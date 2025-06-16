@@ -1,0 +1,36 @@
+/* src/index.css */
+@import 'bulma/css/bulma.min.css';
+
+/* Contoh CSS kustom */
+body {
+  background-color: #f5f5f5; /* Light grey background */
+}
+
+.has-shadow-2 {
+  box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0px 0 1px rgba(10, 10, 10, 0.02);
+}
+
+.navbar-item strong {
+  /* Jika Anda ingin warna teks yang konsisten */
+  color: #00d1b2 !important; /* Warna Bulma 'info' */
+}
+
+.column.is-2 {
+    padding-right: 0 !important; /* Hapus padding agar sidebar lebih rapat */
+}
+
+.menu {
+    height: 100%;
+    background-color: #fbfbfb; /* Warna latar belakang sidebar */
+    border-right: 1px solid #dbdbdb;
+    padding-top: 20px;
+    position: fixed; /* Membuat sidebar tetap di tempat */
+    left: 0;
+    top: 52px; /* Sesuaikan dengan tinggi navbar */
+    bottom: 0;
+}
+
+.main-content {
+    margin-left: 200px; /* Sesuaikan dengan lebar sidebar */
+    padding: 20px;
+}

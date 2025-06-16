@@ -1,27 +1,38 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import Layout from '../components/Layout'; // Menggunakan Layout
 
-const ProtectedRoute = ({ requiredRole }) => {
-  const { user, loading, hasRole } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading authentication...</div>; // Or a spinner
+    return (
+      <div className="pageloader is-active is-light">
+        <span className="title">Loading...</span>
+      </div>
+    );
   }
 
-  if (!user) {
-    // Not logged in, redirect to login page
-    return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />; // Redirect to login if not authenticated
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
-    // Logged in but doesn't have the required role
-    alert("Access Denied: You do not have the necessary permissions.");
-    return <Navigate to="/" replace />; // Or to a forbidden page
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    // If user is authenticated but doesn't have the allowed role
+    return (
+      <Layout> {/* Menggunakan Layout untuk halaman Access Denied */}
+        <div className="section">
+          <div className="container has-text-centered">
+            <p className="title has-text-danger">Access Denied</p>
+            <p className="subtitle">You do not have permission to view this page.</p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
-  // Authenticated and has the correct role, render the child routes
-  return <Outlet />;
+  return children; // Render children (the protected component)
 };
 
 export default ProtectedRoute;

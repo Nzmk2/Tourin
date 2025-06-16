@@ -1,184 +1,138 @@
 import React, { useState, useEffect } from 'react';
-import Layout from '../../components/Layout';
-import API from '../../api/axiosConfig';
+import axiosInstance from '../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
+import Layout from '../../components/Layout';
 
 const EditUser = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // Allow optional password change
-  const [confPassword, setConfPassword] = useState('');
   const [passportNumber, setPassportNumber] = useState('');
-  const [role, setRole] = useState('');
-  const [error, setError] = useState(null);
+  const [role, setRole] = useState('user');
+  const [msg, setMsg] = useState('');
   const navigate = useNavigate();
-  const { id } = useParams(); // Get the userID from the URL
+  const { id } = useParams();
 
   useEffect(() => {
+    const getUserById = async () => {
+      try {
+        const response = await axiosInstance.get(`/users/${id}`);
+        const userData = response.data;
+        setFirstName(userData.firstName);
+        setLastName(userData.lastName);
+        setEmail(userData.email);
+        setPassportNumber(userData.passportNumber || '');
+        setRole(userData.role);
+      } catch (error) {
+        if (error.response) {
+          setMsg(error.response.data.msg);
+        } else {
+          setMsg("Network error or server unavailable.");
+        }
+        console.error("Error fetching user data for edit:", error);
+      }
+    };
     getUserById();
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const getUserById = async () => {
-    try {
-      const response = await API.get(`/users/${id}`);
-      setFirstName(response.data.firstName);
-      setLastName(response.data.lastName);
-      setEmail(response.data.email);
-      setPassportNumber(response.data.passportNumber || ''); // Handle null if no passport
-      setRole(response.data.role);
-    } catch (error) {
-      console.error("Failed to fetch user:", error.response?.data || error.message);
-      setError(error.response?.data?.msg || "Failed to load user data.");
-    }
-  };
+  }, [id]);
 
   const updateUser = async (e) => {
     e.preventDefault();
-    setError(null);
-    if (password && password !== confPassword) { // Only check if password fields are used
-      setError("Password and Confirm Password do not match.");
-      return;
-    }
     try {
-      const updateData = {
+      await axiosInstance.patch(`/users/${id}`, {
         firstName,
         lastName,
         email,
         passportNumber,
-        role,
-      };
-      if (password) { // Only send password if user wants to change it
-        updateData.password = password;
-        updateData.confPassword = confPassword; // Backend expects both for validation
-      }
-
-      await API.patch(`/users/${id}`, updateData);
+        role
+      });
       navigate('/admin/users');
     } catch (error) {
-      console.error("Failed to update user:", error.response?.data || error.message);
-      setError(error.response?.data?.msg || "Failed to update user. Please try again.");
+      if (error.response) {
+        setMsg(error.response.data.msg);
+      } else {
+        setMsg("Network error or server unavailable.");
+      }
+      console.error("Error updating user:", error);
     }
   };
 
   return (
     <Layout>
       <h1 className="title is-2">Edit User</h1>
-      <div className="columns is-centered">
-        <div className="column is-half">
-          <form onSubmit={updateUser}>
-            {error && <div className="notification is-danger">{error}</div>}
+      <h2 className="subtitle is-4">Update user details.</h2>
+      <div className="box p-5">
+        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
+        <form onSubmit={updateUser}>
+          <div className="field">
+            <label className="label">First Name</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First Name"
+              />
+            </div>
+          </div>
 
-            <div className="field">
-              <label className="label">User ID</label>
-              <div className="control">
-                <input className="input" type="text" value={id} disabled />
+          <div className="field">
+            <label className="label">Last Name</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last Name"
+              />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="label">Email</label>
+            <div className="control">
+              <input
+                type="email"
+                className="input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+              />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="label">Passport Number</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={passportNumber}
+                onChange={(e) => setPassportNumber(e.target.value)}
+                placeholder="Passport Number (Optional)"
+              />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="label">Role</label>
+            <div className="control">
+              <div className="select is-fullwidth">
+                <select value={role} onChange={(e) => setRole(e.target.value)}>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">First Name</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="First Name"
-                  required
-                />
-              </div>
+          <div className="field mt-4">
+            <div className="control">
+              <button type="submit" className="button is-success">Update User</button>
             </div>
-
-            <div className="field">
-              <label className="label">Last Name</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last Name"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <label className="label">Email</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <label className="label">New Password (leave blank to keep current)</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="New Password"
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <label className="label">Confirm New Password</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="password"
-                  value={confPassword}
-                  onChange={(e) => setConfPassword(e.target.value)}
-                  placeholder="Confirm New Password"
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <label className="label">Passport Number</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={passportNumber}
-                  onChange={(e) => setPassportNumber(e.target.value)}
-                  placeholder="Passport Number"
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <label className="label">Role</label>
-              <div className="control">
-                <div className="select is-fullwidth">
-                  <select value={role} onChange={(e) => setRole(e.target.value)}>
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="field is-grouped">
-              <div className="control">
-                <button type="submit" className="button is-primary">Update</button>
-              </div>
-              <div className="control">
-                <button type="button" onClick={() => navigate('/admin/users')} className="button is-light">Cancel</button>
-              </div>
-            </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </Layout>
   );

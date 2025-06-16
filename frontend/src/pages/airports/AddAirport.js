@@ -1,105 +1,118 @@
 import React, { useState } from 'react';
-import Layout from '../../components/Layout';
-import API from '../../api/axiosConfig';
+import axiosInstance from '../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import Layout from '../../components/Layout';
 
 const AddAirport = () => {
-  const [airportCode, setAirportCode] = useState(''); // User inputs custom code
-  const [airportName, setAirportName] = useState('');
-  const [facilities, setFacilities] = useState('');
-  const [location, setLocation] = useState('');
-  const [error, setError] = useState(null);
+  const [name, setName] = useState('');
+  const [iataCode, setIataCode] = useState('');
+  const [icaoCode, setIcaoCode] = useState('');
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+  const [msg, setMsg] = useState('');
   const navigate = useNavigate();
 
   const saveAirport = async (e) => {
     e.preventDefault();
-    setError(null);
     try {
-      await API.post('/airports', {
-        airportCode, // Use the code provided by the user
-        airportName,
-        facilities,
-        location
+      await axiosInstance.post('/airports', {
+        name,
+        iataCode,
+        icaoCode,
+        city,
+        country
       });
       navigate('/admin/airports');
     } catch (error) {
-      console.error("Failed to add airport:", error.response?.data || error.message);
-      setError(error.response?.data?.msg || "Failed to add airport. Please try again.");
+      if (error.response) {
+        setMsg(error.response.data.msg);
+      } else {
+        setMsg("Network error or server unavailable.");
+      }
+      console.error("Error adding airport:", error);
     }
   };
 
   return (
     <Layout>
       <h1 className="title is-2">Add New Airport</h1>
-      <div className="columns is-centered">
-        <div className="column is-half">
-          <form onSubmit={saveAirport}>
-            {error && <div className="notification is-danger">{error}</div>}
-
-            <div className="field">
-              <label className="label">Airport Code</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={airportCode}
-                  onChange={(e) => setAirportCode(e.target.value.toUpperCase())} // Convert to uppercase for codes
-                  placeholder="e.g., CGK, SIN"
-                  maxLength="3" // Common max length for airport codes
-                  required
-                />
-              </div>
+      <h2 className="subtitle is-4">Fill in the airport details.</h2>
+      <div className="box p-5">
+        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
+        <form onSubmit={saveAirport}>
+          <div className="field">
+            <label className="label">Name</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Airport Name (e.g., Soekarno-Hatta International Airport)"
+              />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">Airport Name</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={airportName}
-                  onChange={(e) => setAirportName(e.target.value)}
-                  placeholder="e.g., Soekarno-Hatta International Airport"
-                  required
-                />
-              </div>
+          <div className="field">
+            <label className="label">IATA Code</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={iataCode}
+                onChange={(e) => setIataCode(e.target.value)}
+                placeholder="Three-letter IATA Code (e.g., CGK)"
+                maxLength="3"
+              />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">Facilities</label>
-              <div className="control">
-                <textarea
-                  className="textarea"
-                  value={facilities}
-                  onChange={(e) => setFacilities(e.target.value)}
-                  placeholder="e.g., WiFi, Restaurants, Lounges"
-                ></textarea>
-              </div>
+          <div className="field">
+            <label className="label">ICAO Code</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={icaoCode}
+                onChange={(e) => setIcaoCode(e.target.value)}
+                placeholder="Four-letter ICAO Code (e.g., WIII)"
+                maxLength="4"
+              />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">Location</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g., Jakarta, Indonesia"
-                />
-              </div>
+          <div className="field">
+            <label className="label">City</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="City (e.g., Jakarta)"
+              />
             </div>
+          </div>
 
-            <div className="field is-grouped">
-              <div className="control">
-                <button type="submit" className="button is-primary">Save</button>
-              </div>
-              <div className="control">
-                <button type="button" onClick={() => navigate('/admin/airports')} className="button is-light">Cancel</button>
-              </div>
+          <div className="field">
+            <label className="label">Country</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="Country (e.g., Indonesia)"
+              />
             </div>
-          </form>
-        </div>
+          </div>
+
+          <div className="field mt-4">
+            <div className="control">
+              <button type="submit" className="button is-success">Save Airport</button>
+            </div>
+          </div>
+        </form>
       </div>
     </Layout>
   );

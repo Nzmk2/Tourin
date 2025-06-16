@@ -5,45 +5,46 @@ import { useAuth } from '../auth/AuthContext';
 const Navbar = () => {
   const { user, logout } = useAuth();
 
+  const toggleBurgerMenu = () => {
+    const burger = document.querySelector('.navbar-burger');
+    const menu = document.querySelector('.navbar-menu');
+    if (burger && menu) {
+      burger.classList.toggle('is-active');
+      menu.classList.toggle('is-active');
+    }
+  };
+
   return (
-    <nav className="navbar is-info" role="navigation" aria-label="main navigation">
+    <nav className="navbar is-fixed-top has-shadow" role="navigation" aria-label="main navigation">
       <div className="navbar-brand">
-        <Link className="navbar-item" to="/admin">
-          <h1 className="title is-4 has-text-white">Admin Dashboard</h1>
+        <Link to="/admin" className="navbar-item">
+          <strong className="has-text-info is-size-4">Tourin Admin</strong>
         </Link>
+
+        <button
+          className="navbar-burger burger"
+          aria-label="menu"
+          aria-expanded="false"
+          data-target="navbarBasicExample"
+          onClick={toggleBurgerMenu}
+        >
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </button>
       </div>
 
       <div id="navbarBasicExample" className="navbar-menu">
-        <div className="navbar-start">
-          <Link to="/admin" className="navbar-item">
-            Home
-          </Link>
-          <Link to="/admin/users" className="navbar-item">
-            Users
-          </Link>
-          <Link to="/admin/airlines" className="navbar-item">
-            Airlines
-          </Link>
-          <Link to="/admin/airports" className="navbar-item">
-            Airports
-          </Link>
-          {/* Add more links for other entities */}
-        </div>
-
         <div className="navbar-end">
           <div className="navbar-item">
-            {user ? (
-              <div className="buttons">
-                <p className="has-text-weight-bold mr-3">{user.email} ({user.role})</p>
-                <button onClick={logout} className="button is-light">
-                  Log Out
-                </button>
-              </div>
-            ) : (
-              <Link to="/" className="button is-light">
-                Login
-              </Link>
+            {user && (
+              <p className="mr-3">Welcome, <strong className="has-text-info">{user.firstName} ({user.role})</strong></p>
             )}
+            <div className="buttons">
+              <button onClick={logout} className="button is-light">
+                Log Out
+              </button>
+            </div>
           </div>
         </div>
       </div>

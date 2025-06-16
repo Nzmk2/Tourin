@@ -1,18 +1,16 @@
 import axios from 'axios';
 
-const API = axios.create({
-  baseURL: 'http://localhost:5000', // Your backend URL
-  headers: {
-    'Content-Type': 'application/json',
-  },
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:5000', // Sesuaikan dengan port backend Anda
+  withCredentials: true, // Penting untuk mengirim cookie (refresh token)
 });
 
-// Interceptor to attach token to every request
-API.interceptors.request.use(
+// Optional: Interceptor untuk menambahkan access token ke setiap request
+axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken'); // Or wherever you store it
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -21,4 +19,4 @@ API.interceptors.request.use(
   }
 );
 
-export default API;
+export default axiosInstance;

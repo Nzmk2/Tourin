@@ -1,118 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import Layout from '../../components/Layout';
-import API from '../../api/axiosConfig';
+import axiosInstance from '../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
+import Layout from '../../components/Layout';
 
 const EditAirline = () => {
-  const [airlineName, setAirlineName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [operatingRegion, setOperatingRegion] = useState('');
-  const [error, setError] = useState(null);
+  const [name, setName] = useState('');
+  const [iataCode, setIataCode] = useState('');
+  const [icaoCode, setIcaoCode] = useState('');
+  const [country, setCountry] = useState('');
+  const [msg, setMsg] = useState('');
   const navigate = useNavigate();
-  const { id } = useParams(); // Get the airlineID from the URL
+  const { id } = useParams();
 
   useEffect(() => {
+    const getAirlineById = async () => {
+      try {
+        const response = await axiosInstance.get(`/airlines/${id}`);
+        const airlineData = response.data;
+        setName(airlineData.name);
+        setIataCode(airlineData.iataCode);
+        setIcaoCode(airlineData.icaoCode);
+        setCountry(airlineData.country);
+      } catch (error) {
+        if (error.response) {
+          setMsg(error.response.data.msg);
+        } else {
+          setMsg("Network error or server unavailable.");
+        }
+        console.error("Error fetching airline data for edit:", error);
+      }
+    };
     getAirlineById();
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const getAirlineById = async () => {
-    try {
-      const response = await API.get(`/airlines/${id}`);
-      setAirlineName(response.data.airlineName);
-      setContactNumber(response.data.contactNumber);
-      setOperatingRegion(response.data.operatingRegion);
-    } catch (error) {
-      console.error("Failed to fetch airline:", error.response?.data || error.message);
-      setError(error.response?.data?.msg || "Failed to load airline data.");
-    }
-  };
+  }, [id]);
 
   const updateAirline = async (e) => {
     e.preventDefault();
-    setError(null);
     try {
-      await API.patch(`/airlines/${id}`, {
-        airlineName,
-        contactNumber,
-        operatingRegion
+      await axiosInstance.patch(`/airlines/${id}`, {
+        name,
+        iataCode,
+        icaoCode,
+        country
       });
       navigate('/admin/airlines');
     } catch (error) {
-      console.error("Failed to update airline:", error.response?.data || error.message);
-      setError(error.response?.data?.msg || "Failed to update airline. Please try again.");
+      if (error.response) {
+        setMsg(error.response.data.msg);
+      } else {
+        setMsg("Network error or server unavailable.");
+      }
+      console.error("Error updating airline:", error);
     }
   };
 
   return (
     <Layout>
       <h1 className="title is-2">Edit Airline</h1>
-      <div className="columns is-centered">
-        <div className="column is-half">
-          <form onSubmit={updateAirline}>
-            {error && <div className="notification is-danger">{error}</div>}
-
-            <div className="field">
-              <label className="label">Airline ID</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={id} // Display the ID, but keep it read-only
-                  disabled
-                />
-              </div>
+      <h2 className="subtitle is-4">Update airline details.</h2>
+      <div className="box p-5">
+        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
+        <form onSubmit={updateAirline}>
+          <div className="field">
+            <label className="label">Name</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Airline Name"
+              />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">Airline Name</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={airlineName}
-                  onChange={(e) => setAirlineName(e.target.value)}
-                  placeholder="e.g., Garuda Indonesia"
-                  required
-                />
-              </div>
+          <div className="field">
+            <label className="label">IATA Code</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={iataCode}
+                onChange={(e) => setIataCode(e.target.value)}
+                placeholder="Two-letter IATA Code (e.g., GA)"
+                maxLength="2"
+              />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">Contact Number</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
-                  placeholder="e.g., +628123456789"
-                />
-              </div>
+          <div className="field">
+            <label className="label">ICAO Code</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={icaoCode}
+                onChange={(e) => setIcaoCode(e.target.value)}
+                placeholder="Three-letter ICAO Code (e.g., GIA)"
+                maxLength="3"
+              />
             </div>
+          </div>
 
-            <div className="field">
-              <label className="label">Operating Region</label>
-              <div className="control">
-                <input
-                  className="input"
-                  type="text"
-                  value={operatingRegion}
-                  onChange={(e) => setOperatingRegion(e.target.value)}
-                  placeholder="e.g., Asia"
-                />
-              </div>
+          <div className="field">
+            <label className="label">Country</label>
+            <div className="control">
+              <input
+                type="text"
+                className="input"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="Country of origin (e.g., Indonesia)"
+              />
             </div>
+          </div>
 
-            <div className="field is-grouped">
-              <div className="control">
-                <button type="submit" className="button is-primary">Update</button>
-              </div>
-              <div className="control">
-                <button type="button" onClick={() => navigate('/admin/airlines')} className="button is-light">Cancel</button>
-              </div>
+          <div className="field mt-4">
+            <div className="control">
+              <button type="submit" className="button is-success">Update Airline</button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </Layout>
   );
