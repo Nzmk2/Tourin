@@ -1,0 +1,517 @@
+/* ===== Google Font Import - Poppins ===== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&display=swap');
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+:root{
+    /* ===== Colors ===== */
+    --primary-color: #4070F4; /* DIUBAH: Menggunakan warna biru template dari gambar, bukan #0E4BF1 */
+    --panel-color: #FFF;
+    --text-color: #000;
+    --black-light-color: #707070;
+    --border-color: #e6e5e5;
+    --toggle-color: #DDD;
+    --box1-color: #4DA3FF; /* Light blue dari template gambar */
+    --box2-color: #FFE6AC; /* Light yellow dari template gambar */
+    --box3-color: #E7D1FC; /* Light purple dari template gambar */
+    --title-icon-color: #fff;
+    
+    /* ====== Transition ====== */
+    --tran-05: all 0.5s ease;
+    --tran-03: all 0.3s ease;
+    --tran-02: all 0.2s ease;
+}
+
+body{
+    min-height: 100vh;
+    min-width: 100vh;
+    background-color: var(--panel-color); /* DIUBAH: Background body harus pakai --panel-color agar sesuai dark mode, bukan --primary-color */
+    transition: var(--tran-05); /* Tambahkan transisi ke body juga */
+}
+body.dark{
+    --primary-color: #3A3B3C;
+    --panel-color: #242526;
+    --text-color: #CCC;
+    --black-light-color: #CCC;
+    --border-color: #4D4C4C;
+    --toggle-color: #FFF;
+    --box1-color: #3A3B3C;
+    --box2-color: #3A3B3C;
+    --box3-color: #3A3B3C;
+    --title-icon-color: #CCC;
+}
+/* === Custom Scroll Bar CSS === */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0b3cc1;
+}
+
+body.dark::-webkit-scrollbar-thumb, /* Ditambahkan untuk mode gelap */
+body.dark .activity-data::-webkit-scrollbar-thumb{ /* Ditambahkan untuk mode gelap */
+    background: var(--primary-color);
+}
+body.dark::-webkit-scrollbar-thumb:hover, /* Ditambahkan untuk mode gelap */
+body.dark .activity-data::-webkit-scrollbar-thumb:hover{ /* Ditambahkan untuk mode gelap */
+    background: var(--text-color); /* Ubah warna hover di dark mode */
+}
+
+nav{
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    padding: 10px 14px;
+    background-color: var(--panel-color);
+    border-right: 1px solid var(--border-color);
+    transition: var(--tran-05);
+    z-index: 20; /* Tambahkan z-index agar sidebar selalu di atas */
+}
+/* Karena kelas 'close' diterapkan ke body di JSX untuk selektor CSS global */
+body.close nav{ /* DIUBAH: Selektor disesuaikan agar sesuai dengan kelas di body */
+    width: 73px;
+}
+nav .logo-name{
+    display: flex;
+    align-items: center;
+}
+
+nav .logo-name .logo-link-area {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-color); 
+    width: 100%;
+}
+
+nav .logo-image{
+    display: flex;
+    justify-content: center;
+    min-width: 90px; /* Ukuran kontainer gambar logo */
+}
+nav .logo-image img{
+    width: 90px; /* Ukuran gambar logo lebih besar */
+    height: 70px;
+    object-fit: cover;
+    border-radius: 0; /* Bentuk persegi */
+}
+
+nav .logo-name .logo_name{
+    font-size: 28px;
+    font-weight: 700;
+    margin-left: 20px;
+    transition: var(--tran-05);
+}
+/* Karena kelas 'close' diterapkan ke body di JSX untuk selektor CSS global */
+body.close nav .logo_name{ /* DIUBAH: Selektor disesuaikan */
+    opacity: 0;
+    pointer-events: none;
+}
+nav .menu-items{
+    margin-top: 40px;
+    height: calc(100% - 90px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.menu-items li{
+    list-style: none;
+}
+.menu-items li a, /* Menambahkan selektor untuk button yang meniru link */
+.menu-items li button.nav-link-button {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    text-decoration: none;
+    position: relative;
+    background: none; /* Atur ulang gaya default button */
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    color: var(--black-light-color);
+    transition: var(--tran-03);
+}
+.nav-links li a:hover:before, /* Menambahkan selektor untuk button.nav-link-button */
+.nav-links li button.nav-link-button:hover:before{
+    content: "";
+    position: absolute;
+    left: -7px;
+    height: 5px;
+    width: 5px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+}
+body.dark .nav-links li a:hover:before, /* Menambahkan selektor untuk dark mode */
+body.dark .nav-links li button.nav-link-button:hover:before{
+    background-color: var(--text-color);
+}
+.menu-items li a i, /* Menambahkan selektor untuk button.nav-link-button */
+.menu-items li button.nav-link-button i {
+    font-size: 24px;
+    min-width: 45px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--black-light-color); /* Ubah ke inherit jika ingin warna icon mengikuti link */
+}
+.menu-items li a .link-name, /* Menambahkan selektor untuk button.nav-link-button */
+.menu-items li button.nav-link-button .link-name{
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--black-light-color);    /* Ubah ke inherit jika ingin warna teks mengikuti link */
+    transition: var(--tran-05);
+}
+/* Karena kelas 'close' diterapkan ke body di JSX untuk selektor CSS global */
+body.close nav li a .link-name, /* DIUBAH: Selektor disesuaikan */
+body.close nav li button.nav-link-button .link-name{ /* DIUBAH: Selektor disesuaikan */
+    opacity: 0;
+    pointer-events: none;
+}
+.nav-links li a:hover i,
+.nav-links li a:hover .link-name,
+body.dark .nav-links li a:hover i, /* Ditambahkan untuk dark mode */
+body.dark .nav-links li a:hover .link-name, /* Ditambahkan untuk dark mode */
+.nav-links li button.nav-link-button:hover i, /* Ditambahkan untuk tombol */
+.nav-links li button.nav-link-button:hover .link-name /* Ditambahkan untuk tombol */ {
+    color: var(--primary-color); /* DIUBAH: Warna hover pada light mode */
+}
+body.dark .nav-links li a:hover i,
+body.dark .nav-links li a:hover .link-name,
+body.dark .nav-links li button.nav-link-button:hover i, /* Ditambahkan untuk tombol */
+body.dark .nav-links li button.nav-link-button:hover .link-name /* Ditambahkan untuk tombol */ {
+    color: var(--text-color); /* DIUBAH: Warna hover pada dark mode */
+}
+.menu-items .logout-mode{
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+.menu-items .mode{
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    justify-content: space-between; /* Ditambahkan agar toggle di kanan */
+}
+.menu-items .mode-toggle{
+    /* position: absolute; - Dihapus karena sudah ada justify-content: space-between */
+    /* right: 14px; - Dihapus */
+    height: 50px;
+    min-width: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.mode-toggle .switch{
+    position: relative;
+    display: inline-block;
+    height: 22px;
+    width: 40px;
+    border-radius: 25px;
+    background-color: var(--toggle-color);
+}
+.switch:before{
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 15px;
+    width: 15px;
+    background-color: var(--panel-color);
+    border-radius: 50%;
+    transition: var(--tran-03);
+}
+body.dark .switch:before{
+    left: 20px;
+}
+
+.dashboard{
+    position: center;
+    left: 250px;
+    background-color: var(--panel-color);
+    height: 100vh;
+    width:170vh;
+    padding: 70px 14px;
+    transition: var(--tran-05);
+}
+
+body.close .dashboard{
+    left: 73px;
+    width: 100vh;
+}
+.dashboard .top{
+    position: fixed;
+    top: 0;
+    left: 250px;
+    display: flex;
+    width: 87%;
+    height: 80px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background-color: var(--panel-color);
+    transition: var(--tran-05);
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Tambahkan shadow */
+    border-bottom: 1px solid var(--border-color); /* Tambahkan border */
+}
+/* Karena kelas 'close' diterapkan ke body di JSX untuk selektor CSS global */
+body.close .dashboard .top{ /* DIUBAH: Selektor disesuaikan */
+    left: 73px;
+    width: calc(100% - 73px);
+}
+.dashboard .top .sidebar-toggle{
+    font-size: 26px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+.dashboard .top .search-box{
+    position: relative;
+    height: 45px;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 30px;
+}
+.top .search-box input{
+    position: absolute;
+    border: 1px solid var(--border-color);
+    background-color: var(--panel-color);
+    padding: 0 25px 0 50px;
+    border-radius: 8px; /* Lebih rounded */
+    height: 100%;
+    width: 100%;
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 400;
+    outline: none;
+    transition: var(--tran-03);
+}
+.top .search-box input:focus { /* Tambahkan style focus */
+    border-color: var(--primary-color);
+}
+.top .search-box i{
+    position: absolute;
+    left: 15px;
+    font-size: 22px;
+    z-index: 10;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--black-light-color);
+}
+.top img{
+    width: 60px;
+    height: 60px; /* Tambahkan height */
+    border-radius: 50%;
+    object-fit: cover; /* Tambahkan object-fit */
+}
+.dashboard .dash-content{
+    position: center;
+    padding-top: 40px; 
+    width: 130vh;
+    height: 95vh;
+    margin-left: 30vh;
+}
+.dash-content .title{
+    display: flex;
+    align-items: center;
+    margin: 60px 0 30px 0;
+}
+.dash-content .title i{
+    position: relative;
+    height: 35px;
+    width: 35px;
+    background-color: var(--primary-color);
+    border-radius: 6px;
+    color: var(--title-icon-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+.dash-content .title .text{
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-left: 10px;
+}
+/* Menambahkan subtitle seperti di template */
+.dash-content .subtitle {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 30px;
+}
+.dash-content .highlight-text {
+    color: var(--primary-color);
+}
+body.dark .dash-content .highlight-text {
+    color: var(--text-color);
+}
+
+
+.dash-content .boxes{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px; /* Tambahkan gap antar kotak */
+}
+.dash-content .boxes .box{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 12px;
+    width: 42vh;
+    padding: 20px; /* Padding kotak lebih besar */
+    background-color: var(--box1-color); /* Default, akan di-override */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Tambahkan shadow */
+    transition: var(--tran-05);
+}
+/* Specific box colors for light mode, matching screenshot */
+.boxes .box.box1 {
+    background-color: #4070F4; /* Biru terang dari template */
+    color: #fff; /* Teks putih untuk kotak biru */
+}
+.boxes .box.box2 {
+    background-color: #FFF2C6; /* Kuning dari template */
+    color: var(--text-color); /* Teks gelap untuk kotak kuning */
+}
+.boxes .box.box3 {
+    background-color: #E0BBE4; /* Ungu dari template */
+    color: var(--text-color); /* Teks gelap untuk kotak ungu */
+    margin-bottom: 22px;
+}
+
+body.dark .boxes .box.box1,
+body.dark .boxes .box.box2,
+body.dark .boxes .box.box3 {
+    background-color: var(--panel-color); /* Ubah background di dark mode */
+    border: 1px solid var(--border-color); /* Tambahkan border di dark mode */
+    color: var(--text-color); /* Ubah warna teks di dark mode */
+    box-shadow: none; /* Hilangkan shadow di dark mode */
+}
+
+.boxes .box i{
+    font-size: 40px; /* Ukuran ikon lebih besar */
+    color: inherit; /* Gunakan warna inherited dari parent */
+    margin-bottom: 10px; /* Tambahkan margin bawah */
+}
+.boxes .box .text{
+    white-space: nowrap;
+    font-size: 18px;
+    font-weight: 500;
+    color: inherit; /* Gunakan warna inherited dari parent */
+}
+.boxes .box .number{
+    font-size: 45px; /* Ukuran angka lebih besar */
+    font-weight: 600; /* Lebih tebal */
+    color: inherit; /* Gunakan warna inherited dari parent */
+    margin-top: 5px; /* Tambahkan margin atas */
+}
+
+/* Recent Activity Section */
+.activity {
+    margin-top: 50px; /* Margin atas activity lebih besar */
+}
+/* Menyesuaikan struktur CSS untuk tabel activity-data */
+.activity .activity-data{
+    display: flex;
+    flex-direction: column; /* Ubah menjadi kolom */
+    width: 100%;
+    background-color: var(--panel-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    padding: 20px;
+    overflow-x: auto; /* Agar bisa discroll horizontal jika terlalu sempit */
+}
+
+/* Header row for activity data */
+.activity-data .data-header-row { /* Kelas baru untuk header row, sesuai JSX */
+    display: flex;
+    width: 100%;
+    min-width: 700px; /* Sesuaikan min-width agar kolom tidak terlalu rapat */
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+.activity-data .data-header-row .data-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+    flex: 1; /* Distribute space evenly */
+    padding-right: 15px;
+    white-space: nowrap;
+}
+/* Specific flex basis for columns to match screenshot's visual width (disesuaikan) */
+.activity-data .data-header-row .data-title:nth-child(1) { flex: 0.8; } /* Name */
+.activity-data .data-header-row .data-title:nth-child(2) { flex: 1.2; } /* Email */
+.activity-data .data-header-row .data-title:nth-child(3) { flex: 0.8; } /* Joined */
+.activity-data .data-header-row .data-title:nth-child(4) { flex: 0.7; } /* Type */
+.activity-data .data-header-row .data-title:nth-child(5) { flex: 0.7; } /* Status */
+
+
+/* Data rows for recent activity */
+.activity-data .data-row { /* Kelas baru untuk setiap baris data, sesuai JSX */
+    display: flex;
+    width: 100%;
+    min-width: 700px; /* Match min-width of header */
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border-color); /* Garis putus-putus */
+}
+.activity-data .data-row:last-child {
+    border-bottom: none; /* No border for the last row */
+}
+.activity-data .data-row .data-list {
+    font-size: 16px; /* Ukuran font list items */
+    font-weight: 400;
+    color: var(--black-light-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Tambahkan ellipsis untuk teks panjang */
+    flex: 1; /* Distribute space evenly */
+    padding-right: 15px;
+}
+/* Specific flex basis for columns to match headers */
+.activity-data .data-row .data-list:nth-child(1) { flex: 0.8; }
+.activity-data .data-row .data-list:nth-child(2) { flex: 1.2; }
+.activity-data .data-row .data-list:nth-child(3) { flex: 0.8; }
+.activity-data .data-row .data-list:nth-child(4) { flex: 0.7; }
+.activity-data .data-row .data-list:nth-child(5) { flex: 0.7; }
+
+body.dark .activity-data .data-row .data-list {
+    color: var(--text-color);
+}
+
+/* Loading, Error, and No Data Messages */
+.loading-message, .error-message, .no-data-message {
+    font-size: 16px;
+    color: var(--black-light-color);
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+}
+.error-message {
+    color: #e74c3c;
+}
+body.dark .loading-message,
+body.dark .no-data-message {
+    color: var(--text-color);
+}

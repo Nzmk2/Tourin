@@ -6,7 +6,7 @@ import { AuthProvider } from './auth/AuthContext'; // <-- IMPORTANT: Make sure t
 // Pages
 import Login from './pages/login/Login';
 import Register from './pages/register/Register';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import NotFound from './pages/NotFound';
 
 // User Management
@@ -16,8 +16,8 @@ import EditUser from './pages/users/EditUser';
 
 // Airline Management
 import AirlineManagement from './pages/airlines/AirlineManagement';
-import AddAirline from './pages/airlines/AddAirline';
-import EditAirline from './pages/airlines/EditAirline';
+import AddAirline from './pages/airlines/AddAirline'; // Assuming you have this component for adding
+import EditAirline from './pages/airlines/EditAirline'; // Assuming you have this component for editing
 
 // Airport Management
 import AirportManagement from './pages/airports/AirportManagement';
@@ -40,16 +40,26 @@ import PaymentManagement from './pages/payments/PaymentManagement';
 function App() {
   return (
     <BrowserRouter>
-      {/* AuthProvider MUST wrap the content that uses router hooks (like useNavigate) */}
-      {/* This means AuthProvider should be INSIDE BrowserRouter */}
+      {/* AuthProvider HARUS membungkus konten yang menggunakan router hooks (seperti useNavigate) */}
+      {/* Ini berarti AuthProvider harus berada DI DALAM BrowserRouter */}
       <AuthProvider>
         <Routes>
-          {/* Public Routes */}
+          {/* Rute Publik */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Admin Protected Routes */}
+          {/* Rute Terlindungi Admin */}
+          {/* Rute spesifik untuk /admin/dashboard - Penting untuk tautan langsung */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Rute umum /admin - juga mengarah ke AdminDashboard */}
           <Route
             path="/admin"
             element={
@@ -58,6 +68,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Manajemen Pengguna */}
           <Route
             path="/admin/users"
             element={
@@ -82,11 +94,13 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Manajemen Maskapai */}
           <Route
             path="/admin/airlines"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AirlineManagement />
+                <AirlineManagement /> {/* Jika AirlineManagement adalah daftar/tabel */}
               </ProtectedRoute>
             }
           />
@@ -94,7 +108,7 @@ function App() {
             path="/admin/airlines/add"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AddAirline />
+                <AddAirline /> {/* Ini adalah rute untuk komponen form penambahan */}
               </ProtectedRoute>
             }
           />
@@ -102,10 +116,12 @@ function App() {
             path="/admin/airlines/edit/:id"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <EditAirline />
+                <EditAirline /> {/* Ini adalah rute untuk komponen form pengeditan */}
               </ProtectedRoute>
             }
           />
+
+          {/* Manajemen Bandara */}
           <Route
             path="/admin/airports"
             element={
@@ -130,6 +146,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Manajemen Penerbangan */}
           <Route
             path="/admin/flights"
             element={
@@ -154,6 +172,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Manajemen Pemesanan */}
           <Route
             path="/admin/bookings"
             element={
@@ -178,6 +198,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Manajemen Pembayaran */}
           <Route
             path="/admin/payments"
             element={
@@ -186,7 +208,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Catch-all route for 404 */}
+
+          {/* Rute Catch-all untuk 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

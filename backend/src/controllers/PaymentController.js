@@ -65,3 +65,14 @@ export const deletePayment = async (req, res) => {
         res.status(500).json({ msg: error.message });
     }
 };
+
+// --- FUNGSI BARU UNTUK MENGHITUNG JUMLAH PAYMENT ---
+export const getPaymentCount = async (req, res) => {
+    try {
+        const count = await Payment.count(); // Menggunakan Sequelize's .count() method
+        res.status(200).json({ count });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ msg: error.message });
+    }
+};

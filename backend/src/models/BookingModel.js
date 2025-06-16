@@ -11,7 +11,7 @@ const Booking = db.define('bookings', {
         primaryKey: true,
         allowNull: false
     },
-    userID: { // Changed to INTEGER to match UserModel
+    userID: {
         type: DataTypes.INTEGER, // Must match the type in UserModel
         allowNull: false,
         references: {

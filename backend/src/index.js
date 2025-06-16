@@ -1,7 +1,7 @@
 import express from "express";
 import db from "./config/database.js";
 import cors from "cors";
-import cookieParser from "cookie-parser"; // <<<--- TAMBAHKAN INI
+import cookieParser from "cookie-parser";
 
 // Impor Model untuk sinkronisasi (hanya diperlukan sekali untuk membuat tabel)
 import AirlineModel from "./models/AirlineModel.js";

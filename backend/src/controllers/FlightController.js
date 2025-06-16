@@ -12,7 +12,8 @@ export const getFlights = async (req, res) => {
             ]
         });
         res.status(200).json(response);
-    } catch (error) {
+    }
+     catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
     }
@@ -69,6 +70,17 @@ export const deleteFlight = async (req, res) => {
             }
         });
         res.status(200).json({ msg: "Flight deleted" });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ msg: error.message });
+    }
+};
+
+// --- FUNGSI BARU UNTUK MENGHITUNG JUMLAH FLIGHT ---
+export const getFlightCount = async (req, res) => {
+    try {
+        const count = await Flight.count(); // Menggunakan Sequelize's .count() method
+        res.status(200).json({ count });
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });

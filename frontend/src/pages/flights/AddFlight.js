@@ -1,212 +1,295 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/Layout';
+
+import Sidebar from '../../components/Sidebar';
+import Navbar from '../../components/Navbar';
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
 
 const AddFlight = () => {
-  const [flightNumber, setFlightNumber] = useState('');
-  const [airlineId, setAirlineId] = useState('');
-  const [departureAirportId, setDepartureAirportId] = useState('');
-  const [arrivalAirportId, setArrivalAirportId] = useState('');
-  const [departureDate, setDepartureDate] = useState('');
-  const [departureTime, setDepartureTime] = useState('');
-  const [arrivalTime, setArrivalTime] = useState('');
-  const [price, setPrice] = useState('');
-  const [capacity, setCapacity] = useState('');
-  const [airlines, setAirlines] = useState([]);
-  const [airports, setAirports] = useState([]);
-  const [msg, setMsg] = useState('');
-  const navigate = useNavigate();
+    const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
+        return localStorage.getItem("status") === "close";
+    });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        return localStorage.getItem("mode") === "dark";
+    });
 
-  useEffect(() => {
-    const fetchDependencies = async () => {
-      try {
-        const airlinesRes = await axiosInstance.get('/airlines');
-        setAirlines(airlinesRes.data);
-        if (airlinesRes.data.length > 0) {
-          setAirlineId(airlinesRes.data[0].id);
-        }
+    const [flightNumber, setFlightNumber] = useState('');
+    const [airlineID, setAirlineID] = useState('');
+    const [departureAirportCode, setDepartureAirportCode] = useState('');
+    const [destinationAirportCode, setDestinationAirportCode] = useState('');
+    const [departureTime, setDepartureTime] = useState(''); // DataTypes.DATE di model
+    const [arrivalTime, setArrivalTime] = useState('');     // DataTypes.DATE di model
+    const [availableSeats, setAvailableSeats] = useState('');
+    const [airlines, setAirlines] = useState([]);
+    const [airports, setAirports] = useState([]);
+    const [msg, setMsg] = useState('');
+    const [msgType, setMsgType] = useState('info');
+    const navigate = useNavigate();
 
-        const airportsRes = await axiosInstance.get('/airports');
-        setAirports(airportsRes.data);
-        if (airportsRes.data.length > 0) {
-          setDepartureAirportId(airportsRes.data[0].id);
-          setArrivalAirportId(airportsRes.data[0].id);
+    useEffect(() => {
+        if (isDarkMode) {
+            document.body.classList.add("dark");
+        } else {
+            document.body.classList.remove("dark");
         }
-      } catch (error) {
-        console.error("Error fetching airlines/airports:", error);
-        setMsg("Failed to load dependencies (airlines/airports).");
-      }
+        localStorage.setItem("mode", isDarkMode ? "dark" : "light");
+    }, [isDarkMode]);
+
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
+        }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
+
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
     };
-    fetchDependencies();
-  }, []);
 
-  const saveFlight = async (e) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.post('/flights', {
-        flightNumber,
-        airlineId,
-        departureAirportId,
-        arrivalAirportId,
-        departureDate,
-        departureTime,
-        arrivalTime,
-        price: parseFloat(price),
-        capacity: parseInt(capacity, 10)
-      });
-      navigate('/admin/flights');
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Network error or server unavailable.");
-      }
-      console.error("Error adding flight:", error);
-    }
-  };
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
 
-  return (
-    <Layout>
-      <h1 className="title is-2">Add New Flight</h1>
-      <h2 className="subtitle is-4">Fill in the flight details.</h2>
-      <div className="box p-5">
-        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
-        <form onSubmit={saveFlight}>
-          <div className="field">
-            <label className="label">Flight Number</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={flightNumber}
-                onChange={(e) => setFlightNumber(e.target.value)}
-                placeholder="e.g., GA-123"
-              />
-            </div>
-          </div>
+    useEffect(() => {
+        const fetchDependencies = async () => {
+            try {
+                const airlinesRes = await axiosInstance.get('/airlines');
+                setAirlines(airlinesRes.data);
+                if (airlinesRes.data.length > 0) {
+                    setAirlineID(airlinesRes.data[0].airlineID);
+                }
 
-          <div className="field">
-            <label className="label">Airline</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={airlineId} onChange={(e) => setAirlineId(e.target.value)}>
-                  <option value="">Select Airline</option>
-                  {airlines.map((airline) => (
-                    <option key={airline.id} value={airline.id}>
-                      {airline.name} ({airline.iataCode})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+                const airportsRes = await axiosInstance.get('/airports');
+                setAirports(airportsRes.data);
+                if (airportsRes.data.length > 0) {
+                    setDepartureAirportCode(airportsRes.data[0].airportCode);
+                    setDestinationAirportCode(airportsRes.data[0].airportCode);
+                }
+            } catch (error) {
+                console.error("Error fetching airlines/airports:", error);
+                setMsg("Failed to load dependencies (airlines/airports).");
+                setMsgType('danger');
+            }
+        };
+        fetchDependencies();
+    }, []);
 
-          <div className="field">
-            <label className="label">Departure Airport</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={departureAirportId} onChange={(e) => setDepartureAirportId(e.target.value)}>
-                  <option value="">Select Departure Airport</option>
-                  {airports.map((airport) => (
-                    <option key={airport.id} value={airport.id}>
-                      {airport.name} ({airport.iataCode})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+    const saveFlight = async (e) => {
+        e.preventDefault();
+        try {
+            // Asumsi input time adalah 'HH:MM'. Jika DataTypes.DATE memerlukan tanggal juga,
+            // Anda perlu menggabungkannya dengan tanggal (misalnya dari input terpisah atau tanggal saat ini).
+            // Contoh menggabungkan dengan tanggal saat ini:
+            const today = new Date().toISOString().split('T')[0]; // Mendapatkan YYYY-MM-DD
+            const fullDepartureDateTime = `${today}T${departureTime}:00`;
+            const fullArrivalDateTime = `${today}T${arrivalTime}:00`;
 
-          <div className="field">
-            <label className="label">Arrival Airport</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={arrivalAirportId} onChange={(e) => setArrivalAirportId(e.target.value)}>
-                  <option value="">Select Arrival Airport</option>
-                  {airports.map((airport) => (
-                    <option key={airport.id} value={airport.id}>
-                      {airport.name} ({airport.iataCode})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+            await axiosInstance.post('/flights', {
+                flightNumber,
+                airlineID,
+                departureAirportCode,
+                destinationAirportCode,
+                departureTime: fullDepartureDateTime, // Kirim sebagai ISO string
+                arrivalTime: fullArrivalDateTime,     // Kirim sebagai ISO string
+                availableSeats: parseInt(availableSeats, 10)
+            });
+            setMsg("Flight added successfully!");
+            setMsgType('success');
+            // Reset form fields
+            setFlightNumber('');
+            setAirlineID(airlines.length > 0 ? airlines[0].airlineID : '');
+            setDepartureAirportCode(airports.length > 0 ? airports[0].airportCode : '');
+            setDestinationAirportCode(airports.length > 0 ? airports[0].airportCode : '');
+            setDepartureTime('');
+            setArrivalTime('');
+            setAvailableSeats('');
 
-          <div className="field">
-            <label className="label">Departure Date</label>
-            <div className="control">
-              <input
-                type="date"
-                className="input"
-                value={departureDate}
-                onChange={(e) => setDepartureDate(e.target.value)}
-              />
-            </div>
-          </div>
+            setTimeout(() => {
+                navigate('/admin/flights');
+            }, 1500);
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error adding flight:", error);
+        }
+    };
 
-          <div className="field">
-            <label className="label">Departure Time</label>
-            <div className="control">
-              <input
-                type="time"
-                className="input"
-                value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
-              />
-            </div>
-          </div>
+    return (
+        <div className="admin-dashboard-container">
+            <Sidebar
+                isSidebarClosed={isSidebarClosed}
+                toggleDarkMode={toggleDarkMode}
+                isDarkMode={isDarkMode}
+            />
 
-          <div className="field">
-            <label className="label">Arrival Time</label>
-            <div className="control">
-              <input
-                type="time"
-                className="input"
-                value={arrivalTime}
-                onChange={(e) => setArrivalTime(e.target.value)}
-              />
-            </div>
-          </div>
+            <section className="dashboard">
+                <Navbar toggleSidebar={toggleSidebar} />
 
-          <div className="field">
-            <label className="label">Price (IDR)</label>
-            <div className="control">
-              <input
-                type="number"
-                className="input"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="e.g., 1500000"
-                min="0"
-              />
-            </div>
-          </div>
+                <div className="dash-content">
+                    <div className="management-page-wrapper">
+                        <div className="page-header">
+                            <i className="uil uil-plane-fly icon"></i> {/* Ikon untuk Flight */}
+                            <div>
+                                <h1 className="page-title">Add New Flight</h1>
+                                <p className="page-subtitle">Fill in the flight details to create a record.</p>
+                            </div>
+                        </div>
 
-          <div className="field">
-            <label className="label">Capacity</label>
-            <div className="control">
-              <input
-                type="number"
-                className="input"
-                value={capacity}
-                onChange={(e) => setCapacity(e.target.value)}
-                placeholder="e.g., 150"
-                min="1"
-              />
-            </div>
-          </div>
+                        <div className="management-container">
+                            <div className="form-wrapper">
+                                <form onSubmit={saveFlight}>
+                                    {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
-          <div className="field mt-4">
-            <div className="control">
-              <button type="submit" className="button is-success">Save Flight</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </Layout>
-  );
+                                    <div className="form-group">
+                                        <label htmlFor="flightNumber" className="form-label">Flight Number</label>
+                                        <input
+                                            type="text"
+                                            name="flightNumber"
+                                            id="flightNumber"
+                                            placeholder="e.g., GA-123"
+                                            className="form-input"
+                                            value={flightNumber}
+                                            onChange={(e) => setFlightNumber(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="airlineID" className="form-label">Airline</label>
+                                        <div className="form-control-wrapper">
+                                            <select
+                                                name="airlineID"
+                                                id="airlineID"
+                                                className="form-input"
+                                                value={airlineID}
+                                                onChange={(e) => setAirlineID(e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select Airline</option>
+                                                {airlines.map((airline) => (
+                                                    <option key={airline.airlineID} value={airline.airlineID}>
+                                                        {airline.airlineName}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-row">
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="departureAirportCode" className="form-label">Departure Airport</label>
+                                                <div className="form-control-wrapper">
+                                                    <select
+                                                        name="departureAirportCode"
+                                                        id="departureAirportCode"
+                                                        className="form-input"
+                                                        value={departureAirportCode}
+                                                        onChange={(e) => setDepartureAirportCode(e.target.value)}
+                                                        required
+                                                    >
+                                                        <option value="">Select Departure Airport</option>
+                                                        {airports.map((airport) => (
+                                                            <option key={airport.airportCode} value={airport.airportCode}>
+                                                                {airport.airportName} ({airport.location})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="destinationAirportCode" className="form-label">Destination Airport</label>
+                                                <div className="form-control-wrapper">
+                                                    <select
+                                                        name="destinationAirportCode"
+                                                        id="destinationAirportCode"
+                                                        className="form-input"
+                                                        value={destinationAirportCode}
+                                                        onChange={(e) => setDestinationAirportCode(e.target.value)}
+                                                        required
+                                                    >
+                                                        <option value="">Select Destination Airport</option>
+                                                        {airports.map((airport) => (
+                                                            <option key={airport.airportCode} value={airport.airportCode}>
+                                                                {airport.airportName} ({airport.location})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-row">
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="departureTime" className="form-label">Departure Time</label>
+                                                <input
+                                                    type="time"
+                                                    name="departureTime"
+                                                    id="departureTime"
+                                                    className="form-input"
+                                                    value={departureTime}
+                                                    onChange={(e) => setDepartureTime(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="arrivalTime" className="form-label">Arrival Time</label>
+                                                <input
+                                                    type="time"
+                                                    name="arrivalTime"
+                                                    id="arrivalTime"
+                                                    className="form-input"
+                                                    value={arrivalTime}
+                                                    onChange={(e) => setArrivalTime(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="availableSeats" className="form-label">Available Seats</label>
+                                        <input
+                                            type="number"
+                                            name="availableSeats"
+                                            id="availableSeats"
+                                            placeholder="e.g., 150"
+                                            className="form-input"
+                                            value={availableSeats}
+                                            onChange={(e) => setAvailableSeats(e.target.value)}
+                                            min="1"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" className="form-submit-button">
+                                            Add Flight
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 };
 
 export default AddFlight;

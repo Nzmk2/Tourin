@@ -1,121 +1,162 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/Layout';
+
+import Sidebar from '../../components/Sidebar';
+import Navbar from '../../components/Navbar';
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
 
 const AddAirport = () => {
-  const [name, setName] = useState('');
-  const [iataCode, setIataCode] = useState('');
-  const [icaoCode, setIcaoCode] = useState('');
-  const [city, setCity] = useState('');
-  const [country, setCountry] = useState('');
-  const [msg, setMsg] = useState('');
-  const navigate = useNavigate();
+    const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
+        return localStorage.getItem("status") === "close";
+    });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        return localStorage.getItem("mode") === "dark";
+    });
 
-  const saveAirport = async (e) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.post('/airports', {
-        name,
-        iataCode,
-        icaoCode,
-        city,
-        country
-      });
-      navigate('/admin/airports');
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Network error or server unavailable.");
-      }
-      console.error("Error adding airport:", error);
-    }
-  };
+    const [airportName, setAirportName] = useState('');
+    const [facilities, setFacilities] = useState('');
+    const [location, setLocation] = useState('');
+    const [msg, setMsg] = useState('');
+    const [msgType, setMsgType] = useState('info');
+    const navigate = useNavigate();
 
-  return (
-    <Layout>
-      <h1 className="title is-2">Add New Airport</h1>
-      <h2 className="subtitle is-4">Fill in the airport details.</h2>
-      <div className="box p-5">
-        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
-        <form onSubmit={saveAirport}>
-          <div className="field">
-            <label className="label">Name</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Airport Name (e.g., Soekarno-Hatta International Airport)"
-              />
-            </div>
-          </div>
+    useEffect(() => {
+        if (isDarkMode) {
+            document.body.classList.add("dark");
+        } else {
+            document.body.classList.remove("dark");
+        }
+        localStorage.setItem("mode", isDarkMode ? "dark" : "light");
+    }, [isDarkMode]);
 
-          <div className="field">
-            <label className="label">IATA Code</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={iataCode}
-                onChange={(e) => setIataCode(e.target.value)}
-                placeholder="Three-letter IATA Code (e.g., CGK)"
-                maxLength="3"
-              />
-            </div>
-          </div>
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
+        }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
 
-          <div className="field">
-            <label className="label">ICAO Code</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={icaoCode}
-                onChange={(e) => setIcaoCode(e.target.value)}
-                placeholder="Four-letter ICAO Code (e.g., WIII)"
-                maxLength="4"
-              />
-            </div>
-          </div>
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
+    };
 
-          <div className="field">
-            <label className="label">City</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City (e.g., Jakarta)"
-              />
-            </div>
-          </div>
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
 
-          <div className="field">
-            <label className="label">Country</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                placeholder="Country (e.g., Indonesia)"
-              />
-            </div>
-          </div>
+    const saveAirport = async (e) => {
+        e.preventDefault();
+        try {
+            await axiosInstance.post('/airports', {
+                airportName,
+                facilities,
+                location
+            });
+            setMsg("Airport added successfully!");
+            setMsgType('success');
+            // Reset form fields
+            setAirportName('');
+            setFacilities('');
+            setLocation('');
+            setTimeout(() => {
+                navigate('/admin/airports');
+            }, 1500);
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error adding airport:", error);
+        }
+    };
 
-          <div className="field mt-4">
-            <div className="control">
-              <button type="submit" className="button is-success">Save Airport</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </Layout>
-  );
+    return (
+        <div className="admin-dashboard-container">
+            <Sidebar
+                isSidebarClosed={isSidebarClosed}
+                toggleDarkMode={toggleDarkMode}
+                isDarkMode={isDarkMode}
+            />
+
+            <section className="dashboard">
+                <Navbar toggleSidebar={toggleSidebar} />
+
+                <div className="dash-content">
+                    <div className="management-page-wrapper">
+                        <div className="page-header">
+                            <i className="uil uil-building icon"></i> {/* Ikon untuk Airport */}
+                            <div>
+                                <h1 className="page-title">Add New Airport</h1>
+                                <p className="page-subtitle">Fill in the airport details to create a record.</p>
+                            </div>
+                        </div>
+
+                        <div className="management-container">
+                            <div className="form-wrapper">
+                                <form onSubmit={saveAirport}>
+                                    {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
+
+                                    <div className="form-group">
+                                        <label htmlFor="airportName" className="form-label">Airport Name</label>
+                                        <input
+                                            type="text"
+                                            name="airportName"
+                                            id="airportName"
+                                            placeholder="e.g., Soekarno-Hatta International Airport"
+                                            className="form-input"
+                                            value={airportName}
+                                            onChange={(e) => setAirportName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="facilities" className="form-label">Facilities (Comma Separated)</label>
+                                        <textarea
+                                            name="facilities"
+                                            id="facilities"
+                                            placeholder="e.g., WiFi, Lounges, Shops"
+                                            className="form-input"
+                                            value={facilities}
+                                            onChange={(e) => setFacilities(e.target.value)}
+                                            rows="3"
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="location" className="form-label">Location</label>
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            id="location"
+                                            placeholder="e.g., Jakarta, Indonesia"
+                                            className="form-input"
+                                            value={location}
+                                            onChange={(e) => setLocation(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" className="form-submit-button">
+                                            Add Airport
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 };
 
 export default AddAirport;

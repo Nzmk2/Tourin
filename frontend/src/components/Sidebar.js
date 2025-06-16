@@ -1,48 +1,84 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
+import { Link } from 'react-router-dom'; // Untuk navigasi React Router
+import logoImage from '../assets/img/logo.png'; // <<<--- Import gambar logo di sini (sesuaikan path jika berbeda)
 
-const Sidebar = () => {
-  const { user } = useAuth();
+/**
+ * Komponen Sidebar untuk dashboard admin.
+ * Mengelola tampilan sidebar (terbuka/tertutup) dan toggle mode gelap/terang.
+ * @param {object} props - Properti komponen.
+ * @param {boolean} props.isSidebarClosed - Status sidebar (true jika tertutup).
+ * @param {function} props.toggleDarkMode - Fungsi untuk mengubah mode gelap/terang.
+ * @param {boolean} props.isDarkMode - Status mode gelap/terang (true jika mode gelap).
+ */
+const Sidebar = ({ isSidebarClosed, toggleDarkMode, isDarkMode }) => {
+    return (
+        <nav className={isSidebarClosed ? "close" : ""}>
+            <div className="logo-name">
+                {/* Logo dan teks Tourin mengarah ke Dashboard */}
+                <Link to="/admin/dashboard" className="logo-link-area">
+                    <div className="logo-image">
+                        {/* Menggunakan gambar logo yang diimpor */}
+                        <img src={logoImage} alt="Tourin Logo" />
+                    </div>
+                    <span className="logo_name">Tourin</span>
+                </Link>
+            </div>
 
-  return (
-    <aside className="menu p-4">
-      <p className="menu-label">
-        General
-      </p>
-      <ul className="menu-list">
-        <li><NavLink to="/admin">Dashboard</NavLink></li>
-      </ul>
-      {user && user.role === 'admin' && (
-        <>
-          <p className="menu-label">
-            Administration
-          </p>
-          <ul className="menu-list">
-            <li><NavLink to="/admin/users">Users</NavLink></li>
-            <li><NavLink to="/admin/airlines">Airlines</NavLink></li>
-            <li><NavLink to="/admin/airports">Airports</NavLink></li>
-            <li><NavLink to="/admin/flights">Flights</NavLink></li>
-            <li><NavLink to="/admin/bookings">Bookings</NavLink></li>
-            <li><NavLink to="/admin/payments">Payments</NavLink></li>
-          </ul>
-        </>
-      )}
-      {/* Anda bisa menambahkan menu untuk role 'user' di sini jika ada */}
-      {/* Ini adalah contoh, Anda mungkin ingin membuat dashboard terpisah untuk user normal */}
-      {/* {user && user.role === 'user' && (
-        <>
-          <p className="menu-label">
-            User Actions
-          </p>
-          <ul className="menu-list">
-            <li><NavLink to="/my-bookings">My Bookings</NavLink></li>
-            <li><NavLink to="/search-flights">Search Flights</NavLink></li>
-          </ul>
-        </>
-      )} */}
-    </aside>
-  );
+            <div className="menu-items">
+                <ul className="nav-links">
+                    <li><Link to="/admin/dashboard">
+                        <i className="uil uil-estate"></i>
+                        <span className="link-name">Dashboard</span>
+                    </Link></li>
+                    <li><Link to="/admin/airlines">
+                        <i className="uil uil-plane-departure"></i>
+                        <span className="link-name">Airline</span>
+                    </Link></li>
+                    <li><Link to="/admin/airports">
+                        <i className="uil uil-building"></i>
+                        <span className="link-name">Airport</span>
+                    </Link></li>
+                    <li><Link to="/admin/bookings">
+                        <i className="uil uil-receipt"></i>
+                        <span className="link-name">Booking</span>
+                    </Link></li>
+                    <li><Link to="/admin/flights">
+                        <i className="uil uil-plane-fly"></i>
+                        <span className="link-name">Flight</span>
+                    </Link></li>
+                    <li><Link to="/admin/payments">
+                        <i className="uil uil-paypal"></i>
+                        <span className="link-name">Payment</span>
+                    </Link></li>
+                    <li><Link to="/admin/users">
+                        <i className="uil uil-users-alt"></i>
+                        <span className="link-name">User</span>
+                    </Link></li>
+                </ul>
+
+                <ul className="logout-mode">
+                    <li><Link to="/login">
+                        <i className="uil uil-signout"></i>
+                        <span className="link-name">Logout</span>
+                    </Link></li>
+
+                    <li className="mode">
+                        <button
+                            type="button"
+                            onClick={toggleDarkMode}
+                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        >
+                            <i className="uil uil-moon"></i>
+                            <span className="link-name">Dark Mode</span>
+                        </button>
+                        <div className="mode-toggle" onClick={toggleDarkMode}>
+                            <span className="switch"></span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    );
 };
 
 export default Sidebar;

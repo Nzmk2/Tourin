@@ -1,152 +1,221 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/Layout';
+
+import Sidebar from '../../components/Sidebar';
+import Navbar from '../../components/Navbar';
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
 
 const AddBooking = () => {
-  const [userId, setUserId] = useState('');
-  const [flightId, setFlightId] = useState('');
-  const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
-  const [totalPrice, setTotalPrice] = useState('');
-  const [status, setStatus] = useState('pending'); // Default status
-  const [msg, setMsg] = useState('');
-  const navigate = useNavigate();
+    const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
+        return localStorage.getItem("status") === "close";
+    });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        return localStorage.getItem("mode") === "dark";
+    });
 
-  const [users, setUsers] = useState([]);
-  const [flights, setFlights] = useState([]);
+    const [userEmailInput, setUserEmailInput] = useState(''); // State for manual email input
+    // const [foundUserID, setFoundUserID] = useState(null); // DIHAPUS: State ini tidak lagi digunakan
+    const [flightID, setFlightID] = useState('');
+    const [msg, setMsg] = useState('');
+    const [msgType, setMsgType] = useState('info');
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchDependencies = async () => {
-      try {
-        const usersRes = await axiosInstance.get('/users');
-        setUsers(usersRes.data);
-        if (usersRes.data.length > 0) {
-          setUserId(usersRes.data[0].id); // Set default user
+    const [flights, setFlights] = useState([]); // Keep fetching flights
+
+    useEffect(() => {
+        if (isDarkMode) {
+            document.body.classList.add("dark");
+        } else {
+            document.body.classList.remove("dark");
         }
+        localStorage.setItem("mode", isDarkMode ? "dark" : "light");
+    }, [isDarkMode]);
 
-        const flightsRes = await axiosInstance.get('/flights');
-        setFlights(flightsRes.data);
-        if (flightsRes.data.length > 0) {
-          setFlightId(flightsRes.data[0].id); // Set default flight
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
         }
-      } catch (error) {
-        console.error("Error fetching dependencies (users/flights):", error);
-        setMsg("Failed to load users or flights for selection.");
-      }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
+
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
     };
-    fetchDependencies();
-  }, []);
 
-  const saveBooking = async (e) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.post('/bookings', {
-        userId,
-        flightId,
-        bookingDate,
-        totalPrice: parseFloat(totalPrice),
-        status
-      });
-      navigate('/admin/bookings');
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Network error or server unavailable.");
-      }
-      console.error("Error adding booking:", error);
-    }
-  };
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
 
-  return (
-    <Layout>
-      <h1 className="title is-2">Add New Booking</h1>
-      <h2 className="subtitle is-4">Fill in the booking details.</h2>
-      <div className="box p-5">
-        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
-        <form onSubmit={saveBooking}>
-          <div className="field">
-            <label className="label">User</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={userId} onChange={(e) => setUserId(e.target.value)}>
-                  <option value="">Select User</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.email} ({user.firstName} {user.lastName})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+    useEffect(() => {
+        // Fetch flights only, as user selection is now via email input
+        const fetchFlights = async () => {
+            try {
+                const flightsRes = await axiosInstance.get('/flights');
+                setFlights(flightsRes.data);
+                if (flightsRes.data.length > 0) {
+                    setFlightID(flightsRes.data[0].flightID); // Set default flightID
+                }
+            } catch (error) {
+                console.error("Error fetching flights:", error);
+                setMsg("Failed to load flights for selection.");
+                setMsgType('danger');
+            }
+        };
+        fetchFlights();
+    }, []);
 
-          <div className="field">
-            <label className="label">Flight</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={flightId} onChange={(e) => setFlightId(e.target.value)}>
-                  <option value="">Select Flight</option>
-                  {flights.map(flight => (
-                    <option key={flight.id} value={flight.id}>
-                      {flight.flightNumber} - {new Date(flight.departureDate).toLocaleDateString()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+    // Function to resolve user ID from email
+    const resolveUserByEmail = async (email) => {
+        setMsg(''); // Clear previous messages
+        setMsgType('info');
+        if (!email) {
+            setMsg("User email cannot be empty.");
+            setMsgType('danger');
+            return null;
+        }
+        try {
+            // Asumsi backend memiliki endpoint untuk mendapatkan user berdasarkan email
+            const response = await axiosInstance.get(`/users`, { params: { email: email } });
+            if (response.data && response.data.length > 0 && response.data[0].userID) {
+                // setFoundUserID(response.data[0].userID); // DIHAPUS
+                setMsg(`User found: ${response.data[0].firstName} ${response.data[0].lastName}`);
+                setMsgType('success');
+                return response.data[0].userID;
+            } else {
+                // setFoundUserID(null); // DIHAPUS
+                setMsg("User with this email not found. Please ensure the email is registered.");
+                setMsgType('danger');
+                return null;
+            }
+        } catch (error) {
+            // setFoundUserID(null); // DIHAPUS
+            if (error.response && error.response.status === 404) {
+                setMsg("User with this email not found. Please ensure the email is registered.");
+            } else {
+                setMsg("Error searching for user email. Network issue or server error.");
+            }
+            setMsgType('danger');
+            console.error("Error resolving user by email:", error);
+            return null;
+        }
+    };
 
-          <div className="field">
-            <label className="label">Booking Date</label>
-            <div className="control">
-              <input
-                type="date"
-                className="input"
-                value={bookingDate}
-                onChange={(e) => setBookingDate(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+    const saveBooking = async (e) => {
+        e.preventDefault();
 
-          <div className="field">
-            <label className="label">Total Price (IDR)</label>
-            <div className="control">
-              <input
-                type="number"
-                className="input"
-                value={totalPrice}
-                onChange={(e) => setTotalPrice(e.target.value)}
-                placeholder="e.g., 1500000"
-                min="0"
-                required
-              />
-            </div>
-          </div>
+        // First, try to resolve the user email to a userID
+        const userIDToBook = await resolveUserByEmail(userEmailInput);
 
-          <div className="field">
-            <label className="label">Status</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-            </div>
-          </div>
+        if (!userIDToBook) {
+            // If user ID couldn't be resolved, stop submission
+            return;
+        }
 
-          <div className="field mt-4">
-            <div className="control">
-              <button type="submit" className="button is-success">Save Booking</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </Layout>
-  );
+        try {
+            await axiosInstance.post('/bookings', {
+                userID: userIDToBook, // Use the resolved userID
+                flightID
+            });
+            setMsg("Booking added successfully!");
+            setMsgType('success');
+            // Reset form fields
+            setUserEmailInput('');
+            // setFoundUserID(null); // DIHAPUS
+            setFlightID(flights.length > 0 ? flights[0].flightID : ''); // Reset to default flight
+
+            setTimeout(() => {
+                navigate('/admin/bookings');
+            }, 1500);
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error adding booking:", error);
+        }
+    };
+
+    return (
+        <div className="admin-dashboard-container">
+            <Sidebar
+                isSidebarClosed={isSidebarClosed}
+                toggleDarkMode={toggleDarkMode}
+                isDarkMode={isDarkMode}
+            />
+
+            <section className="dashboard">
+                <Navbar toggleSidebar={toggleSidebar} />
+
+                <div className="dash-content">
+                    <div className="management-page-wrapper">
+                        <div className="page-header">
+                            <i className="uil uil-receipt icon"></i>
+                            <div>
+                                <h1 className="page-title">Add New Booking</h1>
+                                <p className="page-subtitle">Fill in the booking details to create a record.</p>
+                            </div>
+                        </div>
+
+                        <div className="management-container">
+                            <div className="form-wrapper">
+                                <form onSubmit={saveBooking}>
+                                    {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
+
+                                    <div className="form-group">
+                                        <label htmlFor="userEmail" className="form-label">User Email</label>
+                                        <input
+                                            type="email"
+                                            name="userEmail"
+                                            id="userEmail"
+                                            placeholder="Enter user email (e.g., john.doe@example.com)"
+                                            className="form-input"
+                                            value={userEmailInput}
+                                            onChange={(e) => setUserEmailInput(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="flightID" className="form-label">Flight</label>
+                                        <div className="form-control-wrapper">
+                                            <select
+                                                name="flightID"
+                                                id="flightID"
+                                                className="form-input"
+                                                value={flightID}
+                                                onChange={(e) => setFlightID(e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select Flight</option>
+                                                {flights.map(flightItem => (
+                                                    <option key={flightItem.flightID} value={flightItem.flightID}>
+                                                        {flightItem.flightNumber} - {new Date(flightItem.departureTime).toLocaleDateString()}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" className="form-submit-button">
+                                            Add Booking
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 };
 
 export default AddBooking;

@@ -1,105 +1,208 @@
 import React, { useState, useEffect } from 'react';
-import Layout from '../../components/Layout';
+// import { Link } from 'react-router-dom'; // Tidak ada tombol edit/add, jadi link tidak dibutuhkan
 import axiosInstance from '../../api/axiosConfig';
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
+import Sidebar from '../../components/Sidebar';
+import Navbar from '../../components/Navbar';
 
 const PaymentManagement = () => {
-  const [payments, setPayments] = useState([]);
-  const [msg, setMsg] = useState('');
+    // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang
+    const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
+        return localStorage.getItem("status") === "close";
+    });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        return localStorage.getItem("mode") === "dark";
+    });
 
-  useEffect(() => {
-    getPayments();
-  }, []);
+    const [payments, setPayments] = useState([]);
+    const [msg, setMsg] = useState('');
+    const [msgType, setMsgType] = useState('info'); // State untuk tipe pesan
+    const [showModal, setShowModal] = useState(false); // State untuk modal konfirmasi
+    const [paymentToDelete, setPaymentToDelete] = useState(null); // State untuk menyimpan ID yang akan dihapus
 
-  const getPayments = async () => {
-    try {
-      const response = await axiosInstance.get('/payments');
-      setPayments(response.data);
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Failed to load payments. Network error or server unavailable.");
-      }
-      console.error("Error fetching payments:", error);
-    }
-  };
+    // Efek samping untuk menerapkan kelas 'dark' ke elemen <body>
+    useEffect(() => {
+        if (isDarkMode) {
+            document.body.classList.add("dark");
+        } else {
+            document.body.classList.remove("dark");
+        }
+        localStorage.setItem("mode", isDarkMode ? "dark" : "light");
+    }, [isDarkMode]);
 
-  const deletePayment = async (paymentId) => {
-    if (!window.confirm("Are you sure you want to delete this payment record?")) {
-      return;
-    }
-    try {
-      await axiosInstance.delete(`/payments/${paymentId}`);
-      setPayments(payments.filter(payment => payment.id !== paymentId));
-      setMsg("Payment record deleted successfully!");
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Failed to delete payment record. Network error or server unavailable.");
-      }
-      console.error("Error deleting payment:", error);
-    }
-  };
+    // Efek samping untuk menerapkan kelas 'close' ke elemen <body>
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
+        }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'has-text-warning';
-      case 'completed': return 'has-text-success';
-      case 'failed': return 'has-text-danger';
-      case 'refunded': return 'has-text-info';
-      default: return '';
-    }
-  };
+    // Handler untuk toggle sidebar
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
+    };
 
-  return (
-    <Layout>
-      <h1 className="title is-2">Payment Management</h1>
-      <h2 className="subtitle is-4">View and manage flight payment records.</h2>
+    // Handler untuk toggle dark mode
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
 
-      <div className="container mt-5">
-        <div className="columns">
-          <div className="column is-full">
-            {msg && <div className="notification is-light is-info">{msg}</div>}
-            <div className="table-container">
-              <table className="table is-striped is-fullwidth is-hoverable">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Payment ID</th>
-                    <th>Booking ID</th>
-                    <th>User Email</th>
-                    <th>Amount</th>
-                    <th>Method</th>
-                    <th>Payment Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment, index) => (
-                    <tr key={payment.id}>
-                      <td>{index + 1}</td>
-                      <td>{payment.paymentId}</td>
-                      <td>{payment.booking?.id || 'N/A'}</td>
-                      <td>{payment.user?.email || 'N/A'}</td>
-                      <td>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(payment.amount)}</td>
-                      <td>{payment.method}</td>
-                      <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
-                      <td className={getStatusColor(payment.status)}>{payment.status}</td>
-                      <td>
-                        <button onClick={() => deletePayment(payment.id)} className="button is-small is-danger">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+    useEffect(() => {
+        getPayments();
+    }, []);
+
+    const getPayments = async () => {
+        try {
+            const response = await axiosInstance.get('/payments');
+            setPayments(response.data);
+            setMsg('');
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Failed to load payments. Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error fetching payments:", error);
+        }
+    };
+
+    // Fungsi untuk menampilkan modal konfirmasi
+    const confirmDelete = (paymentId) => {
+        setPaymentToDelete(paymentId);
+        setShowModal(true);
+    };
+
+    // Fungsi untuk menutup modal
+    const cancelDelete = () => {
+        setShowModal(false);
+        setPaymentToDelete(null);
+    };
+
+    // Fungsi untuk melanjutkan penghapusan setelah konfirmasi
+    const executeDelete = async () => {
+        setShowModal(false); // Tutup modal
+        if (!paymentToDelete) return; // Pastikan ada ID untuk dihapus
+
+        try {
+            await axiosInstance.delete(`/payments/${paymentToDelete}`);
+            setMsg("Payment record deleted successfully!");
+            setMsgType('success');
+            setPayments(payments.filter(payment => payment.id !== paymentToDelete)); // Update state secara lokal
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Failed to delete payment record. Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error deleting payment:", error);
+        } finally {
+            setPaymentToDelete(null); // Reset ID yang akan dihapus
+        }
+    };
+
+    const getStatusColorClass = (status) => {
+        switch (status) {
+            case 'pending': return 'status-pending';
+            case 'completed': return 'status-completed';
+            case 'failed': return 'status-failed';
+            case 'refunded': return 'status-refunded';
+            default: return '';
+        }
+    };
+
+    return (
+        <div className="admin-dashboard-container">
+            <Sidebar
+                isSidebarClosed={isSidebarClosed}
+                toggleDarkMode={toggleDarkMode}
+                isDarkMode={isDarkMode}
+            />
+
+            <section className="dashboard">
+                <Navbar toggleSidebar={toggleSidebar} />
+
+                <div className="dash-content">
+                    <div className="management-page-wrapper">
+                        <div className="page-header">
+                            <i className="uil uil-paypal icon"></i> {/* Ikon Payment */}
+                            <div>
+                                <h1 className="page-title">Payment Management</h1>
+                                <p className="page-subtitle">View and manage flight payment records.</p>
+                            </div>
+                        </div>
+
+                        <div className="management-container">
+                            {/* Tidak ada tombol 'Add New' di sini karena pembayaran biasanya dibuat melalui booking */}
+                            {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
+                            <div className="data-table-container">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Payment ID</th>
+                                            <th>Booking ID</th>
+                                            <th>User Email</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Payment Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {payments.length > 0 ? (
+                                            payments.map((payment, index) => (
+                                                <tr key={payment.id}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{payment.paymentId}</td>
+                                                    <td>{payment.booking?.id || 'N/A'}</td>
+                                                    <td>{payment.user?.email || 'N/A'}</td>
+                                                    <td>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(payment.amount)}</td>
+                                                    <td>{payment.method}</td>
+                                                    <td>{new Date(payment.paymentDate).toLocaleDateString('id-ID')}</td>
+                                                    <td className={getStatusColorClass(payment.status)}>{payment.status}</td>
+                                                    <td>
+                                                        {/* Tidak ada tombol edit untuk pembayaran */}
+                                                        <button onClick={() => confirmDelete(payment.id)} className="table-action-button delete">Delete</button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="9" className="no-data-message">No payment records found.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Custom Confirmation Modal */}
+            {showModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>Confirm Deletion</h3>
+                        <p>Are you sure you want to delete this payment record? This action cannot be undone.</p>
+                        <div className="modal-buttons">
+                            <button onClick={executeDelete} className="modal-button confirm">Delete</button>
+                            <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-    </Layout>
-  );
+    );
 };
 
 export default PaymentManagement;

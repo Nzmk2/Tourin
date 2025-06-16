@@ -4,12 +4,14 @@ import {
     getFlightById,
     createFlight,
     updateFlight,
-    deleteFlight
-} from "../controllers/FlightController.js"; // Corrected path
+    deleteFlight,
+    getFlightCount // <<<--- TAMBAHKAN INI
+} from "../controllers/FlightController.js";
 
 const router = express.Router();
 
 router.get('/flights', getFlights);
+router.get('/flights/count', getFlightCount); // <<<--- TAMBAHKAN RUTE INI
 router.get('/flights/:id', getFlightById);
 router.post('/flights', createFlight);
 router.patch('/flights/:id', updateFlight);

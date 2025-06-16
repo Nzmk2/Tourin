@@ -1,0 +1,418 @@
+/* Import font Poppins dari Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&display=swap');
+
+/* Reset dasar */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Variabel warna dari Admin.css */
+:root {
+    --primary-color: #4070F4;
+    --panel-color: #FFF;
+    --text-color: #000;
+    --black-light-color: #707070;
+    --border-color: #e6e5e5;
+    --toggle-color: #DDD;
+    --success-color: #27ae60;
+    --info-color: #3498db;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --form-label-color: #07074D; /* Warna label dari referensi form */
+    --form-input-text-color: #6B7280; /* Warna teks input dari referensi form */
+    --form-input-border-color: #e0e0e0; /* Warna border input dari referensi form */
+    --form-focus-color: #6A64F1; /* Warna fokus input/button dari referensi form */
+
+
+    --tran-05: all 0.5s ease;
+    --tran-03: all 0.3s ease;
+}
+
+/* Dark mode overrides (menyesuaikan dengan Admin.css) */
+body.dark {
+    --primary-color: #3A3B3C;
+    --panel-color: #242526;
+    --text-color: #CCC;
+    --black-light-color: #CCC;
+    --border-color: #4D4C4C;
+    --toggle-color: #FFF;
+    --form-label-color: #CCC; /* Untuk dark mode */
+    --form-input-text-color: #CCC;
+    --form-input-border-color: #4D4C4C;
+    --form-focus-color: #6A64F1; /* Bisa tetap sama atau disesuaikan */
+}
+
+/* Custom Scroll Bar CSS (dari Admin.css) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0b3cc1;
+}
+
+body.dark::-webkit-scrollbar-thumb,
+body.dark .activity-data::-webkit-scrollbar-thumb{
+    background: var(--primary-color);
+}
+body.dark::-webkit-scrollbar-thumb:hover,
+body.dark .activity-data::-webkit-scrollbar-thumb:hover{
+    background: var(--text-color);
+}
+
+/* Wrapper untuk konten halaman manajemen (dari Admin.css, disesuaikan) */
+.management-page-wrapper {
+    padding: 20px 30px;
+    background-color: var(--panel-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    transition: var(--tran-05);
+    /* Penting: ini dikendalikan oleh AdminDashboard/Layout agar tidak tumpang tindih dengan sidebar */
+    /* margin-left: 250px; */
+    /* width: calc(100% - 250px); */
+}
+
+/* Judul dan Subjudul Halaman (dari Admin.css) */
+.page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-header .icon {
+    font-size: 30px;
+    color: var(--primary-color);
+    margin-right: 10px;
+}
+
+body.dark .page-header .icon {
+    color: var(--text-color);
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.page-subtitle {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--black-light-color);
+    margin-bottom: 30px;
+}
+
+/* Kontainer Utama untuk Konten (dari Admin.css) */
+.management-container {
+    padding: 20px;
+    background-color: var(--panel-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: var(--tran-05);
+}
+
+body.dark .management-container {
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+/* Tombol Aksi (dari Admin.css) */
+.action-button {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--tran-03);
+    margin-bottom: 20px;
+}
+
+.action-button:hover {
+    background-color: #0b3cc1;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.action-button i {
+    margin-right: 8px;
+}
+
+/* Notifikasi / Pesan (dari Admin.css) */
+.notification-message {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    transition: var(--tran-03);
+}
+
+.notification-message.info { background-color: var(--info-color); }
+.notification-message.success { background-color: var(--success-color); }
+.notification-message.warning { background-color: var(--warning-color); }
+.notification-message.danger { background-color: var(--danger-color); }
+
+/* Gaya Tabel (dari Admin.css) */
+.data-table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--panel-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+body.dark .data-table {
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+.data-table thead {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+body.dark .data-table thead {
+    background-color: var(--black-light-color);
+    color: var(--text-color);
+}
+
+.data-table th {
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color var(--tran-02);
+}
+
+.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(64, 112, 244, 0.1); /* Menggunakan warna primary dengan transparansi */
+}
+
+body.dark .data-table tbody tr:hover {
+    background-color: rgba(204, 204, 204, 0.1);
+}
+
+
+.data-table td {
+    padding: 12px 20px;
+    font-size: 15px;
+    color: var(--black-light-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.dark .data-table td {
+    color: var(--text-color);
+}
+
+/* Tombol Aksi dalam Tabel (Edit, Delete) - Disesuaikan untuk ikon dan teks */
+.table-action-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--tran-03);
+    margin-right: 8px;
+    
+    /* Tambahan untuk menyelaraskan ikon dan teks */
+    display: inline-flex; /* Menggunakan flexbox */
+    align-items: center; /* Pusat vertikal */
+    gap: 4px; /* Jarak antara ikon dan teks */
+}
+
+.table-action-button i {
+    font-size: 16px; /* Ukuran ikon */
+}
+
+.table-action-button.edit { background-color: var(--info-color); color: #fff; }
+.table-action-button.edit:hover { background-color: #2980b9; }
+
+.table-action-button.delete { background-color: var(--danger-color); color: #fff; }
+.table-action-button.delete:hover { background-color: #c0392b; }
+
+/* ========================================= */
+/* ===== NEW STYLES FOR FORMS (Management Add/Edit) ===== */
+/* ========================================= */
+
+.form-wrapper {
+    margin: 0 auto;
+    max-width: 550px;
+    width: 100%;
+    background: var(--panel-color); /* Matches container background */
+    padding: 20px; /* Adjust padding if needed, management-container has 20px */
+}
+
+.form-control-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.form-control-wrapper select.form-input {
+    appearance: none; /* Menghapus default styling browser */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236B7280'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); /* Ikon panah bawah */
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.5em;
+    padding-right: 3rem; /* Memberi ruang untuk ikon panah */
+}
+
+body.dark .form-control-wrapper select.form-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23CCC'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); /* Ikon panah di dark mode */
+}
+
+.form-group {
+    margin-bottom: 20px; /* formbold-mb-5 */
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--form-label-color); /* #07074d */
+    margin-bottom: 12px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 24px; /* py-3 px-6 */
+    border-radius: 6px; /* rounded-md */
+    border: 1px solid var(--form-input-border-color); /* border border-[#e0e0e0] */
+    background: var(--panel-color); /* bg-white, matches panel color */
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--form-input-text-color); /* text-[#6B7280] */
+    outline: none;
+    resize: none;
+    transition: border-color var(--tran-03), box-shadow var(--tran-03);
+}
+
+.form-input:focus {
+    border-color: var(--form-focus-color); /* focus:border-[#6A64F1] */
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.05); /* focus:shadow-md */
+}
+
+/* For Address Details type label */
+.form-label-2 {
+    font-weight: 600;
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: var(--form-label-color);
+}
+
+/* Flexbox utilities for columns */
+.flex-row {
+    display: flex;
+    flex-wrap: wrap; /* flex flex-wrap */
+    margin-left: -12px; /* formbold--mx-3 / -mx-3 */
+    margin-right: -12px; /* formbold--mx-3 / -mx-3 */
+}
+
+.flex-col-half {
+    width: 100%; /* w-full */
+    padding-left: 12px; /* formbold-px-3 / px-3 */
+    padding-right: 12px; /* formbold-px-3 / px-3 */
+}
+
+@media (min-width: 540px) { /* Corresponds to sm: in Tailwind */
+    .flex-col-half.sm {
+        width: 50%; /* sm:w-half / sm:w-1/2 */
+    }
+}
+
+/* Submit button */
+.form-submit-button {
+    text-align: center;
+    font-size: 16px;
+    border-radius: 6px;
+    padding: 14px 32px; /* py-3 px-8 */
+    border: none;
+    font-weight: 600;
+    background-color: var(--form-focus-color); /* bg-[#6A64F1] */
+    color: white;
+    width: 100%;
+    cursor: pointer;
+    transition: box-shadow var(--tran-03);
+}
+
+.form-submit-button:hover {
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.05); /* hover:shadow-form */
+}
+
+/* ========================================= */
+/* ===== NEW STYLES FOR TABLE STATUS COLORS ===== */
+/* ========================================= */
+.status-pending { color: var(--warning-color); }
+.status-confirmed { color: var(--success-color); }
+.status-cancelled { color: var(--danger-color); }
+.status-completed { color: var(--success-color); }
+.status-failed { color: var(--danger-color); }
+.status-refunded { color: var(--info-color); }
+
+
+/* Media Queries (dari Admin.css, disesuaikan) */
+@media (max-width: 1000px) {
+    .management-page-wrapper {
+        padding: 15px 20px;
+    }
+}
+
+@media (max-width: 780px) {
+    .modal-content {
+        max-width: 300px;
+        padding: 20px;
+    }
+    .modal-content h3 { font-size: 20px; }
+    .modal-content p { font-size: 14px; }
+    .modal-button { padding: 8px 20px; font-size: 14px; }
+}
+
+@media (max-width: 560px) {
+    .management-page-wrapper {
+        padding: 10px;
+        margin-top: 60px;
+        min-height: calc(100vh - 60px);
+    }
+    .action-button { margin-bottom: 15px; display: block; width: 100%; }
+}

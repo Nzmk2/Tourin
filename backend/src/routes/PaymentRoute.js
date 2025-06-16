@@ -4,12 +4,14 @@ import {
     getPaymentById,
     createPayment,
     updatePayment,
-    deletePayment
-} from "../controllers/PaymentController.js"; // Corrected path
+    deletePayment,
+    getPaymentCount // <<<--- TAMBAHKAN INI
+} from "../controllers/PaymentController.js";
 
 const router = express.Router();
 
 router.get('/payments', getPayments);
+router.get('/payments/count', getPaymentCount); // <<<--- TAMBAHKAN RUTE INI
 router.get('/payments/:id', getPaymentById);
 router.post('/payments', createPayment);
 router.patch('/payments/:id', updatePayment);
