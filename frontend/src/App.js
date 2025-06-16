@@ -4,8 +4,8 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import { AuthProvider } from './auth/AuthContext'; // <-- IMPORTANT: Make sure this import is here
 
 // Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './pages/login/Login';
+import Register from './pages/register/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
 
