@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 
-const db = new Sequelize('tourin', 'root', 'oop', {
+const db = new Sequelize('tourin', 'root', '', {
     host: 'localhost',
     dialect: 'mysql'
 });

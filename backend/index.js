@@ -1,5 +1,5 @@
 import express from "express";
-import db from "./config/database.js";
+import db from "./src/config/database.js";
 import cors from "cors"; // <--- TAMBAHKAN BARIS INI UNTUK MENGIMPOR CORS
 
 // You might use dotenv for environment variables like JWT_SECRET
@@ -8,22 +8,22 @@ import cors from "cors"; // <--- TAMBAHKAN BARIS INI UNTUK MENGIMPOR CORS
 
 // Import Models for synchronization (only needed once to create tables)
 // Order matters for foreign key dependencies
-import AirlineModel from "./models/AirlineModel.js";
-import AirportModel from "./models/AirportModel.js";
-import UserModel from "./models/UserModel.js"; // Changed from PassengerModel
-import FlightModel from "./models/FlightModel.js"; // Depends on Airline and Airport
-import BookingModel from "./models/BookingModel.js"; // Depends on User and Flight
-import PaymentModel from "./models/PaymentModel.js"; // Depends on Booking
+import AirlineModel from "./src/models/AirlineModel.js";
+import AirportModel from "./src/models/AirportModel.js";
+import UserModel from "./src/models/UserModel.js"; // Changed from PassengerModel
+import FlightModel from "./src/models/FlightModel.js"; // Depends on Airline and Airport
+import BookingModel from "./src/models/BookingModel.js"; // Depends on User and Flight
+import PaymentModel from "./src/models/PaymentModel.js"; // Depends on Booking
 
 
 // Import Routes
-import AirlineRoute from "./routes/AirlineRoute.js";
-import AirportRoute from "./routes/AirportRoute.js";
-import FlightRoute from "./routes/FlightRoute.js";
-import BookingRoute from "./routes/BookingRoute.js";
-import PaymentRoute from "./routes/PaymentRoute.js";
-import UserRoute from "./routes/UserRoute.js";     // Changed from PassengerRoute
-import AuthRoute from "./routes/AuthRoute.js";     // NEW Auth Route
+import AirlineRoute from "./src/routes/AirlineRoute.js";
+import AirportRoute from "./src/routes/AirportRoute.js";
+import FlightRoute from "./src/routes/FlightRoute.js";
+import BookingRoute from "./src/routes/BookingRoute.js";
+import PaymentRoute from "./src/routes/PaymentRoute.js";
+import UserRoute from "./src/routes/UserRoute.js";     // Changed from PassengerRoute
+import AuthRoute from "./src/routes/AuthRoute.js";     // NEW Auth Route
 
 const app = express();
 

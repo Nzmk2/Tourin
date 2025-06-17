@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
@@ -15,13 +15,19 @@ import NotFound from './pages/NotFound';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 
+import Utama from './pages/dashboard/Utama';
+import FlightSearchPage from './pages/Pencarian/FlightSearchPage';
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider> {/* Wrap your routes with AuthProvider */}
         <Routes>
           {/* Public Route */}
-          <Route path="/" element={<LoginPage />} />
+          <Route path="/" element={<Utama />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/flights" element={<FlightSearchPage />} />
+
 
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin" />}>

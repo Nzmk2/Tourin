@@ -1,0 +1,190 @@
+/* src/FlightSearch.css */
+
+.flight-search-container {
+    background-color: #2563eb; /* blue-600 */
+    padding: 16px;
+    color: white;
+}
+
+.flight-search-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px; /* Added padding to separate from dates */
+}
+
+.flight-search-route {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* space-x-2 */
+}
+
+.flight-search-route span {
+    font-size: 1.25rem; /* text-xl */
+    font-weight: 700; /* font-bold */
+}
+
+.flight-search-route svg {
+    height: 20px; /* h-5 */
+    width: 20px; /* w-5 */
+    color: #93c5fd; /* Light blue for arrow */
+}
+
+.flight-search-info {
+    display: flex;
+    align-items: center;
+    gap: 16px; /* space-x-4 */
+}
+
+.flight-search-details {
+    display: flex;
+    align-items: center;
+    background-color: #1d4ed8; /* blue-700 */
+    border-radius: 6px; /* rounded-md */
+    padding: 8px 12px; /* Adjusted padding */
+    font-size: 0.9rem; /* Slightly smaller font */
+}
+
+.flight-search-details span {
+    margin-right: 8px;
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+.flight-search-details span:last-child {
+    margin-right: 0;
+}
+
+.flight-search-button { /* This is the hamburger/menu icon button */
+    background-color: #1d4ed8; /* blue-700 */
+    padding: 8px;
+    border-radius: 6px; /* rounded-md */
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex; /* To center the SVG */
+    align-items: center;
+    justify-content: center;
+}
+
+.flight-search-button svg {
+    height: 24px; /* h-6 */
+    width: 24px; /* w-6 */
+}
+
+.flight-search-dates {
+    max-width: 1200px;
+    margin: 0 auto; /* Removed top margin, controlled by header padding */
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    font-size: 0.875rem; /* text-sm */
+    gap: 8px; /* Gap between date items */
+    padding-bottom: 16px; /* Padding below dates */
+}
+
+.flight-date-item {
+    flex: 1;
+    padding: 8px 0; /* Adjusted vertical padding */
+    background-color: #1d4ed8; /* blue-700 */
+    border-radius: 8px; /* rounded-lg */
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flight-date-item:hover {
+    background-color: #173d9e; /* Slightly darker blue on hover */
+}
+
+.flight-date-item.selected {
+    background-color: white;
+    color: #2563eb; /* blue-800 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    position: relative; /* For the orange underline, if desired later */
+}
+
+.flight-date-item.selected p:last-child {
+    font-weight: 700; /* font-bold */
+}
+
+.flight-date-item p {
+    margin: 0; /* Remove default paragraph margins */
+    padding: 2px 0;
+}
+
+.flight-date-item p:nth-child(2) { /* Day number, e.g., 17 Jul */
+    font-weight: 600; /* Semi-bold */
+}
+
+.flight-date-item p:last-child { /* Price */
+    font-size: 0.75rem; /* Smaller price text */
+    color: #bfdbfe; /* blue-200 */
+}
+
+.flight-date-item.selected p:last-child {
+    color: #ea580c; /* orange-600 */
+}
+
+
+.flight-date-calendar {
+    display: flex;
+    flex-direction: column; /* Stack icon and text */
+    align-items: center;
+    justify-content: center;
+    background-color: #1d4ed8; /* blue-700 */
+    border-radius: 8px; /* rounded-lg */
+    width: 64px; /* Fixed width */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    padding: 8px 0; /* Add padding */
+    gap: 4px; /* Space between icon and text */
+}
+
+.flight-date-calendar:hover {
+    background-color: #173d9e;
+}
+
+.flight-date-calendar svg {
+    height: 24px; /* h-6 */
+    width: 24px; /* w-6 */
+}
+
+.flight-date-calendar span {
+    font-size: 0.75rem; /* Smaller font for "Lainnya" */
+    margin-left: 0; /* No margin as it's stacked */
+}
+
+.flight-search-actions {
+    max-width: 1200px;
+    margin: 0 auto; /* Removed top margin, adjusted padding */
+    display: flex;
+    gap: 8px; /* space-x-2 */
+    padding-bottom: 16px; /* Padding at the very bottom of the blue header */
+}
+
+.flight-action-button {
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent white for buttons */
+    color: white;
+    font-weight: 700; /* font-bold */
+    padding: 8px 16px;
+    border-radius: 8px; /* rounded-lg */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle white border */
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.flight-action-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.flight-action-button svg {
+    height: 20px; /* h-5 */
+    width: 20px; /* w-5 */
+    margin-right: 8px; /* mr-2 */
+}

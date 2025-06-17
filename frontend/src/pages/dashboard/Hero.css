@@ -1,0 +1,324 @@
+.hero-container {
+    background-image: url("./pesawat.png");
+    background-color: #243553; /* Dark blue background from the image */
+    padding: 100px 0;
+    font-family: 'Arial', sans-serif; /* Use a common sans-serif font */
+    color: #fff;
+    min-height: 250px; /* Adjust as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-content {
+    width: 90%;
+    max-width: 1000px; /* Max width for the content */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main-title {
+    font-size: 3em; /* Ukuran judul */
+    color: rgb(26, 42, 70); /* Warna teks */
+    margin-bottom: 20px; /* Jarak antara judul dan tombol trip type */
+    font-weight: 800; /* Made it extra bold */
+    text-align: center;
+    font-family: 'Montserrat';
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Added a subtle text shadow */
+}
+
+.text-title {
+    font-size: 1em;
+    color: rgb(26, 42, 70);
+    margin-bottom: 50px;
+    font-weight: 100; /* Made it extra bold */
+    text-align: justify;
+    font-family: 'Montserrat';
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Added a subtle text shadow */
+}
+
+/* Trip Type Switcher (Sekali Jalan / Pulang Pergi, Multi-kota) */
+.trip-type-switcher {
+    display: flex;
+    background-color: rgba(26, 42, 70, 0.5); /* Slightly lighter dark blue */
+    border-radius: 15px;
+    padding: 3px;
+    width: fit-content;
+}
+
+.trip-type-switcher button {
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.3s ease;
+}
+
+.trip-type-switcher button.active {
+    background-color: #007bff; /* Bright blue for active state */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Search Options (Passengers, Cabin Class) */
+.search-options {
+    display: flex;
+    gap: 15px;
+}
+
+.option-dropdown {
+    background-color: rgba(26, 42, 70, 0.5); /* Slightly lighter dark blue */
+    border-radius: 10px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    font-size: 0.9em;
+}
+
+.option-dropdown label {
+    margin-right: 5px;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Search Form */
+.search-form {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 15px;
+    background-color: rgba(26, 42, 70, 0.5); /* Slightly lighter dark blue */
+    border-radius: 10px;
+    padding: 15px;
+    align-items: center;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    flex-grow: 1; /* Allows groups to take available space */
+}
+
+.input-group.origin-destination {
+    flex-basis: 50%; /* Take half width on larger screens */
+    min-width: 300px; /* Minimum width for this group */
+}
+
+.input-group.dates-search {
+    flex-basis: 45%; /* Take slightly less than half to fit search button */
+    min-width: 300px; /* Minimum width for this group */
+}
+
+.input-field {
+    background-color: rgba(26, 42, 70, 0.5); /* Slightly lighter dark blue */
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex-grow: 1; /* Allow input fields to grow within their group */
+}
+
+.input-field label {
+    font-size: 0.75em;
+    color: #a0a8b9;
+    margin-bottom: 2px;
+}
+
+.input-field input {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1em;
+    outline: none;
+    width: 100%; /* Ensure input takes full width */
+}
+
+.input-field input::placeholder {
+    color: #a0a8b9;
+}
+
+.city-input .airport-code {
+    position: absolute;
+    right: 12px;
+    bottom: 8px;
+    font-size: 0.8em;
+    color: #a0a8b9;
+}
+
+.date-input {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.date-input input[type="date"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* Hide the native date input */
+    cursor: pointer;
+}
+
+.date-input .date-display {
+    font-size: 1em;
+    color: #fff;
+    padding-right: 25px; /* Space for calendar icon */
+}
+
+.date-input .calendar-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #a0a8b9;
+    pointer-events: none; /* Make icon unclickable, click goes to input */
+}
+
+.swap-button {
+    background-color: #007bff; /* Bright blue */
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0; /* Prevent shrinking on smaller screens */
+    margin: auto 0; /* Center vertically in the flex container */
+    margin-top: 20px; /* Adjust to align with input fields */
+}
+
+.swap-button svg {
+    width: 20px;
+    height: 20px;
+    color: #fff;
+}
+
+.search-button {
+    background-color: #ff7f00; /* Orange color */
+    border: none;
+    border-radius: 8px;
+    width: 50px; /* Fixed width for the button */
+    height: 50px; /* Fixed height for the button */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.search-button svg {
+    width: 24px;
+    height: 24px;
+    color: #fff;
+}
+
+/* Search Inspirations */
+.search-inspirations {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.inspiration-button {
+    background-color: rgba(26, 42, 70, 0.5); /* Slightly lighter dark blue */
+    border: none;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.inspiration-button:hover {
+    background-color: #2f4060;
+}
+
+.inspiration-button svg {
+    width: 18px;
+    height: 18px;
+    color: #a0a8b9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-content {
+        width: 95%;
+        padding: 0 10px;
+    }
+
+    .search-form {
+        flex-direction: column; /* Stack elements vertically */
+        align-items: stretch; /* Stretch elements to fill width */
+    }
+
+    .input-group.origin-destination,
+    .input-group.dates-search {
+        flex-basis: auto; /* Remove fixed width on small screens */
+        min-width: unset; /* Remove min-width */
+        flex-direction: column; /* Stack city inputs vertically */
+        gap: 15px; /* Adjust gap */
+    }
+
+    .input-group.origin-destination {
+        position: relative; /* For positioning swap button */
+    }
+
+    .swap-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10; /* Ensure it's above inputs */
+        margin: 0; /* Remove auto margins */
+    }
+
+    .search-button {
+        width: 100%; /* Full width search button */
+        height: 45px;
+        margin-top: 15px; /* Add some space from date inputs */
+    }
+
+    .search-options,
+    .search-inspirations {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .option-dropdown,
+    .inspiration-button {
+        width: 100%; /* Full width for these buttons */
+        justify-content: center; /* Center content */
+    }
+}
+
+@media (max-width: 480px) {
+    .trip-type-switcher {
+        flex-direction: column;
+        width: 100%;
+        border-radius: 10px;
+        padding: 0;
+    }
+
+    .trip-type-switcher button {
+        border-radius: 10px;
+        margin: 5px;
+    }
+
+    .hero-container {
+        padding: 20px 0;
+    }
+}

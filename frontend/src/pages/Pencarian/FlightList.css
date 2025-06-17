@@ -1,0 +1,132 @@
+/* src/components/FlightList.css */
+.flight-list-container {
+    flex: 1; /* flex-1 */
+    padding: 24px; /* p-6 */
+    background-color: #f3f4f6; /* bg-gray-100 */
+    overflow-y: auto; /* Allow scrolling for the flight list */
+}
+
+.flight-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Align items to the bottom */
+    margin-bottom: 24px; /* mb-6 */
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px 24px; /* Adjusted padding */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* subtle shadow */
+    border: 1px solid #e5e7eb;
+}
+
+.flight-summary-details {
+    display: flex;
+    align-items: flex-end; /* Align text baselines */
+    gap: 32px; /* space-x-4, increased gap */
+}
+
+.flight-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.flight-summary-item p:first-child {
+    color: #4b5563; /* gray-600 */
+    font-size: 0.875rem; /* text-sm */
+    margin-bottom: 4px; /* Space before price */
+}
+
+.flight-summary-item p:nth-child(2) {
+    font-size: 1.5rem; /* text-xl, increased size for price */
+    font-weight: 700; /* font-bold */
+    line-height: 1; /* Ensure tight line height */
+    margin-bottom: 4px; /* Space before duration */
+}
+
+.flight-summary-item .price-highlight {
+    color: #ea580c; /* orange-600 */
+}
+
+.flight-summary-item p:last-child {
+    font-size: 0.875rem; /* text-xs, slightly larger for better readability */
+    color: #6b7280; /* gray-500 */
+}
+
+.flight-summary-more-button {
+    color: #3b82f6; /* blue-500 */
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    font-weight: 600; /* Semi-bold */
+    font-size: 0.9rem; /* Slightly larger text */
+}
+
+.flight-summary-more-button:hover {
+    color: #2563eb;
+}
+
+.flight-summary-more-button svg {
+    height: 20px; /* h-5 */
+    width: 20px; /* w-5 */
+    margin-right: 4px; /* mr-1 */
+}
+
+.recommended-flight-section {
+    background-color: #ecfdf5; /* green-50 */
+    border: 1px solid #a7f3d0; /* green-200 */
+    border-radius: 8px; /* rounded-lg */
+    padding: 16px;
+    margin-bottom: 24px; /* mb-6 */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* very subtle shadow */
+}
+
+.recommended-flight-section p {
+    font-weight: 600; /* font-semibold */
+    color: #065f46; /* green-800 */
+    margin-bottom: 12px; /* mb-2, increased spacing */
+}
+
+.all-flights-heading {
+    font-weight: 700; /* font-bold */
+    font-size: 1.125rem; /* text-lg */
+    color: #1f2937; /* Darker gray */
+    margin-bottom: 16px; /* mb-4 */
+}
+
+.traveloka-benefit-banner {
+    background-color: #dbeafe; /* blue-100 */
+    border: 1px solid #bfdbfe; /* blue-200 */
+    border-radius: 8px; /* rounded-lg */
+    padding: 20px; /* Increased padding */
+    text-align: center;
+    margin-top: 24px; /* mt-6 */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* subtle shadow */
+}
+
+.traveloka-benefit-banner p:first-child {
+    font-weight: 600; /* font-semibold */
+    color: #1e40af; /* blue-800 */
+    margin-bottom: 8px; /* mb-2 */
+    font-size: 1rem; /* Base font size */
+}
+
+.traveloka-benefit-banner p:nth-child(2) {
+    font-size: 0.875rem; /* text-sm */
+    color: #1d4ed8; /* blue-700 */
+    line-height: 1.5; /* Better readability */
+    margin-bottom: 12px; /* Space before link */
+}
+
+.traveloka-benefit-banner a {
+    color: #2563eb; /* blue-600 */
+    font-weight: 700; /* font-bold */
+    display: inline-block;
+    text-decoration: none;
+}
+
+.traveloka-benefit-banner a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,267 @@
+/* General Section Styling */
+.popular-destination-section {
+  padding: 80px 20px;
+  text-align: center;
+  background-color: #f0f2f5; /* Softer, modern light grey background */
+  font-family: 'Poppins', sans-serif; /* Using Poppins for a modern feel, add this to your index.html or App.css */
+  color: #333;
+  overflow: hidden; /* Clear floats/margins if any */
+}
+
+/* You might need to add Poppins font link in public/index.html or global CSS:
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+*/
+
+.section-header {
+  margin-bottom: 60px;
+  position: relative;
+  z-index: 1; /* Ensure text is above any background effects */
+}
+
+.section-header .subtitle {
+  color: #7f8c8d; /* Muted grey */
+  font-size: 0.9em;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.section-header .title {
+  font-size: 3.2em; /* Slightly larger, more impactful */
+  color: #2c3e50; /* Darker, sophisticated blue-grey */
+  margin-bottom: 25px;
+  font-weight: 800; /* Extra bold for prominence */
+  line-height: 1.2;
+  position: relative;
+  display: inline-block; /* For potential underline/decoration */
+}
+
+/* Optional: Subtle underline effect for the title */
+.section-header .title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background-color: #3498db; /* A vibrant blue */
+    border-radius: 2px;
+}
+
+
+.section-header .description {
+  color: #555;
+  font-size: 1.05em; /* Slightly larger, easier to read */
+  line-height: 1.7;
+  max-width: 750px; /* Wider for better text flow */
+  margin: 0 auto;
+  font-weight: 400;
+}
+
+/* Destination Cards Container */
+.destination-cards-container {
+  display: flex;
+  justify-content: center;
+  gap: 35px; /* More generous space between cards */
+  flex-wrap: wrap;
+  margin-bottom: 60px;
+}
+
+/* Individual Destination Card */
+.destination-card {
+  background-color: #fff;
+  border-radius: 15px; /* More rounded corners */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Softer, deeper shadow */
+  overflow: hidden;
+  width: 340px; /* Slightly wider cards */
+  max-width: 100%; /* Ensure responsiveness */
+  text-align: left;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transitions */
+  display: flex;
+  flex-direction: column; /* Stack image and content */
+}
+
+.destination-card:hover {
+  transform: translateY(-12px); /* More pronounced lift effect */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); /* Stronger shadow on hover */
+}
+
+.card-image-wrapper {
+  position: relative;
+  height: 260px; /* Slightly taller image area */
+  overflow: hidden;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Subtle separator */
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease; /* Zoom effect on image */
+}
+
+.destination-card:hover .card-image {
+    transform: scale(1.05); /* Slight zoom on hover */
+}
+
+.card-rating {
+  position: absolute;
+  bottom: 18px; /* Slightly higher from bottom */
+  right: 18px; /* Slightly in from right */
+  background: linear-gradient(45deg, #FFD700, #FFA07A); /* Gold to light orange gradient */
+  padding: 6px 12px;
+  border-radius: 8px; /* More rounded pill shape */
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Clearer shadow for the rating badge */
+  color: white; /* Ensure stars are white if using gradient background */
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.card-rating .fas.fa-star {
+  color: white; /* Stars inside gradient badge are white */
+  font-size: 0.95em;
+  /* Add outline for better visibility against gradient */
+  -webkit-text-stroke: 0.5px rgba(0,0,0,0.1);
+  text-stroke: 0.5px rgba(0,0,0,0.1);
+}
+
+.card-content {
+  padding: 25px; /* More padding inside content area */
+  flex-grow: 1; /* Allow content to take available space */
+  display: flex;
+  flex-direction: column;
+}
+
+.card-country {
+  color: #888;
+  font-size: 0.8em; /* Slightly smaller for subtle detail */
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.card-city {
+  font-size: 1.8em; /* Larger, more dominant city name */
+  color: #2c3e50; /* Matches title color */
+  margin-bottom: 12px;
+  font-weight: 700; /* Bold */
+  line-height: 1.3;
+}
+
+.card-description {
+  color: #666;
+  font-size: 0.95em; /* Slightly larger for readability */
+  line-height: 1.6;
+  margin-top: auto; /* Pushes description to the bottom if content varies */
+}
+
+/* New container for the button to center it */
+.button-container {
+  display: flex; /* Aktifkan flexbox */
+  justify-content: center; /* Pusatkan item secara horizontal */
+  align-items: center; /* Pusatkan item secara vertikal (jika ada tinggi) */
+  margin-top: 30px; /* Opsional: Tambahkan sedikit spasi di atas tombol */
+  margin-bottom: 50px; /* Opsional: Spasi di bawah tombol */
+}
+
+/* More Destination Button */
+.more-destination-btn {
+  background: linear-gradient(45deg, #3498db, #2980b9); /* Blue gradient */
+  color: white;
+  border: none;
+  border-radius: 8px; /* More rounded button */
+  padding: 15px 35px; /* Larger padding */
+  font-size: 1.05em; /* Slightly larger font */
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4); /* Blue shadow */
+}
+
+.more-destination-btn:hover {
+  background: linear-gradient(45deg, #2980b9, #3498db); /* Reverse gradient or darker */
+  transform: translateY(-3px); /* More noticeable lift */
+  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6); /* Stronger shadow on hover */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .destination-cards-container {
+        gap: 25px;
+    }
+    .destination-card {
+        width: 300px;
+    }
+}
+
+@media (max-width: 992px) {
+    .section-header .title {
+        font-size: 2.5em;
+    }
+    .destination-cards-container {
+        gap: 30px;
+    }
+    .destination-card {
+        width: 45%; /* Two cards per row on tablets */
+        max-width: 360px;
+    }
+}
+
+@media (max-width: 768px) {
+    .popular-destination-section {
+        padding: 60px 15px;
+    }
+    .section-header .title {
+        font-size: 2em;
+        margin-bottom: 15px;
+    }
+    .section-header .title::after {
+        bottom: -5px;
+    }
+    .section-header .description {
+        font-size: 0.95em;
+    }
+    .destination-cards-container {
+        flex-direction: column; /* Stack cards vertically on small screens */
+        align-items: center;
+        gap: 25px;
+    }
+    .destination-card {
+        width: 90%; /* Almost full width */
+        max-width: 380px; /* But limit max width */
+    }
+    .card-city {
+        font-size: 1.6em;
+    }
+    .more-destination-btn {
+        padding: 12px 25px;
+        font-size: 0.95em;
+    }
+}
+
+@media (max-width: 480px) {
+    .popular-destination-section {
+        padding: 40px 10px;
+    }
+    .section-header .title {
+        font-size: 1.8em;
+    }
+    .section-header .description {
+        font-size: 0.9em;
+    }
+    .card-rating {
+        padding: 5px 10px;
+        font-size: 0.8em;
+    }
+    .card-city {
+        font-size: 1.4em;
+    }
+}
