@@ -1,56 +1,56 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './auth/ProtectedRoute';
-import { AuthProvider } from './auth/AuthContext'; // <-- IMPORTANT: Make sure this import is here
+import { AuthProvider } from './auth/AuthContext';
 
 // Pages
 import Login from './pages/login/Login';
 import Register from './pages/register/Register';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard'; // This path is already correct
 import NotFound from './pages/NotFound';
 
-// User Management
-import UserManagement from './pages/users/UserManagement';
-import AddUser from './pages/users/AddUser';
-import EditUser from './pages/users/EditUser';
+// User Management - Updated Paths (Correct as per previous step)
+import UserManagement from './pages/admin/users/UserManagement';
+import AddUser from './pages/admin/users/AddUser';
+import EditUser from './pages/admin/users/EditUser';
 
-// Airline Management
-import AirlineManagement from './pages/airlines/AirlineManagement';
-import AddAirline from './pages/airlines/AddAirline'; // Assuming you have this component for adding
-import EditAirline from './pages/airlines/EditAirline'; // Assuming you have this component for editing
+// Airline Management - Updated Paths (Correct as per previous step)
+import AirlineManagement from './pages/admin/airlines/AirlineManagement';
+import AddAirline from './pages/admin/airlines/AddAirline';
+import EditAirline from './pages/admin/airlines/EditAirline';
 
-// Airport Management
-import AirportManagement from './pages/airports/AirportManagement';
-import AddAirport from './pages/airports/AddAirport';
-import EditAirport from './pages/airports/EditAirport';
+// Airport Management - Updated Paths (Correct as per previous step)
+import AirportManagement from './pages/admin/airports/AirportManagement';
+import AddAirport from './pages/admin/airports/AddAirport';
+import EditAirport from './pages/admin/airports/EditAirport';
 
-// Flight Management
-import FlightManagement from './pages/flights/FlightManagement';
-import AddFlight from './pages/flights/AddFlight';
-import EditFlight from './pages/flights/EditFlight';
+// Flight Management - Updated Paths (Correct as per previous step)
+import FlightManagement from './pages/admin/flights/FlightManagement';
+import AddFlight from './pages/admin/flights/AddFlight';
+import EditFlight from './pages/admin/flights/EditFlight';
 
-// Booking Management
-import BookingManagement from './pages/bookings/BookingManagement';
-import AddBooking from './pages/bookings/AddBooking';
-import EditBooking from './pages/bookings/EditBooking';
+// Booking Management - Updated Paths (Correct as per previous step)
+import BookingManagement from './pages/admin/bookings/BookingManagement';
+import AddBooking from './pages/admin/bookings/AddBooking';
+import EditBooking from './pages/admin/bookings/EditBooking';
 
-// Payment Management
-import PaymentManagement from './pages/payments/PaymentManagement';
+// Payment Management - Updated Paths (Correct as per previous step)
+import PaymentManagement from './pages/admin/payments/PaymentManagement';
 
 function App() {
   return (
     <BrowserRouter>
-      {/* AuthProvider HARUS membungkus konten yang menggunakan router hooks (seperti useNavigate) */}
-      {/* Ini berarti AuthProvider harus berada DI DALAM BrowserRouter */}
+      {/* AuthProvider MUST wrap content that uses router hooks (like useNavigate) */}
+      {/* This means AuthProvider must be INSIDE BrowserRouter */}
       <AuthProvider>
         <Routes>
-          {/* Rute Publik */}
+          {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Rute Terlindungi Admin */}
-          {/* Rute spesifik untuk /admin/dashboard - Penting untuk tautan langsung */}
+          {/* Admin Protected Routes */}
+          {/* Specific route for /admin/dashboard - Important for direct links */}
           <Route
             path="/admin/dashboard"
             element={
@@ -59,7 +59,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Rute umum /admin - juga mengarah ke AdminDashboard */}
+          {/* General /admin route - also points to AdminDashboard */}
           <Route
             path="/admin"
             element={
@@ -69,7 +69,7 @@ function App() {
             }
           />
 
-          {/* Manajemen Pengguna */}
+          {/* User Management */}
           <Route
             path="/admin/users"
             element={
@@ -95,12 +95,12 @@ function App() {
             }
           />
 
-          {/* Manajemen Maskapai */}
+          {/* Airline Management */}
           <Route
             path="/admin/airlines"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AirlineManagement /> {/* Jika AirlineManagement adalah daftar/tabel */}
+                <AirlineManagement />
               </ProtectedRoute>
             }
           />
@@ -108,7 +108,7 @@ function App() {
             path="/admin/airlines/add"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AddAirline /> {/* Ini adalah rute untuk komponen form penambahan */}
+                <AddAirline />
               </ProtectedRoute>
             }
           />
@@ -116,12 +116,12 @@ function App() {
             path="/admin/airlines/edit/:id"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <EditAirline /> {/* Ini adalah rute untuk komponen form pengeditan */}
+                <EditAirline />
               </ProtectedRoute>
             }
           />
 
-          {/* Manajemen Bandara */}
+          {/* Airport Management */}
           <Route
             path="/admin/airports"
             element={
@@ -147,7 +147,7 @@ function App() {
             }
           />
 
-          {/* Manajemen Penerbangan */}
+          {/* Flight Management */}
           <Route
             path="/admin/flights"
             element={
@@ -173,7 +173,7 @@ function App() {
             }
           />
 
-          {/* Manajemen Pemesanan */}
+          {/* Booking Management */}
           <Route
             path="/admin/bookings"
             element={
@@ -199,7 +199,7 @@ function App() {
             }
           />
 
-          {/* Manajemen Pembayaran */}
+          {/* Payment Management */}
           <Route
             path="/admin/payments"
             element={
@@ -209,7 +209,7 @@ function App() {
             }
           />
 
-          {/* Rute Catch-all untuk 404 */}
+          {/* Catch-all route for 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

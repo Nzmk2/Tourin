@@ -1,16 +1,15 @@
-// src/pages/admin/EditUser.js
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosConfig'; // Pastikan path ini benar
-import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar'; // Pastikan path ini benar
-import Navbar from '../../components/Navbar';   // Pastikan path ini benar
+import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
+import { useNavigate } from 'react-router-dom';
+
+import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
+import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
 
 // Import CSS
-import '../../assets/styles/Admin.css';
-import '../../assets/styles/management.css';
+import '../../../assets/styles/Admin.css';
+import '../../../assets/styles/management.css';
 
-const EditUser = () => {
-    // State untuk kontrol UI Sidebar dan Dark Mode
+const AddUser = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -18,32 +17,17 @@ const EditUser = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    // State untuk data form user
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confPassword, setConfPassword] = useState('');
     const [passportNumber, setPassportNumber] = useState('');
-    const [role, setRole] = useState('user'); // Default value 'user'
-    
-    // State untuk pesan notifikasi
+    const [role, setRole] = useState('user'); // Default role
     const [msg, setMsg] = useState('');
-    const [msgType, setMsgType] = useState('info'); // 'info', 'success', 'danger'
-
+    const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
-    // Mengambil parameter ID dari URL dan mengaliasnya menjadi userID
-    const { id: userID } = useParams(); 
 
-    // Effect untuk mengelola status sidebar (open/close)
-    useEffect(() => {
-        if (isSidebarClosed) {
-            document.body.classList.add("close");
-        } else {
-            document.body.classList.remove("close");
-        }
-        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
-    }, [isSidebarClosed]);
-
-    // Effect untuk mengelola dark mode
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -53,92 +37,64 @@ const EditUser = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Fungsi untuk mengubah status sidebar
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
+        }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
+
     const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
     };
 
-    // Fungsi untuk mengubah mode gelap/terang
     const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    // Effect untuk mengambil data user berdasarkan ID saat komponen dimuat atau userID berubah
-    useEffect(() => {
-        const getUserById = async () => {
-            try {
-                // Pastikan userID ada sebelum memanggil API
-                if (!userID) {
-                    setMsg("No user ID provided for editing.");
-                    setMsgType('danger');
-                    // Opsional: Redirect jika ID tidak ada
-                    // navigate('/admin/users'); 
-                    return; 
-                }
+    const saveUser = async (e) => {
+        e.preventDefault();
+        // Frontend validation for password confirmation
+        if (password !== confPassword) {
+            setMsg("Passwords do not match.");
+            setMsgType('danger');
+            return; // Stop the submission
+        }
 
-                const response = await axiosInstance.get(`/users/${userID}`);
-                const userData = response.data;
-
-                // Pastikan data user tidak null atau undefined
-                if (!userData) {
-                    setMsg("User data not found for the given ID.");
-                    setMsgType('danger');
-                    // Opsional: Redirect jika user tidak ditemukan
-                    // navigate('/admin/users'); 
-                    return;
-                }
-
-                setFirstName(userData.firstName);
-                setLastName(userData.lastName);
-                setEmail(userData.email);
-                // Pastikan passportNumber selalu string, bahkan jika null dari backend
-                setPassportNumber(userData.passportNumber || ''); 
-                setRole(userData.role);
-
-            } catch (error) {
-                // Tangani error dari respons backend (misal: 404 Not Found)
-                if (error.response) {
-                    setMsg(error.response.data.msg || "Error fetching user data from server.");
-                    setMsgType('danger');
-                } else {
-                    // Tangani error jaringan atau server tidak responsif
-                    setMsg("Network error or server unavailable. Please check your connection.");
-                    setMsgType('danger');
-                }
-                console.error("Error fetching user data for edit:", error);
-            }
-        };
-        getUserById();
-    }, [userID, navigate]); // `Maps` ditambahkan ke dependency array karena digunakan di dalam effect
-
-    // Fungsi untuk mengupdate data user
-    const updateUser = async (e) => {
-        e.preventDefault(); // Mencegah reload halaman
         try {
-            await axiosInstance.patch(`/users/${userID}`, {
+            await axiosInstance.post('/users', {
                 firstName,
                 lastName,
                 email,
+                password,
                 passportNumber,
                 role
             });
-            setMsg("User updated successfully!");
+            setMsg("User added successfully!");
             setMsgType('success');
-            // Redirect ke halaman daftar user setelah 1.5 detik
+            // Reset form fields
+            setFirstName('');
+            setLastName('');
+            setEmail('');
+            setPassword('');
+            setConfPassword('');
+            setPassportNumber('');
+            setRole('user'); // Reset role ke default 'user'
+
             setTimeout(() => {
                 navigate('/admin/users');
             }, 1500);
         } catch (error) {
-            // Tangani error dari respons backend (misal: validasi gagal, email duplikat)
             if (error.response) {
-                setMsg(error.response.data.msg || "Failed to update user.");
+                setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                // Tangani error jaringan
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error updating user:", error);
+            console.error("Error adding user:", error);
         }
     };
 
@@ -156,17 +112,16 @@ const EditUser = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-user icon"></i> {/* Icon untuk user */}
+                            <i className="uil uil-user-plus icon"></i>
                             <div>
-                                <h1 className="page-title">Edit User</h1>
-                                <p className="page-subtitle">Update the user details below.</p>
+                                <h1 className="page-title">Add New User</h1>
+                                <p className="page-subtitle">Fill in the user details to create a new account.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
                             <div className="form-wrapper">
-                                <form onSubmit={updateUser}>
-                                    {/* Tampilkan pesan notifikasi jika ada */}
+                                <form onSubmit={saveUser}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="flex-row">
@@ -216,6 +171,39 @@ const EditUser = () => {
                                         />
                                     </div>
 
+                                    <div className="flex-row">
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="password" className="form-label">Password</label>
+                                                <input
+                                                    type="password"
+                                                    name="password"
+                                                    id="password"
+                                                    placeholder="Password"
+                                                    className="form-input"
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="confPassword" className="form-label">Confirm Password</label>
+                                                <input
+                                                    type="password"
+                                                    name="confPassword"
+                                                    id="confPassword"
+                                                    placeholder="Confirm Password"
+                                                    className="form-input"
+                                                    value={confPassword}
+                                                    onChange={(e) => setConfPassword(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="form-group">
                                         <label htmlFor="passportNumber" className="form-label">Passport Number</label>
                                         <input
@@ -226,17 +214,16 @@ const EditUser = () => {
                                             className="form-input"
                                             value={passportNumber}
                                             onChange={(e) => setPassportNumber(e.target.value)}
-                                            // passportNumber tidak required di model Sequelize, jadi tidak perlu `required` di sini
                                         />
                                     </div>
 
                                     <div className="form-group">
                                         <label htmlFor="role" className="form-label">Role</label>
-                                        <div className="custom-select-wrapper">
+                                        <div className="form-control-wrapper">
                                             <select
                                                 name="role"
                                                 id="role"
-                                                className="form-input custom-select"
+                                                className="form-input"
                                                 value={role}
                                                 onChange={(e) => setRole(e.target.value)}
                                                 required
@@ -249,7 +236,7 @@ const EditUser = () => {
 
                                     <div>
                                         <button type="submit" className="form-submit-button">
-                                            Update User
+                                            Add User
                                         </button>
                                     </div>
                                 </form>
@@ -262,4 +249,4 @@ const EditUser = () => {
     );
 };
 
-export default EditUser;
+export default AddUser;

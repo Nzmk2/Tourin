@@ -1,11 +1,13 @@
 // frontend/src/pages/admin/FlightManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosConfig';
-import '../../assets/styles/Admin.css';
-import '../../assets/styles/management.css';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
+import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
+import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+
+// Import CSS
+import '../../../assets/styles/Admin.css';
+import '../../../assets/styles/management.css';
 
 const FlightManagement = () => {
     // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang

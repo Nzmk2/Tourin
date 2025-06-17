@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosConfig';
-import '../../assets/styles/Admin.css';
-import '../../assets/styles/management.css';
+import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
+import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
+import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
 
-// Impor komponen yang baru dipisahkan
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+// Import CSS
+import '../../../assets/styles/Admin.css';
+import '../../../assets/styles/management.css';
 
 const UserManagement = () => {
     // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang

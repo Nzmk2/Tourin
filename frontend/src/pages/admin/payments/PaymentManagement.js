@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axiosInstance from '../../api/axiosConfig'; // Sesuaikan path jika perlu
-import '../../assets/styles/Admin.css'; // Sesuaikan path jika perlu
-import '../../assets/styles/management.css'; // Sesuaikan path jika perlu
-import Sidebar from '../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../components/Navbar';   // Sesuaikan path jika perlu
+import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
+import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
+import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+
+// Import CSS
+import '../../../assets/styles/Admin.css';
+import '../../../assets/styles/management.css';
 
 const PaymentManagement = () => {
     // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang

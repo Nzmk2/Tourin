@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosConfig';
+import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
 import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
+import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
 
 // Import CSS
-import '../../assets/styles/Admin.css';
-import '../../assets/styles/management.css';
+import '../../../assets/styles/Admin.css';
+import '../../../assets/styles/management.css';
 
 const EditBooking = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
