@@ -1,170 +1,225 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../../components/Layout';
+import Sidebar from '../../components/Sidebar';
+import Navbar from '../../components/Navbar';
+
+// Import CSS
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
 
 const EditBooking = () => {
-  const [bookingNumber, setBookingNumber] = useState('');
-  const [userId, setUserId] = useState('');
-  const [flightId, setFlightId] = useState('');
-  const [bookingDate, setBookingDate] = useState('');
-  const [totalPrice, setTotalPrice] = useState('');
-  const [status, setStatus] = useState('');
-  const [msg, setMsg] = useState('');
-  const navigate = useNavigate();
-  const { id } = useParams();
+    const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
+        return localStorage.getItem("status") === "close";
+    });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        return localStorage.getItem("mode") === "dark";
+    });
 
-  const [users, setUsers] = useState([]);
-  const [flights, setFlights] = useState([]);
+    // State variables for booking data, strictly matching the Sequelize model
+    const [bookingID, setBookingID] = useState(''); // Corresponds to bookingID in model (primary key)
+    const [userID, setUserID] = useState('');       // Corresponds to userID in model (foreign key)
+    const [flightID, setFlightID] = useState('');   // Corresponds to flightID in model (foreign key)
 
-  useEffect(() => {
-    const fetchBookingAndDependencies = async () => {
-      try {
-        const usersRes = await axiosInstance.get('/users');
-        setUsers(usersRes.data);
-        const flightsRes = await axiosInstance.get('/flights');
-        setFlights(flightsRes.data);
+    const [msg, setMsg] = useState('');
+    const [msgType, setMsgType] = useState('info');
+    const navigate = useNavigate();
+    const { id } = useParams(); // 'id' from URL will be 'bookingID'
 
-        const response = await axiosInstance.get(`/bookings/${id}`);
-        const bookingData = response.data;
-        setBookingNumber(bookingData.bookingNumber);
-        setUserId(bookingData.userId);
-        setFlightId(bookingData.flightId);
-        setBookingDate(bookingData.bookingDate.split('T')[0]);
-        setTotalPrice(bookingData.totalPrice);
-        setStatus(bookingData.status);
-      } catch (error) {
-        if (error.response) {
-          setMsg(error.response.data.msg);
+    // State for dropdowns (users and flights)
+    const [users, setUsers] = useState([]);
+    const [flights, setFlights] = useState([]);
+
+    // Effect for Dark Mode
+    useEffect(() => {
+        if (isDarkMode) {
+            document.body.classList.add("dark");
         } else {
-          setMsg("Network error or server unavailable.");
+            document.body.classList.remove("dark");
         }
-        console.error("Error fetching booking data for edit:", error);
-      }
+        localStorage.setItem("mode", isDarkMode ? "dark" : "light");
+    }, [isDarkMode]);
+
+    // Effect for Sidebar State
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
+        }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
+
+    // Toggle Sidebar Function
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
     };
-    fetchBookingAndDependencies();
-  }, [id]);
 
-  const updateBooking = async (e) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.patch(`/bookings/${id}`, {
-        userId,
-        flightId,
-        bookingDate,
-        totalPrice: parseFloat(totalPrice),
-        status
-      });
-      navigate('/admin/bookings');
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Network error or server unavailable.");
-      }
-      console.error("Error updating booking:", error);
-    }
-  };
+    // Toggle Dark Mode Function
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
 
-  return (
-    <Layout>
-      <h1 className="title is-2">Edit Booking</h1>
-      <h2 className="subtitle is-4">Update booking details.</h2>
-      <div className="box p-5">
-        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
-        <form onSubmit={updateBooking}>
-          <div className="field">
-            <label className="label">Booking Number</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={bookingNumber}
-                readOnly
-              />
-            </div>
-          </div>
+    // Fetch Booking Data and related Users/Flights
+    useEffect(() => {
+        const fetchBookingAndDependencies = async () => {
+            try {
+                // Fetch users for the dropdown
+                const usersRes = await axiosInstance.get('/users');
+                setUsers(usersRes.data);
 
-          <div className="field">
-            <label className="label">User</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={userId} onChange={(e) => setUserId(e.target.value)}>
-                  <option value="">Select User</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.email} ({user.firstName} {user.lastName})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+                // Fetch flights for the dropdown
+                const flightsRes = await axiosInstance.get('/flights');
+                setFlights(flightsRes.data);
 
-          <div className="field">
-            <label className="label">Flight</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={flightId} onChange={(e) => setFlightId(e.target.value)}>
-                  <option value="">Select Flight</option>
-                  {flights.map(flight => (
-                    <option key={flight.id} value={flight.id}>
-                      {flight.flightNumber} ({new Date(flight.departureDate).toLocaleDateString()})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+                // Fetch the specific booking data using the ID (bookingID) from params
+                const response = await axiosInstance.get(`/bookings/${id}`);
+                const bookingData = response.data;
 
-          <div className="field">
-            <label className="label">Booking Date</label>
-            <div className="control">
-              <input
-                type="date"
-                className="input"
-                value={bookingDate}
-                onChange={(e) => setBookingDate(e.target.value)}
-              />
-            </div>
-          </div>
+                // Populate the state variables with fetched data, strictly matching model fields
+                setBookingID(bookingData.bookingID || '');
+                setUserID(bookingData.userID || '');
+                setFlightID(bookingData.flightID || '');
 
-          <div className="field">
-            <label className="label">Total Price (IDR)</label>
-            <div className="control">
-              <input
-                type="number"
-                className="input"
-                value={totalPrice}
-                onChange={(e) => setTotalPrice(e.target.value)}
-                placeholder="Total Price"
-                min="0"
-              />
-            </div>
-          </div>
+                // Removed state updates for bookingDate, totalPrice, status as they are not in the model
+            } catch (error) {
+                if (error.response) {
+                    setMsg(error.response.data.msg);
+                    setMsgType('danger');
+                } else {
+                    setMsg("Network error or server unavailable.");
+                    setMsgType('danger');
+                }
+                console.error("Error fetching booking data for edit:", error);
+            }
+        };
+        fetchBookingAndDependencies();
+    }, [id]); // Dependency array includes 'id' (which is bookingID)
 
-          <div className="field">
-            <label className="label">Status</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-            </div>
-          </div>
+    // Update Booking Function
+    const updateBooking = async (e) => {
+        e.preventDefault();
+        try {
+            // Send data matching the Sequelize model fields
+            // bookingID is the primary key and likely shouldn't be updated via PATCH,
+            // it's used in the URL to identify the record.
+            await axiosInstance.patch(`/bookings/${id}`, {
+                userID,   // Only update foreign keys
+                flightID  // Only update foreign keys
+                // Removed bookingDate, totalPrice, status from payload as they are not in the model
+            });
+            setMsg("Booking updated successfully!");
+            setMsgType('success');
+            setTimeout(() => {
+                navigate('/admin/bookings');
+            }, 1500);
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error updating booking:", error);
+        }
+    };
 
-          <div className="field mt-4">
-            <div className="control">
-              <button type="submit" className="button is-success">Update Booking</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </Layout>
-  );
+    return (
+        <div className="admin-dashboard-container">
+            <Sidebar
+                isSidebarClosed={isSidebarClosed}
+                toggleDarkMode={toggleDarkMode}
+                isDarkMode={isDarkMode}
+            />
+
+            <section className="dashboard">
+                <Navbar toggleSidebar={toggleSidebar} />
+
+                <div className="dash-content">
+                    <div className="management-page-wrapper">
+                        <div className="page-header">
+                            <i className="uil uil-receipt icon"></i>
+                            <div>
+                                <h1 className="page-title">Edit Booking</h1>
+                                <p className="page-subtitle">Update the booking details below.</p>
+                            </div>
+                        </div>
+
+                        <div className="management-container">
+                            <div className="form-wrapper">
+                                <form onSubmit={updateBooking}>
+                                    {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
+
+                                    <div className="form-group">
+                                        <label htmlFor="bookingID" className="form-label">Booking ID</label>
+                                        <input
+                                            type="text"
+                                            name="bookingID"
+                                            id="bookingID"
+                                            placeholder="e.g., BKNG12345"
+                                            className="form-input"
+                                            value={bookingID}
+                                            readOnly // Primary key, not editable
+                                            disabled // Visually indicates it's disabled
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="userID" className="form-label">User</label>
+                                        <div className="custom-select-wrapper">
+                                            <select
+                                                name="userID"
+                                                id="userID"
+                                                className="form-input custom-select"
+                                                value={userID}
+                                                onChange={(e) => setUserID(e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select User</option>
+                                                {users.map(user => (
+                                                    <option key={user.userID} value={user.userID}>
+                                                        {user.email} ({user.firstName} {user.lastName})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="flightID" className="form-label">Flight</label>
+                                        <div className="custom-select-wrapper">
+                                            <select
+                                                name="flightID"
+                                                id="flightID"
+                                                className="form-input custom-select"
+                                                value={flightID}
+                                                onChange={(e) => setFlightID(e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select Flight</option>
+                                                {flights.map(flight => (
+                                                    <option key={flight.flightID} value={flight.flightID}>
+                                                        {flight.flightNumber} ({new Date(flight.departureDate).toLocaleDateString()} - {flight.departureAirportCode} to {flight.arrivalAirportCode})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" className="form-submit-button">
+                                            Update Booking
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 };
 
 export default EditBooking;

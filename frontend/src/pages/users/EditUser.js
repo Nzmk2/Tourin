@@ -1,141 +1,265 @@
+// src/pages/admin/EditUser.js
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosConfig';
+import axiosInstance from '../../api/axiosConfig'; // Pastikan path ini benar
 import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../../components/Layout';
+import Sidebar from '../../components/Sidebar'; // Pastikan path ini benar
+import Navbar from '../../components/Navbar';   // Pastikan path ini benar
+
+// Import CSS
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
 
 const EditUser = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [passportNumber, setPassportNumber] = useState('');
-  const [role, setRole] = useState('user');
-  const [msg, setMsg] = useState('');
-  const navigate = useNavigate();
-  const { id } = useParams();
+    // State untuk kontrol UI Sidebar dan Dark Mode
+    const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
+        return localStorage.getItem("status") === "close";
+    });
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        return localStorage.getItem("mode") === "dark";
+    });
 
-  useEffect(() => {
-    const getUserById = async () => {
-      try {
-        const response = await axiosInstance.get(`/users/${id}`);
-        const userData = response.data;
-        setFirstName(userData.firstName);
-        setLastName(userData.lastName);
-        setEmail(userData.email);
-        setPassportNumber(userData.passportNumber || '');
-        setRole(userData.role);
-      } catch (error) {
-        if (error.response) {
-          setMsg(error.response.data.msg);
+    // State untuk data form user
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [passportNumber, setPassportNumber] = useState('');
+    const [role, setRole] = useState('user'); // Default value 'user'
+    
+    // State untuk pesan notifikasi
+    const [msg, setMsg] = useState('');
+    const [msgType, setMsgType] = useState('info'); // 'info', 'success', 'danger'
+
+    const navigate = useNavigate();
+    // Mengambil parameter ID dari URL dan mengaliasnya menjadi userID
+    const { id: userID } = useParams(); 
+
+    // Effect untuk mengelola status sidebar (open/close)
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
         } else {
-          setMsg("Network error or server unavailable.");
+            document.body.classList.remove("close");
         }
-        console.error("Error fetching user data for edit:", error);
-      }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
+
+    // Effect untuk mengelola dark mode
+    useEffect(() => {
+        if (isDarkMode) {
+            document.body.classList.add("dark");
+        } else {
+            document.body.classList.remove("dark");
+        }
+        localStorage.setItem("mode", isDarkMode ? "dark" : "light");
+    }, [isDarkMode]);
+
+    // Fungsi untuk mengubah status sidebar
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
     };
-    getUserById();
-  }, [id]);
 
-  const updateUser = async (e) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.patch(`/users/${id}`, {
-        firstName,
-        lastName,
-        email,
-        passportNumber,
-        role
-      });
-      navigate('/admin/users');
-    } catch (error) {
-      if (error.response) {
-        setMsg(error.response.data.msg);
-      } else {
-        setMsg("Network error or server unavailable.");
-      }
-      console.error("Error updating user:", error);
-    }
-  };
+    // Fungsi untuk mengubah mode gelap/terang
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
 
-  return (
-    <Layout>
-      <h1 className="title is-2">Edit User</h1>
-      <h2 className="subtitle is-4">Update user details.</h2>
-      <div className="box p-5">
-        <p className="has-text-centered has-text-danger-dark mb-4">{msg}</p>
-        <form onSubmit={updateUser}>
-          <div className="field">
-            <label className="label">First Name</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First Name"
-              />
-            </div>
-          </div>
+    // Effect untuk mengambil data user berdasarkan ID saat komponen dimuat atau userID berubah
+    useEffect(() => {
+        const getUserById = async () => {
+            try {
+                // Pastikan userID ada sebelum memanggil API
+                if (!userID) {
+                    setMsg("No user ID provided for editing.");
+                    setMsgType('danger');
+                    // Opsional: Redirect jika ID tidak ada
+                    // navigate('/admin/users'); 
+                    return; 
+                }
 
-          <div className="field">
-            <label className="label">Last Name</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Last Name"
-              />
-            </div>
-          </div>
+                const response = await axiosInstance.get(`/users/${userID}`);
+                const userData = response.data;
 
-          <div className="field">
-            <label className="label">Email</label>
-            <div className="control">
-              <input
-                type="email"
-                className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-              />
-            </div>
-          </div>
+                // Pastikan data user tidak null atau undefined
+                if (!userData) {
+                    setMsg("User data not found for the given ID.");
+                    setMsgType('danger');
+                    // Opsional: Redirect jika user tidak ditemukan
+                    // navigate('/admin/users'); 
+                    return;
+                }
 
-          <div className="field">
-            <label className="label">Passport Number</label>
-            <div className="control">
-              <input
-                type="text"
-                className="input"
-                value={passportNumber}
-                onChange={(e) => setPassportNumber(e.target.value)}
-                placeholder="Passport Number (Optional)"
-              />
-            </div>
-          </div>
+                setFirstName(userData.firstName);
+                setLastName(userData.lastName);
+                setEmail(userData.email);
+                // Pastikan passportNumber selalu string, bahkan jika null dari backend
+                setPassportNumber(userData.passportNumber || ''); 
+                setRole(userData.role);
 
-          <div className="field">
-            <label className="label">Role</label>
-            <div className="control">
-              <div className="select is-fullwidth">
-                <select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            </div>
-          </div>
+            } catch (error) {
+                // Tangani error dari respons backend (misal: 404 Not Found)
+                if (error.response) {
+                    setMsg(error.response.data.msg || "Error fetching user data from server.");
+                    setMsgType('danger');
+                } else {
+                    // Tangani error jaringan atau server tidak responsif
+                    setMsg("Network error or server unavailable. Please check your connection.");
+                    setMsgType('danger');
+                }
+                console.error("Error fetching user data for edit:", error);
+            }
+        };
+        getUserById();
+    }, [userID, navigate]); // `Maps` ditambahkan ke dependency array karena digunakan di dalam effect
 
-          <div className="field mt-4">
-            <div className="control">
-              <button type="submit" className="button is-success">Update User</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </Layout>
-  );
+    // Fungsi untuk mengupdate data user
+    const updateUser = async (e) => {
+        e.preventDefault(); // Mencegah reload halaman
+        try {
+            await axiosInstance.patch(`/users/${userID}`, {
+                firstName,
+                lastName,
+                email,
+                passportNumber,
+                role
+            });
+            setMsg("User updated successfully!");
+            setMsgType('success');
+            // Redirect ke halaman daftar user setelah 1.5 detik
+            setTimeout(() => {
+                navigate('/admin/users');
+            }, 1500);
+        } catch (error) {
+            // Tangani error dari respons backend (misal: validasi gagal, email duplikat)
+            if (error.response) {
+                setMsg(error.response.data.msg || "Failed to update user.");
+                setMsgType('danger');
+            } else {
+                // Tangani error jaringan
+                setMsg("Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error updating user:", error);
+        }
+    };
+
+    return (
+        <div className="admin-dashboard-container">
+            <Sidebar
+                isSidebarClosed={isSidebarClosed}
+                toggleDarkMode={toggleDarkMode}
+                isDarkMode={isDarkMode}
+            />
+
+            <section className="dashboard">
+                <Navbar toggleSidebar={toggleSidebar} />
+
+                <div className="dash-content">
+                    <div className="management-page-wrapper">
+                        <div className="page-header">
+                            <i className="uil uil-user icon"></i> {/* Icon untuk user */}
+                            <div>
+                                <h1 className="page-title">Edit User</h1>
+                                <p className="page-subtitle">Update the user details below.</p>
+                            </div>
+                        </div>
+
+                        <div className="management-container">
+                            <div className="form-wrapper">
+                                <form onSubmit={updateUser}>
+                                    {/* Tampilkan pesan notifikasi jika ada */}
+                                    {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
+
+                                    <div className="flex-row">
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="firstName" className="form-label">First Name</label>
+                                                <input
+                                                    type="text"
+                                                    name="firstName"
+                                                    id="firstName"
+                                                    placeholder="First Name"
+                                                    className="form-input"
+                                                    value={firstName}
+                                                    onChange={(e) => setFirstName(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="lastName" className="form-label">Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    name="lastName"
+                                                    id="lastName"
+                                                    placeholder="Last Name"
+                                                    className="form-input"
+                                                    value={lastName}
+                                                    onChange={(e) => setLastName(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="email" className="form-label">Email</label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            id="email"
+                                            placeholder="Email"
+                                            className="form-input"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="passportNumber" className="form-label">Passport Number</label>
+                                        <input
+                                            type="text"
+                                            name="passportNumber"
+                                            id="passportNumber"
+                                            placeholder="Passport Number (Optional)"
+                                            className="form-input"
+                                            value={passportNumber}
+                                            onChange={(e) => setPassportNumber(e.target.value)}
+                                            // passportNumber tidak required di model Sequelize, jadi tidak perlu `required` di sini
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="role" className="form-label">Role</label>
+                                        <div className="custom-select-wrapper">
+                                            <select
+                                                name="role"
+                                                id="role"
+                                                className="form-input custom-select"
+                                                value={role}
+                                                onChange={(e) => setRole(e.target.value)}
+                                                required
+                                            >
+                                                <option value="user">User</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" className="form-submit-button">
+                                            Update User
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 };
 
 export default EditUser;

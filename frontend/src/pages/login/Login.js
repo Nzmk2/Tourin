@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../auth/AuthContext';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link dari react-router-dom
+import { useNavigate, Link } from 'react-router-dom';
 import '../../assets/styles/Login.css';
 import loginImage from '../../assets/img/login.jpg';
 
@@ -42,7 +42,7 @@ const Login = () => {
     return (
         <div className="session">
             <div className="left" style={{ backgroundImage: `url(${loginImage})` }}>
-                {/* SVG icon untuk Nuva Logo */}
+                {/* SVG icon for Nuva Logo */}
                 <svg enableBackground="new 0 0 300 302.5" version="1.1" viewBox="0 0 300 302.5" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                     <style type="text/css">
                         {`.st01{fill:#fff;}`}
@@ -55,7 +55,6 @@ const Login = () => {
                 <p className="welcome-message">Welcome back! Log in to your account</p>
                 {msg && <p className="error-msg">{msg}</p>}
 
-                {/* ... sisa formulir Anda ... */}
                 <div className="floating-label">
                     <input
                         placeholder="Email"
@@ -69,7 +68,7 @@ const Login = () => {
                     />
                     <label htmlFor="email">Email:</label>
                     <div className="icon">
-                        {/* SVG icon untuk Email */}
+                        {/* SVG icon for Email */}
                         <svg enableBackground="new 0 0 100 100" version="1.1" viewBox="0 0 100 100" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
                                 {`.st0{fill:none;}`}
@@ -95,7 +94,7 @@ const Login = () => {
                     />
                     <label htmlFor="password">Password:</label>
                     <div className="icon">
-                        {/* SVG icon untuk Password */}
+                        {/* SVG icon for Password */}
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
                                 {`.st0{fill:none;}.st1{fill:#010101;}`}
@@ -109,12 +108,11 @@ const Login = () => {
                 </div>
 
                 <div className="button-group">
-                    <button type="submit" className="login-button">Log in</button> {/* <--- Tambahkan className="login-button" di sini */}
+                    <button type="submit" className="login-button">Log in</button>
                     <p className="signup-text">Didn't have an account?{' '}
                         <Link to="/register" className="signup-link">Sign Up</Link>
                     </p>
                 </div>
-
             </form>
         </div>
     );

@@ -2,8 +2,7 @@ import express from "express";
 import {
     getUsers,
     getUserById,
-    // Pastikan createUser diimpor dari UserController.js
-    createUser, // <-- TAMBAHKAN INI
+    createUser, 
     updateUser,
     deleteUser,
     getUserCount,
@@ -15,11 +14,9 @@ const router = express.Router();
 router.get('/users', getUsers);
 router.get('/users/count', getUserCount);
 router.get('/users/:id', getUserById);
-router.get('/users/search-by-email', getUsersByEmail);
+router.get('/users/search-by-email', getUsersByEmail); // Pastikan ini sebelum /users/:id jika ID bisa berupa 'search-by-email'
 router.patch('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
-
-// Rute untuk membuat pengguna baru
-router.post('/users', createUser); // <-- TAMBAHKAN RUTE INI
+router.post('/users', createUser); 
 
 export default router;

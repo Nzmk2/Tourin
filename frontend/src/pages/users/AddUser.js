@@ -54,13 +54,19 @@ const AddUser = () => {
 
     const saveUser = async (e) => {
         e.preventDefault();
+        // Frontend validation for password confirmation
+        if (password !== confPassword) {
+            setMsg("Passwords do not match.");
+            setMsgType('danger');
+            return; // Stop the submission
+        }
+
         try {
             await axiosInstance.post('/users', {
                 firstName,
                 lastName,
                 email,
                 password,
-                // confPassword tidak dikirim ke backend, hanya untuk validasi frontend
                 passportNumber,
                 role
             });

@@ -25,6 +25,8 @@ const app = express();
 // Sinkronisasi Database (buat tabel jika belum ada)
 (async () => {
     try {
+        await db.authenticate(); // Pastikan koneksi DB berhasil
+        console.log('Database connected...');
         await AirlineModel.sync();
         await AirportModel.sync();
         await UserModel.sync();
@@ -38,8 +40,6 @@ const app = express();
 })();
 
 // Middleware
-
-// KONFIGURASI CORS YANG BENAR UNTUK MENGIZINKAN KREDENSIAL DARI FRONTEND
 app.use(cors({
     origin: 'http://localhost:3000', // Mengizinkan permintaan hanya dari origin frontend Anda
     credentials: true, // PENTING: Mengizinkan pengiriman cookie/kredensial
@@ -48,8 +48,7 @@ app.use(cors({
 }));
 
 app.use(express.json()); // Untuk mengurai body permintaan JSON
-app.use(cookieParser()); // <<<--- TAMBAHKAN INI SEBELUM RUTE ANDA
-
+app.use(cookieParser()); 
 
 // Rute
 app.use(AirlineRoute);
@@ -58,7 +57,7 @@ app.use(FlightRoute);
 app.use(BookingRoute);
 app.use(PaymentRoute);
 app.use(UserRoute);
-app.use(AuthRoute); // Rute autentikasi (register, login, /me, /token)
+app.use(AuthRoute); 
 
 // Mulai server
 app.listen(5000, () => console.log("Server up and running on port 5000..."));

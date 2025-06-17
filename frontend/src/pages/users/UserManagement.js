@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig';
-import '../../assets/styles/Admin.css'; // Import Admin.css untuk layout dashboard (Sidebar & Navbar styles)
-import '../../assets/styles/management.css'; // Pertahankan management.css untuk gaya spesifik tabel/form
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
 
 // Impor komponen yang baru dipisahkan
 import Sidebar from '../../components/Sidebar';
@@ -53,16 +53,18 @@ const UserManagement = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
+    // Efek untuk memuat daftar pengguna saat komponen dimuat
     useEffect(() => {
         getUsers();
     }, []);
 
+    // Fungsi untuk mengambil daftar pengguna dari API
     const getUsers = async () => {
         try {
             const response = await axiosInstance.get('/users');
-            console.log("Data pengguna dari API:", response.data); // Ini untuk debugging, bisa dihapus nanti
+            console.log("Data pengguna dari API:", response.data);
             setUsers(response.data);
-            setMsg('');
+            setMsg(''); // Hapus pesan sebelumnya jika berhasil
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -159,7 +161,8 @@ const UserManagement = () => {
                                         {/* Menggunakan filteredUsers */}
                                         {filteredUsers.length > 0 ? (
                                             filteredUsers.map((userItem, index) => (
-                                                <tr key={userItem.id}>
+                                                // PENTING: Gunakan userItem.userID sebagai key
+                                                <tr key={userItem.userID}> 
                                                     <td>{index + 1}</td>
                                                     <td>{userItem.firstName}</td>
                                                     <td>{userItem.lastName}</td>
@@ -167,9 +170,10 @@ const UserManagement = () => {
                                                     <td>{userItem.passportNumber || 'N/A'}</td>
                                                     <td>{userItem.role}</td>
                                                     <td>
-                                                        <Link to={`/admin/users/edit/${userItem.id}`} className="table-action-button edit">Edit</Link>
-                                                        {/* Tombol Delete dengan ikon */}
-                                                        <button onClick={() => confirmDelete(userItem.id)} className="table-action-button delete">
+                                                        {/* PENTING: Gunakan userItem.userID di Link Edit */}
+                                                        <Link to={`/admin/users/edit/${userItem.userID}`} className="table-action-button edit">Edit</Link>
+                                                        {/* Tombol Delete dengan ikon dan menggunakan userItem.userID */}
+                                                        <button onClick={() => confirmDelete(userItem.userID)} className="table-action-button delete">
                                                             <i className="uil uil-trash"></i> Delete
                                                         </button>
                                                     </td>
@@ -177,7 +181,7 @@ const UserManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className="no-data-message">Tidak ada pengguna dengan peran 'user' yang ditemukan.</td>
+                                                <td colSpan="7" className="no-data-message">No users with 'user' role found.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -188,11 +192,12 @@ const UserManagement = () => {
                 </div>
             </section>
 
+            {/* Modal Konfirmasi Penghapusan */}
             {showModal && (
-                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this user? This action cannot be undone.</p>
                         <div className="modal-buttons">
                             <button onClick={executeDelete} className="modal-button confirm">Delete</button>
                             <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>
