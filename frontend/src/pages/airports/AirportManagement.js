@@ -7,7 +7,6 @@ import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 
 const AirportManagement = () => {
-    // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -17,11 +16,10 @@ const AirportManagement = () => {
 
     const [airports, setAirports] = useState([]);
     const [msg, setMsg] = useState('');
-    const [msgType, setMsgType] = useState('info'); // State untuk tipe pesan
-    const [showModal, setShowModal] = useState(false); // State untuk modal konfirmasi
-    const [airportToDelete, setAirportToDelete] = useState(null); // State untuk menyimpan ID yang akan dihapus
+    const [msgType, setMsgType] = useState('info');
+    const [showModal, setShowModal] = useState(false);
+    const [airportToDelete, setAirportToDelete] = useState(null);
 
-    // Efek samping untuk menerapkan kelas 'dark' ke elemen <body>
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -31,7 +29,6 @@ const AirportManagement = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Efek samping untuk menerapkan kelas 'close' ke elemen <body>
     useEffect(() => {
         if (isSidebarClosed) {
             document.body.classList.add("close");
@@ -41,12 +38,10 @@ const AirportManagement = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    // Handler untuk toggle sidebar
     const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
     };
 
-    // Handler untuk toggle dark mode
     const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
     };
@@ -72,28 +67,25 @@ const AirportManagement = () => {
         }
     };
 
-    // Fungsi untuk menampilkan modal konfirmasi
     const confirmDelete = (airportId) => {
         setAirportToDelete(airportId);
         setShowModal(true);
     };
 
-    // Fungsi untuk menutup modal
     const cancelDelete = () => {
         setShowModal(false);
         setAirportToDelete(null);
     };
 
-    // Fungsi untuk melanjutkan penghapusan setelah konfirmasi
     const executeDelete = async () => {
-        setShowModal(false); // Tutup modal
-        if (!airportToDelete) return; // Pastikan ada ID untuk dihapus
+        setShowModal(false);
+        if (!airportToDelete) return;
 
         try {
             await axiosInstance.delete(`/airports/${airportToDelete}`);
             setMsg("Airport deleted successfully!");
             setMsgType('success');
-            getAirports(); // Muat ulang daftar bandara
+            getAirports();
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -104,7 +96,7 @@ const AirportManagement = () => {
             }
             console.error("Error deleting airport:", error);
         } finally {
-            setAirportToDelete(null); // Reset ID yang akan dihapus
+            setAirportToDelete(null);
         }
     };
 
@@ -122,7 +114,7 @@ const AirportManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-building icon"></i> {/* Ikon Bandara */}
+                            <i className="uil uil-building icon"></i>
                             <div>
                                 <h1 className="page-title">Airport Management</h1>
                                 <p className="page-subtitle">Manage all airport details.</p>
@@ -139,33 +131,31 @@ const AirportManagement = () => {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Name</th>
-                                            <th>IATA Code</th>
-                                            <th>ICAO Code</th>
-                                            <th>City</th>
-                                            <th>Country</th>
+                                            <th>Airport Code</th> {/* Changed to reflect model */}
+                                            <th>Airport Name</th> {/* Changed to reflect model */}
+                                            <th>Facilities</th> {/* Added as per model */}
+                                            <th>Location</th> {/* Added as per model */}
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {airports.length > 0 ? (
                                             airports.map((airport, index) => (
-                                                <tr key={airport.id}>
+                                                <tr key={airport.airportCode}> {/* Changed key to airportCode */}
                                                     <td>{index + 1}</td>
-                                                    <td>{airport.name}</td>
-                                                    <td>{airport.iataCode}</td>
-                                                    <td>{airport.icaoCode}</td>
-                                                    <td>{airport.city}</td>
-                                                    <td>{airport.country}</td>
+                                                    <td>{airport.airportCode}</td>
+                                                    <td>{airport.airportName}</td>
+                                                    <td>{airport.facilities || 'N/A'}</td>
+                                                    <td>{airport.location || 'N/A'}</td>
                                                     <td>
-                                                        <Link to={`/admin/airports/edit/${airport.id}`} className="table-action-button edit">Edit</Link>
-                                                        <button onClick={() => confirmDelete(airport.id)} className="table-action-button delete">Delete</button>
+                                                        <Link to={`/admin/airports/edit/${airport.airportCode}`} className="table-action-button edit">Edit</Link>
+                                                        <button onClick={() => confirmDelete(airport.airportCode)} className="table-action-button delete">Delete</button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="7" className="no-data-message">No airports found.</td>
+                                                <td colSpan="6" className="no-data-message">No airports found.</td> {/* Adjusted colSpan */}
                                             </tr>
                                         )}
                                     </tbody>
@@ -176,12 +166,11 @@ const AirportManagement = () => {
                 </div>
             </section>
 
-            {/* Custom Confirmation Modal */}
             {showModal && (
-                <div className="modal-overlay">
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this airport? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
                         <div className="modal-buttons">
                             <button onClick={executeDelete} className="modal-button confirm">Delete</button>
                             <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>

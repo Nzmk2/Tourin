@@ -2,7 +2,7 @@ import Booking from "../models/BookingModel.js";
 import User from "../models/UserModel.js";
 import Flight from "../models/FlightModel.js";
 import Airport from "../models/AirportModel.js";
-import Payment from "../models/PaymentModel.js"; // <<<--- TAMBAHKAN INI
+import Payment from "../models/PaymentModel.js";
 
 export const getBookings = async (req, res) => {
     try {
@@ -39,8 +39,29 @@ export const getBookingById = async (req, res) => {
 
 export const createBooking = async (req, res) => {
     try {
-        await Booking.create(req.body);
-        res.status(201).json({ msg: "Booking created" });
+        const { userID, flightID } = req.body;
+
+        // Fetch the Flight to get its flightNumber
+        const flight = await Flight.findOne({
+            where: {
+                flightID: flightID
+            },
+            attributes: ['flightNumber'] // Only retrieve flightNumber
+        });
+
+        if (!flight) {
+            return res.status(404).json({ msg: "Flight not found." });
+        }
+
+        // Generate bookingID using the flightNumber
+        const bookingID = `Booking-${flight.flightNumber}-${Date.now()}`; // Add timestamp for uniqueness
+
+        await Booking.create({
+            bookingID: bookingID,
+            userID: userID,
+            flightID: flightID
+        });
+        res.status(201).json({ msg: "Booking created successfully!" });
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
@@ -85,7 +106,6 @@ export const getBookingCount = async (req, res) => {
     }
 };
 
-// --- FUNGSI BARU UNTUK MENGAMBIL RECENT BOOKINGS (DENGAN STATUS PEMBAYARAN) ---
 export const getRecentBookings = async (req, res) => {
     try {
         const response = await Booking.findAll({
@@ -113,9 +133,9 @@ export const getRecentBookings = async (req, res) => {
                     ]
                 },
                 {
-                    model: Payment, // <<<--- INCLUDE MODEL PAYMENT
-                    attributes: ['paymentStatus'], // Ambil paymentStatus dari PaymentModel
-                    required: false // Gunakan 'required: false' (LEFT JOIN) agar booking tetap tampil meskipun belum ada payment
+                    model: Payment,
+                    attributes: ['paymentStatus'],
+                    required: false
                 }
             ]
         });
@@ -129,8 +149,7 @@ export const getRecentBookings = async (req, res) => {
             arrivalTime: booking.flight ? booking.flight.arrivalTime : 'N/A',
             departureAirport: booking.flight && booking.flight.DepartureAirport ? booking.flight.DepartureAirport.airportName : 'N/A',
             destinationAirport: booking.flight && booking.flight.DestinationAirport ? booking.flight.DestinationAirport.airportName : 'N/A',
-            // Ambil paymentStatus dari objek payment, default ke 'Pending' jika tidak ada payment
-            paymentStatus: booking.payment ? booking.payment.paymentStatus : 'Pending' 
+            paymentStatus: booking.payment ? booking.payment.paymentStatus : 'Pending'
         }));
 
         res.status(200).json(formattedBookings);

@@ -180,7 +180,7 @@ const AdminDashboard = () => {
                                 <div className="data-header-row">
                                     <span className="data-title">Booker Name</span>
                                     <span className="data-title">Email</span>
-                                    <span className="data-title">Booking Time</span>
+                                    <span className="data-title">Flight Time</span>
                                     <span className="data-title">From</span>
                                     <span className="data-title">To</span>
                                     <span className="data-title">Payment Status</span>

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// frontend/src/pages/admin/BookingManagement.jsx
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig';
 import '../../assets/styles/Admin.css';
@@ -7,7 +8,6 @@ import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 
 const BookingManagement = () => {
-    // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -17,11 +17,13 @@ const BookingManagement = () => {
 
     const [bookings, setBookings] = useState([]);
     const [msg, setMsg] = useState('');
-    const [msgType, setMsgType] = useState('info'); // State untuk tipe pesan
-    const [showModal, setShowModal] = useState(false); // State untuk modal konfirmasi
-    const [bookingToDelete, setBookingToDelete] = useState(null); // State untuk menyimpan ID yang akan dihapus
+    const [msgType, setMsgType] = useState('info');
+    const [showModal, setShowModal] = useState(false);
+    const [bookingToDelete, setBookingToDelete] = useState(null);
 
-    // Efek samping untuk menerapkan kelas 'dark' ke elemen <body>
+    // State baru untuk menyimpan peta flightID ke flightNumber
+    const [flightsMap, setFlightsMap] = useState({});
+
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -31,7 +33,6 @@ const BookingManagement = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Efek samping untuk menerapkan kelas 'close' ke elemen <body>
     useEffect(() => {
         if (isSidebarClosed) {
             document.body.classList.add("close");
@@ -41,23 +42,34 @@ const BookingManagement = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    // Handler untuk toggle sidebar
-    const toggleSidebar = () => {
+    const toggleSidebar = useCallback(() => {
         setIsSidebarClosed(prevState => !prevState);
-    };
-
-    // Handler untuk toggle dark mode
-    const toggleDarkMode = () => {
-        setIsDarkMode(prevState => !prevState);
-    };
-
-    useEffect(() => {
-        getBookings();
     }, []);
 
-    const getBookings = async () => {
+    const toggleDarkMode = useCallback(() => {
+        setIsDarkMode(prevState => !prevState);
+    }, []);
+
+    // Fungsi untuk mengambil semua data (bookings, users, flights)
+    const getBookings = useCallback(async () => {
         try {
-            const response = await axiosInstance.get('/bookings');
+            // Mengambil daftar penerbangan untuk membuat peta flightID ke flightNumber
+            const flightsRes = await axiosInstance.get('/flights');
+            const flightMap = flightsRes.data.reduce((acc, flight) => {
+                acc[flight.flightID] = flight.flightNumber;
+                return acc;
+            }, {});
+            setFlightsMap(flightMap);
+
+            // Mengambil data booking, pastikan backend Anda bisa menginklusi user
+            const response = await axiosInstance.get('/bookings', {
+                params: {
+                    // Pastikan backend Anda mendukung 'user' sebagai include
+                    // Jika flight detail juga perlu diinclude secara langsung di booking,
+                    // tambahkan 'flight' di sini. Namun, kita sudah punya flightMap.
+                    include: ['user']
+                }
+            });
             setBookings(response.data);
             setMsg('');
         } catch (error) {
@@ -70,30 +82,35 @@ const BookingManagement = () => {
             }
             console.error("Error fetching bookings:", error);
         }
-    };
+    }, []);
 
-    // Fungsi untuk menampilkan modal konfirmasi
+    useEffect(() => {
+        getBookings();
+    }, [getBookings]);
+
     const confirmDelete = (bookingId) => {
         setBookingToDelete(bookingId);
         setShowModal(true);
     };
 
-    // Fungsi untuk menutup modal
     const cancelDelete = () => {
         setShowModal(false);
         setBookingToDelete(null);
     };
 
-    // Fungsi untuk melanjutkan penghapusan setelah konfirmasi
     const executeDelete = async () => {
-        setShowModal(false); // Tutup modal
-        if (!bookingToDelete) return; // Pastikan ada ID untuk dihapus
+        setShowModal(false); // Tutup modal konfirmasi
+        if (!bookingToDelete) return; // Pastikan ada booking ID yang akan dihapus
 
         try {
+            // Lakukan permintaan DELETE ke backend
             await axiosInstance.delete(`/bookings/${bookingToDelete}`);
             setMsg("Booking deleted successfully!");
             setMsgType('success');
-            getBookings(); // Muat ulang daftar booking
+            // **PERBAIKAN DI SINI:** Perbarui state 'bookings' secara lokal
+            // dengan memfilter booking yang baru saja dihapus.
+            setBookings(prevBookings => prevBookings.filter(booking => booking.bookingID !== bookingToDelete));
+            // Tidak perlu memanggil getBookings() lagi, karena state sudah diperbarui.
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -104,16 +121,7 @@ const BookingManagement = () => {
             }
             console.error("Error deleting booking:", error);
         } finally {
-            setBookingToDelete(null); // Reset ID yang akan dihapus
-        }
-    };
-
-    const getStatusColorClass = (status) => {
-        switch (status) {
-            case 'pending': return 'status-pending';
-            case 'confirmed': return 'status-confirmed';
-            case 'cancelled': return 'status-cancelled';
-            default: return '';
+            setBookingToDelete(null); // Reset booking ID yang akan dihapus
         }
     };
 
@@ -131,7 +139,7 @@ const BookingManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-receipt icon"></i> {/* Ikon Booking */}
+                            <i className="uil uil-receipt icon"></i>
                             <div>
                                 <h1 className="page-title">Booking Management</h1>
                                 <p className="page-subtitle">Manage all flight bookings.</p>
@@ -148,35 +156,31 @@ const BookingManagement = () => {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Booking Number</th>
+                                            <th>Booking ID</th>
                                             <th>User Email</th>
                                             <th>Flight Number</th>
-                                            <th>Booking Date</th>
-                                            <th>Total Price</th>
-                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {bookings.length > 0 ? (
                                             bookings.map((booking, index) => (
-                                                <tr key={booking.id}>
+                                                <tr key={booking.bookingID}>
                                                     <td>{index + 1}</td>
-                                                    <td>{booking.bookingNumber}</td>
+                                                    <td>{booking.bookingID}</td>
                                                     <td>{booking.user?.email || 'N/A'}</td>
-                                                    <td>{booking.flight?.flightNumber || 'N/A'}</td>
-                                                    <td>{new Date(booking.bookingDate).toLocaleDateString()}</td>
-                                                    <td>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(booking.totalPrice)}</td>
-                                                    <td className={getStatusColorClass(booking.status)}>{booking.status}</td>
+                                                    {/* Menggunakan flightsMap untuk mendapatkan flightNumber */}
+                                                    <td>{flightsMap[booking.flightID] || 'N/A'}</td>
                                                     <td>
-                                                        <Link to={`/admin/bookings/edit/${booking.id}`} className="table-action-button edit">Edit</Link>
-                                                        <button onClick={() => confirmDelete(booking.id)} className="table-action-button delete">Delete</button>
+                                                        <Link to={`/admin/bookings/edit/${booking.bookingID}`} className="table-action-button edit">Edit</Link>
+                                                        <button onClick={() => confirmDelete(booking.bookingID)} className="table-action-button delete">Delete</button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="no-data-message">No bookings found.</td>
+                                                {/* colSpan tetap 5 karena jumlah kolom tidak berubah */}
+                                                <td colSpan="5" className="no-data-message">No bookings found.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -187,12 +191,11 @@ const BookingManagement = () => {
                 </div>
             </section>
 
-            {/* Custom Confirmation Modal */}
             {showModal && (
-                <div className="modal-overlay">
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this booking? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
                         <div className="modal-buttons">
                             <button onClick={executeDelete} className="modal-button confirm">Delete</button>
                             <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>

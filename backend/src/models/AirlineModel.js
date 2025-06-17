@@ -5,9 +5,10 @@ const { DataTypes } = Sequelize;
 
 const Airline = db.define('airlines', {
     airlineID: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Sudah STRING, Primary Key
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     airlineName: {
         type: DataTypes.STRING,

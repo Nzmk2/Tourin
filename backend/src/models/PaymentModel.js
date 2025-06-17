@@ -1,12 +1,12 @@
 import { Sequelize } from "sequelize";
 import db from "../config/database.js";
-import Booking from "./BookingModel.js";
+import Booking from "./BookingModel.js"; // Pastikan path benar
 
 const { DataTypes } = Sequelize;
 
 const Payment = db.define('payments', {
     paymentID: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // STRING Primary Key
         primaryKey: true,
         allowNull: false
     },
@@ -28,7 +28,7 @@ const Payment = db.define('payments', {
     },
     // Foreign key
     bookingID: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Merujuk ke BookingModel.bookingID (STRING)
         allowNull: false,
         references: {
             model: Booking,

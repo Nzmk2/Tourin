@@ -16,7 +16,6 @@ const AddBooking = () => {
     });
 
     const [userEmailInput, setUserEmailInput] = useState(''); // State for manual email input
-    // const [foundUserID, setFoundUserID] = useState(null); // DIHAPUS: State ini tidak lagi digunakan
     const [flightID, setFlightID] = useState('');
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
@@ -79,20 +78,19 @@ const AddBooking = () => {
         }
         try {
             // Asumsi backend memiliki endpoint untuk mendapatkan user berdasarkan email
+            // This endpoint might need to be created if not already existing.
+            // For example, if /users?email=... is not supported, you'd need a dedicated endpoint.
             const response = await axiosInstance.get(`/users`, { params: { email: email } });
             if (response.data && response.data.length > 0 && response.data[0].userID) {
-                // setFoundUserID(response.data[0].userID); // DIHAPUS
                 setMsg(`User found: ${response.data[0].firstName} ${response.data[0].lastName}`);
                 setMsgType('success');
                 return response.data[0].userID;
             } else {
-                // setFoundUserID(null); // DIHAPUS
                 setMsg("User with this email not found. Please ensure the email is registered.");
                 setMsgType('danger');
                 return null;
             }
         } catch (error) {
-            // setFoundUserID(null); // DIHAPUS
             if (error.response && error.response.status === 404) {
                 setMsg("User with this email not found. Please ensure the email is registered.");
             } else {
@@ -124,7 +122,6 @@ const AddBooking = () => {
             setMsgType('success');
             // Reset form fields
             setUserEmailInput('');
-            // setFoundUserID(null); // DIHAPUS
             setFlightID(flights.length > 0 ? flights[0].flightID : ''); // Reset to default flight
 
             setTimeout(() => {

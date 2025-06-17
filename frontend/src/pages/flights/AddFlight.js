@@ -1,3 +1,4 @@
+// frontend/src/pages/admin/AddFlight.jsx
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
@@ -15,12 +16,18 @@ const AddFlight = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [flightNumber, setFlightNumber] = useState('');
     const [airlineID, setAirlineID] = useState('');
     const [departureAirportCode, setDepartureAirportCode] = useState('');
     const [destinationAirportCode, setDestinationAirportCode] = useState('');
-    const [departureTime, setDepartureTime] = useState(''); // DataTypes.DATE di model
-    const [arrivalTime, setArrivalTime] = useState('');     // DataTypes.DATE di model
+    
+    // ✅ Tambahkan state untuk tanggal
+    const [departureDate, setDepartureDate] = useState(''); 
+    const [departureTime, setDepartureTime] = useState('');
+    
+    // ✅ Tambahkan state untuk tanggal
+    const [arrivalTime, setArrivalTime] = useState('');
+    const [arrivalDate, setArrivalDate] = useState(''); 
+    
     const [availableSeats, setAvailableSeats] = useState('');
     const [airlines, setAirlines] = useState([]);
     const [airports, setAirports] = useState([]);
@@ -81,30 +88,26 @@ const AddFlight = () => {
     const saveFlight = async (e) => {
         e.preventDefault();
         try {
-            // Asumsi input time adalah 'HH:MM'. Jika DataTypes.DATE memerlukan tanggal juga,
-            // Anda perlu menggabungkannya dengan tanggal (misalnya dari input terpisah atau tanggal saat ini).
-            // Contoh menggabungkan dengan tanggal saat ini:
-            const today = new Date().toISOString().split('T')[0]; // Mendapatkan YYYY-MM-DD
-            const fullDepartureDateTime = `${today}T${departureTime}:00`;
-            const fullArrivalDateTime = `${today}T${arrivalTime}:00`;
-
+            // ✅ Kirim departureDate dan arrivalDate ke backend
             await axiosInstance.post('/flights', {
-                flightNumber,
                 airlineID,
                 departureAirportCode,
                 destinationAirportCode,
-                departureTime: fullDepartureDateTime, // Kirim sebagai ISO string
-                arrivalTime: fullArrivalDateTime,     // Kirim sebagai ISO string
+                departureDate, // Kirim tanggal keberangkatan
+                departureTime, // Kirim waktu keberangkatan
+                arrivalDate,   // Kirim tanggal kedatangan
+                arrivalTime,   // Kirim waktu kedatangan
                 availableSeats: parseInt(availableSeats, 10)
             });
             setMsg("Flight added successfully!");
             setMsgType('success');
             // Reset form fields
-            setFlightNumber('');
             setAirlineID(airlines.length > 0 ? airlines[0].airlineID : '');
             setDepartureAirportCode(airports.length > 0 ? airports[0].airportCode : '');
             setDestinationAirportCode(airports.length > 0 ? airports[0].airportCode : '');
+            setDepartureDate(''); // Reset tanggal
             setDepartureTime('');
+            setArrivalDate('');   // Reset tanggal
             setArrivalTime('');
             setAvailableSeats('');
 
@@ -137,7 +140,7 @@ const AddFlight = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-plane-fly icon"></i> {/* Ikon untuk Flight */}
+                            <i className="uil uil-plane-fly icon"></i>
                             <div>
                                 <h1 className="page-title">Add New Flight</h1>
                                 <p className="page-subtitle">Fill in the flight details to create a record.</p>
@@ -148,20 +151,6 @@ const AddFlight = () => {
                             <div className="form-wrapper">
                                 <form onSubmit={saveFlight}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
-
-                                    <div className="form-group">
-                                        <label htmlFor="flightNumber" className="form-label">Flight Number</label>
-                                        <input
-                                            type="text"
-                                            name="flightNumber"
-                                            id="flightNumber"
-                                            placeholder="e.g., GA-123"
-                                            className="form-input"
-                                            value={flightNumber}
-                                            onChange={(e) => setFlightNumber(e.target.value)}
-                                            required
-                                        />
-                                    </div>
 
                                     <div className="form-group">
                                         <label htmlFor="airlineID" className="form-label">Airline</label>
@@ -234,6 +223,20 @@ const AddFlight = () => {
                                     <div className="flex-row">
                                         <div className="flex-col-half sm">
                                             <div className="form-group">
+                                                <label htmlFor="departureDate" className="form-label">Departure Date</label>
+                                                <input
+                                                    type="date" // ✅ Input type date
+                                                    name="departureDate"
+                                                    id="departureDate"
+                                                    className="form-input"
+                                                    value={departureDate}
+                                                    onChange={(e) => setDepartureDate(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
                                                 <label htmlFor="departureTime" className="form-label">Departure Time</label>
                                                 <input
                                                     type="time"
@@ -242,6 +245,23 @@ const AddFlight = () => {
                                                     className="form-input"
                                                     value={departureTime}
                                                     onChange={(e) => setDepartureTime(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-row">
+                                        <div className="flex-col-half sm">
+                                            <div className="form-group">
+                                                <label htmlFor="arrivalDate" className="form-label">Arrival Date</label>
+                                                <input
+                                                    type="date" // ✅ Input type date
+                                                    name="arrivalDate"
+                                                    id="arrivalDate"
+                                                    className="form-input"
+                                                    value={arrivalDate}
+                                                    onChange={(e) => setArrivalDate(e.target.value)}
                                                     required
                                                 />
                                             </div>

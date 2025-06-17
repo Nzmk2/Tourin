@@ -1,19 +1,21 @@
 import { Sequelize } from "sequelize";
 import db from "../config/database.js";
-import Airline from "./AirlineModel.js";
-import Airport from "./AirportModel.js";
+import Airline from "./AirlineModel.js"; // Pastikan path benar
+import Airport from "./AirportModel.js"; // Pastikan path benar
 
 const { DataTypes } = Sequelize;
 
 const Flight = db.define('flights', {
     flightID: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER, // INTEGER Primary Key, auto-increment
         primaryKey: true,
+        autoIncrement: true,
         allowNull: false
     },
     flightNumber: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     arrivalTime: {
         type: DataTypes.DATE,
@@ -29,7 +31,7 @@ const Flight = db.define('flights', {
     },
     // Foreign keys
     airlineID: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // ✅ DIUBAH: Sekarang menjadi STRING untuk cocok dengan AirlineModel.airlineID
         allowNull: false,
         references: {
             model: Airline,
@@ -37,7 +39,7 @@ const Flight = db.define('flights', {
         }
     },
     departureAirportCode: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Merujuk ke AirportModel.airportCode (STRING)
         allowNull: false,
         references: {
             model: Airport,
@@ -45,7 +47,7 @@ const Flight = db.define('flights', {
         }
     },
     destinationAirportCode: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Merujuk ke AirportModel.airportCode (STRING)
         allowNull: false,
         references: {
             model: Airport,

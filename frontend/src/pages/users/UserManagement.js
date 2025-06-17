@@ -188,15 +188,14 @@ const UserManagement = () => {
                 </div>
             </section>
 
-            {/* Custom Confirmation Modal */}
             {showModal && (
-                <div className="modal-overlay">
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
                     <div className="modal-content">
-                        <h3>Konfirmasi Penghapusan</h3>
-                        <p>Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.</p>
+                        <h3>Confirm Deletion</h3>
+                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
                         <div className="modal-buttons">
-                            <button onClick={executeDelete} className="modal-button confirm">Hapus</button>
-                            <button onClick={cancelDelete} className="modal-button cancel">Batal</button>
+                            <button onClick={executeDelete} className="modal-button confirm">Delete</button>
+                            <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>
                         </div>
                     </div>
                 </div>

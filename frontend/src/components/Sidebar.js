@@ -46,10 +46,10 @@ const Sidebar = ({ isSidebarClosed, toggleDarkMode, isDarkMode }) => {
                         <i className="uil uil-plane-fly"></i>
                         <span className="link-name">Flight</span>
                     </Link></li>
-                    <li><Link to="/admin/payments">
+                    {/* <li><Link to="/admin/payments">
                         <i className="uil uil-paypal"></i>
                         <span className="link-name">Payment</span>
-                    </Link></li>
+                    </Link></li> */}
                     <li><Link to="/admin/users">
                         <i className="uil uil-users-alt"></i>
                         <span className="link-name">User</span>

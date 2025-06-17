@@ -1,18 +1,18 @@
 import { Sequelize } from "sequelize";
 import db from "../config/database.js";
 import User from "./UserModel.js";
-import Flight from "./FlightModel.js";
+import Flight from "./FlightModel.js"; // Pastikan path benar
 
 const { DataTypes } = Sequelize;
 
 const Booking = db.define('bookings', {
     bookingID: {
-        type: DataTypes.STRING, // Keep bookingID as STRING if you want UUIDs for bookings
+        type: DataTypes.STRING, // STRING Primary Key
         primaryKey: true,
         allowNull: false
     },
     userID: {
-        type: DataTypes.INTEGER, // Must match the type in UserModel
+        type: DataTypes.INTEGER, // Merujuk ke UserModel.userID (INTEGER)
         allowNull: false,
         references: {
             model: User,
@@ -20,7 +20,7 @@ const Booking = db.define('bookings', {
         }
     },
     flightID: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER, // Merujuk ke FlightModel.flightID (INTEGER)
         allowNull: false,
         references: {
             model: Flight,

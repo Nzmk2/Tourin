@@ -5,7 +5,7 @@ const { DataTypes } = Sequelize;
 
 const Airport = db.define('airports', {
     airportCode: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Sudah STRING, Primary Key
         primaryKey: true,
         allowNull: false
     },

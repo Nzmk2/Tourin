@@ -25,12 +25,43 @@ export const getAirportById = async (req, res) => {
 };
 
 export const createAirport = async (req, res) => {
+    const { airportName, facilities, location } = req.body; // Destructure body
+
     try {
-        await Airport.create(req.body);
-        res.status(201).json({ msg: "Airport created" });
+        // Find the last airport code to determine the next sequential number
+        const lastAirport = await Airport.findOne({
+            order: [
+                ['airportCode', 'DESC'] // Order by airportCode descending to get the largest one
+            ]
+        });
+
+        let nextNumber = 1; // Default starting number
+
+        if (lastAirport && lastAirport.airportCode) {
+            // Extract the number from the last airport code (e.g., "AP-001" -> 1)
+            const lastCodeMatch = lastAirport.airportCode.match(/^AP-(\d+)$/);
+            if (lastCodeMatch && lastCodeMatch[1]) {
+                const lastNumber = parseInt(lastCodeMatch[1], 10);
+                nextNumber = lastNumber + 1;
+            }
+        }
+
+        // Format the next number with leading zeros (e.g., 1 -> 001, 15 -> 015)
+        const formattedNumber = String(nextNumber).padStart(3, '0');
+        const airportCode = `AP-${formattedNumber}`; // Construct the new airport code
+
+        // Create the new airport record with the generated code
+        await Airport.create({
+            airportCode, // Use the generated code
+            airportName,
+            facilities,
+            location
+        });
+
+        res.status(201).json({ msg: "Airport created successfully!", airportCode }); // Send back the generated code
     } catch (error) {
-        console.log(error.message);
-        res.status(500).json({ msg: error.message });
+        console.error("Error creating airport:", error.message); // Use console.error for errors
+        res.status(500).json({ msg: error.message || "Failed to create airport." });
     }
 };
 

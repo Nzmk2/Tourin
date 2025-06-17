@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosConfig';
+import axiosInstance from '../../api/axiosConfig'; // Sesuaikan path jika perlu
 import { useNavigate } from 'react-router-dom';
-// import Layout from '../../components/Layout'; // Hapus ini karena kita akan menggunakan Sidebar & Navbar langsung
+import Sidebar from '../../components/Sidebar'; // Sesuaikan path jika perlu
+import Navbar from '../../components/Navbar';   // Sesuaikan path jika perlu
 
-// Impor komponen yang baru dipisahkan
-import Sidebar from '../../components/Sidebar';
-import Navbar from '../../components/Navbar';
+// Import CSS
+import '../../assets/styles/Admin.css';
+import '../../assets/styles/management.css';
+
 
 const AddAirline = () => {
-    // State untuk mengelola status sidebar (buka/tutup) dan mode gelap/terang
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -17,13 +18,12 @@ const AddAirline = () => {
     });
 
     const [airlineName, setAirlineName] = useState('');
-    const [contactNumber, setContactNumber] = useState(''); // DIUBAH: Menambahkan state untuk contactNumber
-    const [operatingRegion, setOperatingRegion] = useState(''); // DIUBAH: Menambahkan state untuk operatingRegion
+    const [contactNumber, setContactNumber] = useState('');
+    const [operatingRegion, setOperatingRegion] = useState('');
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
 
-    // Efek samping untuk menerapkan kelas 'dark' ke elemen <body>
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -33,7 +33,6 @@ const AddAirline = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Efek samping untuk menerapkan kelas 'close' ke elemen <body>
     useEffect(() => {
         if (isSidebarClosed) {
             document.body.classList.add("close");
@@ -43,12 +42,10 @@ const AddAirline = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    // Handler untuk toggle sidebar
     const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
     };
 
-    // Handler untuk toggle dark mode
     const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
     };
@@ -58,8 +55,8 @@ const AddAirline = () => {
         try {
             await axiosInstance.post('/airlines', {
                 airlineName,
-                contactNumber, // DIUBAH: Menggunakan contactNumber
-                operatingRegion // DIUBAH: Menggunakan operatingRegion
+                contactNumber,
+                operatingRegion
             });
             setMsg("Airline added successfully!");
             setMsgType('success');
@@ -85,7 +82,6 @@ const AddAirline = () => {
 
     return (
         <div className="admin-dashboard-container">
-            {/* Menggunakan komponen Sidebar */}
             <Sidebar
                 isSidebarClosed={isSidebarClosed}
                 toggleDarkMode={toggleDarkMode}
@@ -93,13 +89,12 @@ const AddAirline = () => {
             />
 
             <section className="dashboard">
-                {/* Menggunakan komponen Navbar */}
                 <Navbar toggleSidebar={toggleSidebar} />
 
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-plane-departure icon"></i> {/* Ikon sesuai tema Airline */}
+                            <i className="uil uil-plane-departure icon"></i>
                             <div>
                                 <h1 className="page-title">Add New Airline</h1>
                                 <p className="page-subtitle">Fill in the new airline details to create a record.</p>
@@ -125,10 +120,10 @@ const AddAirline = () => {
                                         />
                                     </div>
 
-                                    <div className="flex-row"> {/* Menggunakan flex-row untuk layout dua kolom */}
+                                    <div className="flex-row">
                                         <div className="flex-col-half sm">
                                             <div className="form-group">
-                                                <label htmlFor="contactNumber" className="form-label">Contact Number</label> {/* DIUBAH: Label untuk Contact Number */}
+                                                <label htmlFor="contactNumber" className="form-label">Contact Number</label>
                                                 <input
                                                     type="text"
                                                     name="contactNumber"
@@ -143,7 +138,7 @@ const AddAirline = () => {
                                         </div>
                                         <div className="flex-col-half sm">
                                             <div className="form-group">
-                                                <label htmlFor="operatingRegion" className="form-label">Operating Region</label> {/* DIUBAH: Label untuk Operating Region */}
+                                                <label htmlFor="operatingRegion" className="form-label">Operating Region</label>
                                                 <input
                                                     type="text"
                                                     name="operatingRegion"
@@ -156,22 +151,7 @@ const AddAirline = () => {
                                                 />
                                             </div>
                                         </div>
-                                    </div> {/* End flex-row */}
-
-                                    {/* DIHAPUS: Form group untuk Country dihapus karena tidak ada di DB skema */}
-                                    {/* <div className="form-group">
-                                        <label htmlFor="country" className="form-label">Country</label>
-                                        <input
-                                            type="text"
-                                            name="country"
-                                            id="country"
-                                            placeholder="Country of origin (e.g., Indonesia)"
-                                            className="form-input"
-                                            value={country}
-                                            onChange={(e) => setCountry(e.target.value)}
-                                            required
-                                        />
-                                    </div> */}
+                                    </div>
 
                                     <div>
                                         <button type="submit" className="form-submit-button">

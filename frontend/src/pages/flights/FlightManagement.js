@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// frontend/src/pages/admin/FlightManagement.jsx
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig';
 import '../../assets/styles/Admin.css';
@@ -44,73 +45,80 @@ const FlightManagement = () => {
     }, [isSidebarClosed]);
 
     // Handler untuk toggle sidebar
-    const toggleSidebar = () => {
+    const toggleSidebar = useCallback(() => {
         setIsSidebarClosed(prevState => !prevState);
-    };
-
-    // Handler untuk toggle dark mode
-    const toggleDarkMode = () => {
-        setIsDarkMode(prevState => !prevState);
-    };
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const flightsRes = await axiosInstance.get('/flights');
-                setFlights(flightsRes.data);
-
-                const airlinesRes = await axiosInstance.get('/airlines');
-                const airlineMap = airlinesRes.data.reduce((acc, airline) => {
-                    acc[airline.airlineID] = airline.airlineName; // Sesuaikan dengan properti airline
-                    return acc;
-                }, {});
-                setAirlines(airlineMap);
-
-                const airportsRes = await axiosInstance.get('/airports');
-                const airportMap = airportsRes.data.reduce((acc, airport) => {
-                    acc[airport.airportID] = airport.airportName; // Sesuaikan dengan properti airport
-                    return acc;
-                }, {});
-                setAirports(airportMap);
-                setMsg('');
-            } catch (error) {
-                if (error.response) {
-                    setMsg(error.response.data.msg);
-                    setMsgType('danger');
-                } else {
-                    setMsg("Failed to load data. Network error or server unavailable.");
-                    setMsgType('danger');
-                }
-                console.error("Error fetching flight data:", error);
-            }
-        };
-
-        fetchData();
     }, []);
 
-    // Fungsi untuk menampilkan modal konfirmasi
-    const confirmDelete = (flightId) => {
-        setFlightToDelete(flightId);
-        setShowModal(true);
-    };
+    // Handler untuk toggle dark mode
+    const toggleDarkMode = useCallback(() => {
+        setIsDarkMode(prevState => !prevState);
+    }, []);
 
-    // Fungsi untuk menutup modal
+    // Fungsi untuk mengambil semua data yang dibutuhkan (penerbangan, maskapai, bandara)
+    const fetchData = useCallback(async () => {
+        try {
+            const flightsRes = await axiosInstance.get('/flights');
+            setFlights(flightsRes.data);
+
+            const airlinesRes = await axiosInstance.get('/airlines');
+            // Membuat map airlineID ke airlineName untuk pencarian cepat
+            const airlineMap = airlinesRes.data.reduce((acc, airline) => {
+                acc[airline.airlineID] = airline.airlineName;
+                return acc;
+            }, {});
+            setAirlines(airlineMap);
+
+            const airportsRes = await axiosInstance.get('/airports');
+            // Membuat map airportCode ke airportName untuk pencarian cepat
+            const airportMap = airportsRes.data.reduce((acc, airport) => {
+                acc[airport.airportCode] = airport.airportName;
+                return acc;
+            }, {});
+            setAirports(airportMap);
+            setMsg('');
+        } catch (error) {
+            if (error.response) {
+                setMsg(error.response.data.msg);
+                setMsgType('danger');
+            } else {
+                setMsg("Failed to load data. Network error or server unavailable.");
+                setMsgType('danger');
+            }
+            console.error("Error fetching flight data:", error);
+        }
+    }, []);
+
+    // Efek untuk memuat data saat komponen pertama kali di-mount
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    // Fungsi untuk menampilkan modal konfirmasi penghapusan
+    const confirmDelete = (flightId) => {
+    setFlightToDelete(flightId);
+    setShowModal(true);
+};
+
+    // Fungsi untuk menutup modal konfirmasi
     const cancelDelete = () => {
         setShowModal(false);
         setFlightToDelete(null);
     };
 
-    // Fungsi untuk melanjutkan penghapusan setelah konfirmasi
+    // Fungsi untuk mengeksekusi penghapusan penerbangan
     const executeDelete = async () => {
-        setShowModal(false); // Tutup modal
-        if (!flightToDelete) return; // Pastikan ada ID untuk dihapus
-
+        //console.log("Melaksanakan penghapusan untuk Flight ID:", flightToDelete); // <-- INI JUGA PENTING!
+        setShowModal(false);
+        if (!flightToDelete) {
+            //console.log("Flight ID untuk dihapus kosong."); // Tambah log ini
+            return;
+        }
         try {
             await axiosInstance.delete(`/flights/${flightToDelete}`);
             setMsg("Flight deleted successfully!");
             setMsgType('success');
-            setFlights(flights.filter(flight => flight.id !== flightToDelete)); // Update state secara lokal
-            // Atau panggil fetchData() lagi jika ingin reload penuh: fetchData();
+            // Perbarui state `flights` setelah penghapusan berhasil
+            setFlights(prevFlights => prevFlights.filter(flight => flight.flightID !== flightToDelete));
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -121,16 +129,32 @@ const FlightManagement = () => {
             }
             console.error("Error deleting flight:", error);
         } finally {
-            setFlightToDelete(null); // Reset ID yang akan dihapus
+            setFlightToDelete(null);
         }
     };
 
-    // Corrected formatTime function
-    const formatTime = (timeString) => {
-        if (!timeString) return '';
-        // Asumsi timeString adalah "HH:MM:SS" atau "HH:MM"
-        const parts = timeString.split(':');
-        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+    // Fungsi helper untuk memformat waktu dari string ISO atau hanya HH:MM:SS
+    const formatTime = (timeData) => {
+        if (!timeData) return '';
+
+        // Coba parsing sebagai Date jika formatnya adalah ISO string (misal: "2024-06-17T09:00:00.000Z")
+        if (typeof timeData === 'string' && timeData.includes('T')) {
+            const date = new Date(timeData);
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+        // Jika hanya string waktu (misal: "09:00:00")
+        else if (typeof timeData === 'string' && timeData.includes(':')) {
+            const parts = timeData.split(':');
+            return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+        }
+        return '';
+    };
+
+    // Fungsi helper untuk memformat tanggal dari string ISO
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        // Pastikan kita membuat objek Date dari string ISO
+        return new Date(dateString).toLocaleDateString('id-ID');
     };
 
     return (
@@ -171,34 +195,33 @@ const FlightManagement = () => {
                                             <th>Departure Date</th>
                                             <th>Departure Time</th>
                                             <th>Arrival Time</th>
-                                            <th>Price</th>
-                                            <th>Capacity</th>
+                                            <th>Available Seats</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {flights.length > 0 ? (
                                             flights.map((flight, index) => (
-                                                <tr key={flight.id}>
+                                                <tr key={flight.flightID}> {/* Menggunakan flightID sebagai key */}
                                                     <td>{index + 1}</td>
                                                     <td>{flight.flightNumber}</td>
-                                                    <td>{airlines[flight.airlineId] || 'N/A'}</td>
-                                                    <td>{airports[flight.departureAirportId] || 'N/A'}</td>
-                                                    <td>{airports[flight.arrivalAirportId] || 'N/A'}</td>
-                                                    <td>{new Date(flight.departureDate).toLocaleDateString('id-ID')}</td>
+                                                    <td>{airlines[flight.airlineID] || 'N/A'}</td> {/* Menggunakan airlineID */}
+                                                    <td>{airports[flight.departureAirportCode] || 'N/A'}</td> {/* Menggunakan departureAirportCode */}
+                                                    <td>{airports[flight.destinationAirportCode] || 'N/A'}</td> {/* Menggunakan destinationAirportCode */}
+                                                    <td>{formatDate(flight.departureTime)}</td>
                                                     <td>{formatTime(flight.departureTime)}</td>
                                                     <td>{formatTime(flight.arrivalTime)}</td>
-                                                    <td>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(flight.price)}</td>
-                                                    <td>{flight.capacity}</td>
+                                                    <td>{flight.availableSeats}</td> {/* Menampilkan availableSeats */}
                                                     <td>
-                                                        <Link to={`/admin/flights/edit/${flight.id}`} className="table-action-button edit">Edit</Link>
-                                                        <button onClick={() => confirmDelete(flight.id)} className="table-action-button delete">Delete</button>
+                                                        <Link to={`/admin/flights/edit/${flight.flightID}`} className="table-action-button edit">Edit</Link>
+                                                        <button onClick={() => confirmDelete(flight.flightID)} className="table-action-button delete">Delete</button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="11" className="no-data-message">No flights found.</td>
+                                                {/* colSpan disesuaikan dengan jumlah kolom (10) */}
+                                                <td colSpan="10" className="no-data-message">No flights found.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -208,10 +231,8 @@ const FlightManagement = () => {
                     </div>
                 </div>
             </section>
-
-            {/* Custom Confirmation Modal */}
             {showModal && (
-                <div className="modal-overlay">
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
                         <p>Are you sure you want to delete this flight? This action cannot be undone.</p>

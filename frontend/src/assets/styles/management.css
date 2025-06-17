@@ -355,6 +355,118 @@ body.dark .form-control-wrapper select.form-input {
     padding-right: 12px; /* formbold-px-3 / px-3 */
 }
 
+/* --- Modal Overlay (Latar Belakang Gelap) --- */
+.modal-overlay {
+    position: fixed; /* Membuat modal tetap di posisi layar, tidak ikut scroll */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Lebar penuh viewport */
+    height: 100vh; /* Tinggi penuh viewport */
+    background-color: rgba(0, 0, 0, 0.6); /* Latar belakang hitam transparan */
+    display: flex; /* Menggunakan Flexbox untuk menengahkan konten */
+    justify-content: center; /* Tengahkan horizontal */
+    align-items: center; /* Tengahkan vertikal */
+    z-index: 1000; /* Pastikan modal muncul di atas elemen lain */
+    opacity: 0; /* Mulai dengan opacity 0 untuk animasi */
+    visibility: hidden; /* Sembunyikan modal secara default */
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* Transisi untuk animasi fade */
+}
+
+/* Kondisi saat modal aktif (muncul) */
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Modal Content (Kotak Dialog Modal) --- */
+.modal-content {
+    background-color: #ffffff; /* Latar belakang putih untuk modal */
+    padding: 40px;
+    border-radius: 12px; /* Sudut lebih membulat */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Bayangan yang lebih menonjol */
+    width: 90%; /* Lebar responsif */
+    max-width: 450px; /* Lebar maksimum untuk desktop */
+    text-align: center;
+    transform: translateY(-20px); /* Mulai sedikit ke atas untuk animasi */
+    transition: transform 0.3s ease, opacity 0.3s ease; /* Transisi untuk animasi slide-in */
+    opacity: 0; /* Mulai dengan opacity 0 untuk animasi */
+}
+
+/* Kondisi saat modal aktif (konten muncul dengan animasi) */
+.modal-overlay.active .modal-content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Teks dalam Modal --- */
+.modal-content h3 {
+    font-size: 1.8em;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.modal-content p {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+/* --- Tombol Modal --- */
+.modal-buttons {
+    display: flex;
+    justify-content: center; /* Tengahkan tombol */
+    gap: 15px; /* Spasi antar tombol */
+    margin-top: 20px;
+}
+
+.modal-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    font-weight: 600;
+}
+
+.modal-button.confirm {
+    background-color: #dc3545; /* Merah untuk Delete */
+    color: white;
+}
+
+.modal-button.confirm:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.modal-button.cancel {
+    background-color: #6c757d; /* Abu-abu untuk Cancel */
+    color: white;
+}
+
+.modal-button.cancel:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* --- Dark Mode Support (opsional, jika Anda memiliki toggle dark mode) --- */
+body.dark .modal-content {
+    background-color: #2c2c2c; /* Background lebih gelap */
+    color: #f0f0f0; /* Teks lebih terang */
+}
+
+body.dark .modal-content h3 {
+    color: #f0f0f0;
+}
+
+body.dark .modal-content p {
+    color: #ccc;
+}
+
 @media (min-width: 540px) { /* Corresponds to sm: in Tailwind */
     .flex-col-half.sm {
         width: 50%; /* sm:w-half / sm:w-1/2 */
