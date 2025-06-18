@@ -1,9 +1,10 @@
-// frontend/src/pages/admin/BookingManagement.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+// src/pages/admin/booking/BookingManagement.js
+
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
-import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+import axiosInstance from '../../../api/axiosConfig';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 // Import CSS
 import '../../../assets/styles/Admin.css';
@@ -21,10 +22,8 @@ const BookingManagement = () => {
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [showModal, setShowModal] = useState(false);
-    const [bookingToDelete, setBookingToDelete] = useState(null);
-
-    // State baru untuk menyimpan peta flightID ke flightNumber
-    const [flightsMap, setFlightsMap] = useState({});
+    const [bookingToCancel, setBookingToCancel] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -44,37 +43,23 @@ const BookingManagement = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    const toggleSidebar = useCallback(() => {
+    const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
-    }, []);
+    };
 
-    const toggleDarkMode = useCallback(() => {
+    const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
-    }, []);
+    };
 
-    // Fungsi untuk mengambil semua data (bookings, users, flights)
-    const getBookings = useCallback(async () => {
+    const getBookings = async () => {
         try {
-            // Mengambil daftar penerbangan untuk membuat peta flightID ke flightNumber
-            const flightsRes = await axiosInstance.get('/flights');
-            const flightMap = flightsRes.data.reduce((acc, flight) => {
-                acc[flight.flightID] = flight.flightNumber;
-                return acc;
-            }, {});
-            setFlightsMap(flightMap);
-
-            // Mengambil data booking, pastikan backend Anda bisa menginklusi user
-            const response = await axiosInstance.get('/bookings', {
-                params: {
-                    // Pastikan backend Anda mendukung 'user' sebagai include
-                    // Jika flight detail juga perlu diinclude secara langsung di booking,
-                    // tambahkan 'flight' di sini. Namun, kita sudah punya flightMap.
-                    include: ['user']
-                }
-            });
+            setLoading(true);
+            const response = await axiosInstance.get('/bookings');
             setBookings(response.data);
             setMsg('');
+            setLoading(false);
         } catch (error) {
+            setLoading(false);
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
@@ -84,48 +69,99 @@ const BookingManagement = () => {
             }
             console.error("Error fetching bookings:", error);
         }
-    }, []);
+    };
 
     useEffect(() => {
         getBookings();
-    }, [getBookings]);
+    }, []);
 
-    const confirmDelete = (bookingId) => {
-        setBookingToDelete(bookingId);
+    const confirmCancel = (bookingId) => {
+        setBookingToCancel(bookingId);
         setShowModal(true);
     };
 
-    const cancelDelete = () => {
+    const cancelModal = () => {
         setShowModal(false);
-        setBookingToDelete(null);
+        setBookingToCancel(null);
     };
 
-    const executeDelete = async () => {
-        setShowModal(false); // Tutup modal konfirmasi
-        if (!bookingToDelete) return; // Pastikan ada booking ID yang akan dihapus
+    const executeCancel = async () => {
+        setShowModal(false);
+        if (!bookingToCancel) return;
 
         try {
-            // Lakukan permintaan DELETE ke backend
-            await axiosInstance.delete(`/bookings/${bookingToDelete}`);
-            setMsg("Booking deleted successfully!");
+            await axiosInstance.patch(`/bookings/${bookingToCancel}`, {
+                status: 'cancelled'
+            });
+            setMsg("Booking cancelled successfully!");
             setMsgType('success');
-            // **PERBAIKAN DI SINI:** Perbarui state 'bookings' secara lokal
-            // dengan memfilter booking yang baru saja dihapus.
-            setBookings(prevBookings => prevBookings.filter(booking => booking.bookingID !== bookingToDelete));
-            // Tidak perlu memanggil getBookings() lagi, karena state sudah diperbarui.
+            // Update booking status in the state
+            setBookings(prevBookings => 
+                prevBookings.map(booking => 
+                    booking.bookingID === bookingToCancel 
+                        ? {...booking, status: 'cancelled'} 
+                        : booking
+                )
+            );
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                setMsg("Failed to delete booking. Network error or server unavailable.");
+                setMsg("Failed to cancel booking. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error deleting booking:", error);
+            console.error("Error cancelling booking:", error);
         } finally {
-            setBookingToDelete(null); // Reset booking ID yang akan dihapus
+            setBookingToCancel(null);
         }
     };
+
+    const formatDate = (date) => {
+        return new Date(date).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR'
+        }).format(price);
+    };
+
+    const getStatusBadgeClass = (status) => {
+        switch (status.toLowerCase()) {
+            case 'confirmed':
+                return 'status-badge confirmed';
+            case 'cancelled':
+                return 'status-badge cancelled';
+            default:
+                return 'status-badge pending';
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-container">
+                <Sidebar
+                    isSidebarClosed={isSidebarClosed}
+                    toggleDarkMode={toggleDarkMode}
+                    isDarkMode={isDarkMode}
+                />
+                <section className="dashboard">
+                    <Navbar toggleSidebar={toggleSidebar} />
+                    <div className="dash-content">
+                        <div className="loading-spinner">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-dashboard-container">
@@ -141,7 +177,7 @@ const BookingManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-receipt icon"></i>
+                            <i className="uil uil-ticket icon"></i>
                             <div>
                                 <h1 className="page-title">Booking Management</h1>
                                 <p className="page-subtitle">Manage all flight bookings.</p>
@@ -149,18 +185,17 @@ const BookingManagement = () => {
                         </div>
 
                         <div className="management-container">
-                            <Link to="/admin/bookings/add" className="action-button">
-                                <i className="uil uil-plus"></i> Add New Booking
-                            </Link>
                             {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
                             <div className="data-table-container">
                                 <table className="data-table">
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Booking ID</th>
-                                            <th>User Email</th>
-                                            <th>Flight Number</th>
+                                            <th>Booking Date</th>
+                                            <th>Customer</th>
+                                            <th>Flight Details</th>
+                                            <th>Total Price</th>
+                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -169,20 +204,42 @@ const BookingManagement = () => {
                                             bookings.map((booking, index) => (
                                                 <tr key={booking.bookingID}>
                                                     <td>{index + 1}</td>
-                                                    <td>{booking.bookingID}</td>
-                                                    <td>{booking.user?.email || 'N/A'}</td>
-                                                    {/* Menggunakan flightsMap untuk mendapatkan flightNumber */}
-                                                    <td>{flightsMap[booking.flightID] || 'N/A'}</td>
+                                                    <td>{formatDate(booking.bookingDate)}</td>
+                                                    <td>{booking.user.name}</td>
                                                     <td>
-                                                        <Link to={`/admin/bookings/edit/${booking.bookingID}`} className="table-action-button edit">Edit</Link>
-                                                        <button onClick={() => confirmDelete(booking.bookingID)} className="table-action-button delete">Delete</button>
+                                                        {`${booking.flight.flightNumber} - 
+                                                          ${booking.flight.departureAirport.code} to 
+                                                          ${booking.flight.arrivalAirport.code}`}
+                                                    </td>
+                                                    <td>{formatPrice(booking.totalPrice)}</td>
+                                                    <td>
+                                                        <span className={getStatusBadgeClass(booking.status)}>
+                                                            {booking.status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <Link 
+                                                            to={`/admin/bookings/view/${booking.bookingID}`} 
+                                                            className="table-action-button view"
+                                                        >
+                                                            View
+                                                        </Link>
+                                                        {booking.status === 'pending' && (
+                                                            <button 
+                                                                onClick={() => confirmCancel(booking.bookingID)} 
+                                                                className="table-action-button cancel"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                {/* colSpan tetap 5 karena jumlah kolom tidak berubah */}
-                                                <td colSpan="5" className="no-data-message">No bookings found.</td>
+                                                <td colSpan="7" className="no-data-message">
+                                                    No bookings found.
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -194,13 +251,17 @@ const BookingManagement = () => {
             </section>
 
             {showModal && (
-                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
-                        <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
+                        <h3>Confirm Cancellation</h3>
+                        <p>Are you sure you want to cancel this booking? This action cannot be undone.</p>
                         <div className="modal-buttons">
-                            <button onClick={executeDelete} className="modal-button confirm">Delete</button>
-                            <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>
+                            <button onClick={executeCancel} className="modal-button confirm">
+                                Cancel Booking
+                            </button>
+                            <button onClick={cancelModal} className="modal-button cancel">
+                                Keep Booking
+                            </button>
                         </div>
                     </div>
                 </div>

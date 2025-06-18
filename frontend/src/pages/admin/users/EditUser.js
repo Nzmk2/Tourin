@@ -1,15 +1,16 @@
+// src/pages/admin/user/EditUser.js
+
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
+import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 // Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
 const EditUser = () => {
-    // State untuk kontrol UI Sidebar dan Dark Mode
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -17,32 +18,22 @@ const EditUser = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    // State untuk data form user
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [passportNumber, setPassportNumber] = useState('');
-    const [role, setRole] = useState('user'); // Default value 'user'
-    
-    // State untuk pesan notifikasi
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [role, setRole] = useState('');
+    const [profileImage, setProfileImage] = useState(null);
+    const [currentProfileImage, setCurrentProfileImage] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [isActive, setIsActive] = useState(true);
     const [msg, setMsg] = useState('');
-    const [msgType, setMsgType] = useState('info'); // 'info', 'success', 'danger'
-
+    const [msgType, setMsgType] = useState('info');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    // Mengambil parameter ID dari URL dan mengaliasnya menjadi userID
-    const { id: userID } = useParams(); 
+    const { id } = useParams();
 
-    // Effect untuk mengelola status sidebar (open/close)
-    useEffect(() => {
-        if (isSidebarClosed) {
-            document.body.classList.add("close");
-        } else {
-            document.body.classList.remove("close");
-        }
-        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
-    }, [isSidebarClosed]);
-
-    // Effect untuk mengelola dark mode
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -52,94 +43,160 @@ const EditUser = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Fungsi untuk mengubah status sidebar
+    useEffect(() => {
+        if (isSidebarClosed) {
+            document.body.classList.add("close");
+        } else {
+            document.body.classList.remove("close");
+        }
+        localStorage.setItem("status", isSidebarClosed ? "close" : "open");
+    }, [isSidebarClosed]);
+
+    useEffect(() => {
+        const getUserById = async () => {
+            try {
+                const response = await axiosInstance.get(`/users/${id}`);
+                const user = response.data;
+                setName(user.name);
+                setEmail(user.email);
+                setPhoneNumber(user.phoneNumber || '');
+                setRole(user.role);
+                setIsActive(user.isActive);
+                if (user.profileImage) {
+                    setCurrentProfileImage(`data:${user.profileImageType};base64,${user.profileImage}`);
+                    setPreviewUrl(`data:${user.profileImageType};base64,${user.profileImage}`);
+                }
+                setLoading(false);
+            } catch (error) {
+                setMsg("Failed to fetch user data");
+                setMsgType('danger');
+                console.error("Error fetching user:", error);
+                setLoading(false);
+            }
+        };
+        getUserById();
+    }, [id]);
+
     const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
     };
 
-    // Fungsi untuk mengubah mode gelap/terang
     const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    // Effect untuk mengambil data user berdasarkan ID saat komponen dimuat atau userID berubah
-    useEffect(() => {
-        const getUserById = async () => {
-            try {
-                // Pastikan userID ada sebelum memanggil API
-                if (!userID) {
-                    setMsg("No user ID provided for editing.");
-                    setMsgType('danger');
-                    // Opsional: Redirect jika ID tidak ada
-                    // navigate('/admin/users'); 
-                    return; 
-                }
-
-                const response = await axiosInstance.get(`/users/${userID}`);
-                const userData = response.data;
-
-                // Pastikan data user tidak null atau undefined
-                if (!userData) {
-                    setMsg("User data not found for the given ID.");
-                    setMsgType('danger');
-                    // Opsional: Redirect jika user tidak ditemukan
-                    // navigate('/admin/users'); 
-                    return;
-                }
-
-                setFirstName(userData.firstName);
-                setLastName(userData.lastName);
-                setEmail(userData.email);
-                // Pastikan passportNumber selalu string, bahkan jika null dari backend
-                setPassportNumber(userData.passportNumber || ''); 
-                setRole(userData.role);
-
-            } catch (error) {
-                // Tangani error dari respons backend (misal: 404 Not Found)
-                if (error.response) {
-                    setMsg(error.response.data.msg || "Error fetching user data from server.");
-                    setMsgType('danger');
-                } else {
-                    // Tangani error jaringan atau server tidak responsif
-                    setMsg("Network error or server unavailable. Please check your connection.");
-                    setMsgType('danger');
-                }
-                console.error("Error fetching user data for edit:", error);
+    const handleProfileImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5000000) { // 5MB limit
+                setMsg("File size must be less than 5MB");
+                setMsgType('danger');
+                return;
             }
-        };
-        getUserById();
-    }, [userID, navigate]); // `Maps` ditambahkan ke dependency array karena digunakan di dalam effect
 
-    // Fungsi untuk mengupdate data user
+            if (!file.type.match('image.*')) {
+                setMsg("Please select an image file");
+                setMsgType('danger');
+                return;
+            }
+
+            setProfileImage(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const validateForm = () => {
+        if (password || confirmPassword) {
+            if (password !== confirmPassword) {
+                setMsg("Passwords do not match");
+                setMsgType('danger');
+                return false;
+            }
+
+            if (password.length < 6) {
+                setMsg("Password must be at least 6 characters long");
+                setMsgType('danger');
+                return false;
+            }
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setMsg("Please enter a valid email address");
+            setMsgType('danger');
+            return false;
+        }
+
+        const phoneRegex = /^\+?[\d\s-]{10,}$/;
+        if (phoneNumber && !phoneRegex.test(phoneNumber)) {
+            setMsg("Please enter a valid phone number");
+            setMsgType('danger');
+            return false;
+        }
+
+        return true;
+    };
+
     const updateUser = async (e) => {
-        e.preventDefault(); // Mencegah reload halaman
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        if (password) {
+            formData.append('password', password);
+        }
+        formData.append('phoneNumber', phoneNumber);
+        formData.append('role', role);
+        formData.append('isActive', isActive);
+        if (profileImage) {
+            formData.append('profileImage', profileImage);
+        }
+
         try {
-            await axiosInstance.patch(`/users/${userID}`, {
-                firstName,
-                lastName,
-                email,
-                passportNumber,
-                role
+            await axiosInstance.patch(`/users/${id}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             setMsg("User updated successfully!");
             setMsgType('success');
-            // Redirect ke halaman daftar user setelah 1.5 detik
             setTimeout(() => {
                 navigate('/admin/users');
             }, 1500);
         } catch (error) {
-            // Tangani error dari respons backend (misal: validasi gagal, email duplikat)
             if (error.response) {
-                setMsg(error.response.data.msg || "Failed to update user.");
+                setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                // Tangani error jaringan
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
             console.error("Error updating user:", error);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-container">
+                <Sidebar
+                    isSidebarClosed={isSidebarClosed}
+                    toggleDarkMode={toggleDarkMode}
+                    isDarkMode={isDarkMode}
+                />
+                <section className="dashboard">
+                    <Navbar toggleSidebar={toggleSidebar} />
+                    <div className="dash-content">
+                        <div className="loading-spinner">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-dashboard-container">
@@ -155,98 +212,136 @@ const EditUser = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-user icon"></i> {/* Icon untuk user */}
+                            <i className="uil uil-user-circle icon"></i>
                             <div>
                                 <h1 className="page-title">Edit User</h1>
-                                <p className="page-subtitle">Update the user details below.</p>
+                                <p className="page-subtitle">Update user account information.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
                             <div className="form-wrapper">
                                 <form onSubmit={updateUser}>
-                                    {/* Tampilkan pesan notifikasi jika ada */}
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
-                                    <div className="flex-row">
-                                        <div className="flex-col-half sm">
-                                            <div className="form-group">
-                                                <label htmlFor="firstName" className="form-label">First Name</label>
-                                                <input
-                                                    type="text"
-                                                    name="firstName"
-                                                    id="firstName"
-                                                    placeholder="First Name"
-                                                    className="form-input"
-                                                    value={firstName}
-                                                    onChange={(e) => setFirstName(e.target.value)}
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex-col-half sm">
-                                            <div className="form-group">
-                                                <label htmlFor="lastName" className="form-label">Last Name</label>
-                                                <input
-                                                    type="text"
-                                                    name="lastName"
-                                                    id="lastName"
-                                                    placeholder="Last Name"
-                                                    className="form-input"
-                                                    value={lastName}
-                                                    onChange={(e) => setLastName(e.target.value)}
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div className="form-group">
-                                        <label htmlFor="email" className="form-label">Email</label>
+                                        <label htmlFor="name" className="form-label">Full Name</label>
                                         <input
-                                            type="email"
-                                            name="email"
-                                            id="email"
-                                            placeholder="Email"
+                                            type="text"
+                                            id="name"
                                             className="form-input"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Enter full name"
                                             required
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="passportNumber" className="form-label">Passport Number</label>
+                                        <label htmlFor="email" className="form-label">Email Address</label>
                                         <input
-                                            type="text"
-                                            name="passportNumber"
-                                            id="passportNumber"
-                                            placeholder="Passport Number (Optional)"
+                                            type="email"
+                                            id="email"
                                             className="form-input"
-                                            value={passportNumber}
-                                            onChange={(e) => setPassportNumber(e.target.value)}
-                                            // passportNumber tidak required di model Sequelize, jadi tidak perlu `required` di sini
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="Enter email address"
+                                            required
                                         />
                                     </div>
 
-                                    <div className="form-group">
-                                        <label htmlFor="role" className="form-label">Role</label>
-                                        <div className="custom-select-wrapper">
-                                            <select
-                                                name="role"
-                                                id="role"
-                                                className="form-input custom-select"
-                                                value={role}
-                                                onChange={(e) => setRole(e.target.value)}
-                                                required
-                                            >
-                                                <option value="user">User</option>
-                                                <option value="admin">Admin</option>
-                                            </select>
+                                    <div className="flex-row">
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="password" className="form-label">
+                                                    New Password (Leave blank to keep current)
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    id="password"
+                                                    className="form-input"
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    placeholder="Enter new password"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="confirmPassword" className="form-label">
+                                                    Confirm New Password
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    id="confirmPassword"
+                                                    className="form-input"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    placeholder="Confirm new password"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div className="flex-row">
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
+                                                <input
+                                                    type="tel"
+                                                    id="phoneNumber"
+                                                    className="form-input"
+                                                    value={phoneNumber}
+                                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                                    placeholder="Enter phone number"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="role" className="form-label">User Role</label>
+                                                <select
+                                                    id="role"
+                                                    className="form-input"
+                                                    value={role}
+                                                    onChange={(e) => setRole(e.target.value)}
+                                                    required
+                                                >
+                                                    <option value="USER">User</option>
+                                                    <option value="ADMIN">Admin</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="profileImage" className="form-label">Profile Image</label>
+                                        <input
+                                            type="file"
+                                            id="profileImage"
+                                            className="form-input file-input"
+                                            onChange={handleProfileImageChange}
+                                            accept="image/*"
+                                        />
+                                        {previewUrl && (
+                                            <div className="image-preview">
+                                                <img src={previewUrl} alt="Preview" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="form-group checkbox-group">
+                                        <label className="checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={isActive}
+                                                onChange={(e) => setIsActive(e.target.checked)}
+                                            />
+                                            Account Active
+                                        </label>
+                                    </div>
+
+                                    <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
                                             Update User
                                         </button>

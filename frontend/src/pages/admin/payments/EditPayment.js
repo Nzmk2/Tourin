@@ -1,4 +1,4 @@
-// src/pages/admin/booking/EditBooking.js
+// src/pages/admin/payment/EditPayment.js
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
@@ -10,7 +10,7 @@ import Navbar from '../../../components/Navbar';
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
-const EditBooking = () => {
+const EditPayment = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -18,13 +18,13 @@ const EditBooking = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [userID, setUserID] = useState('');
-    const [flightID, setFlightID] = useState('');
-    const [status, setStatus] = useState('');
-    const [totalPrice, setTotalPrice] = useState('');
-    const [bookingDate, setBookingDate] = useState('');
-    const [users, setUsers] = useState([]);
-    const [flights, setFlights] = useState([]);
+    const [bookingID, setBookingID] = useState('');
+    const [amount, setAmount] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [paymentStatus, setPaymentStatus] = useState('');
+    const [paymentDate, setPaymentDate] = useState('');
+    const [bookings, setBookings] = useState([]);
+    const [selectedBooking, setSelectedBooking] = useState(null);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [loading, setLoading] = useState(true);
@@ -34,25 +34,32 @@ const EditBooking = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [bookingRes, usersRes, flightsRes] = await Promise.all([
-                    axiosInstance.get(`/bookings/${id}`),
-                    axiosInstance.get('/users'),
-                    axiosInstance.get('/flights')
+                const [paymentRes, bookingsRes] = await Promise.all([
+                    axiosInstance.get(`/payments/${id}`),
+                    axiosInstance.get('/bookings')
                 ]);
 
-                const booking = bookingRes.data;
-                setUserID(booking.userID.toString());
-                setFlightID(booking.flightID.toString());
-                setStatus(booking.status);
-                setTotalPrice(booking.totalPrice.toString());
-                setBookingDate(booking.bookingDate);
-                setUsers(usersRes.data);
-                setFlights(flightsRes.data);
+                const payment = paymentRes.data;
+                setBookingID(payment.bookingID.toString());
+                setAmount(payment.amount.toString());
+                setPaymentMethod(payment.paymentMethod);
+                setPaymentStatus(payment.paymentStatus);
+                setPaymentDate(payment.paymentDate);
+                
+                const availableBookings = bookingsRes.data.filter(booking => 
+                    booking.status !== 'cancelled' ||
+                    booking.bookingID === payment.bookingID
+                );
+                setBookings(availableBookings);
+
+                const booking = availableBookings.find(b => b.bookingID === payment.bookingID);
+                setSelectedBooking(booking);
+                
                 setLoading(false);
             } catch (error) {
-                setMsg("Failed to fetch booking data");
+                setMsg("Failed to fetch payment data");
                 setMsgType('danger');
-                console.error("Error fetching booking:", error);
+                console.error("Error fetching payment:", error);
                 setLoading(false);
             }
         };
@@ -85,35 +92,36 @@ const EditBooking = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const handleTotalPriceChange = (e) => {
+    const handleAmountChange = (e) => {
         const value = e.target.value.replace(/[^\d]/g, '');
-        setTotalPrice(value);
+        setAmount(value);
     };
 
-    const handleFlightChange = (e) => {
-        const selectedFlightId = e.target.value;
-        setFlightID(selectedFlightId);
+    const handleBookingChange = (e) => {
+        const selectedBookingId = e.target.value;
+        setBookingID(selectedBookingId);
         
-        const selectedFlight = flights.find(flight => flight.flightID === parseInt(selectedFlightId));
-        if (selectedFlight) {
-            setTotalPrice(selectedFlight.price.toString());
+        const booking = bookings.find(b => b.bookingID.toString() === selectedBookingId);
+        if (booking) {
+            setSelectedBooking(booking);
+            setAmount(booking.totalPrice.toString());
         }
     };
 
-    const updateBooking = async (e) => {
+    const updatePayment = async (e) => {
         e.preventDefault();
 
         try {
-            await axiosInstance.patch(`/bookings/${id}`, {
-                userID,
-                flightID,
-                status,
-                totalPrice
+            await axiosInstance.patch(`/payments/${id}`, {
+                bookingID,
+                amount,
+                paymentMethod,
+                paymentStatus
             });
-            setMsg("Booking updated successfully!");
+            setMsg("Payment updated successfully!");
             setMsgType('success');
             setTimeout(() => {
-                navigate('/admin/bookings');
+                navigate('/admin/payments');
             }, 1500);
         } catch (error) {
             if (error.response) {
@@ -123,7 +131,7 @@ const EditBooking = () => {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error updating booking:", error);
+            console.error("Error updating payment:", error);
         }
     };
 
@@ -138,7 +146,6 @@ const EditBooking = () => {
     };
 
     const formatDateTime = (dateTime) => {
-        if (!dateTime) return '';
         return new Date(dateTime).toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -180,101 +187,109 @@ const EditBooking = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-ticket icon"></i>
+                            <i className="uil uil-bill icon"></i>
                             <div>
-                                <h1 className="page-title">Edit Booking</h1>
-                                <p className="page-subtitle">Update booking information.</p>
+                                <h1 className="page-title">Edit Payment</h1>
+                                <p className="page-subtitle">Update payment information.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
                             <div className="form-wrapper">
-                                <form onSubmit={updateBooking}>
+                                <form onSubmit={updatePayment}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="form-group">
-                                        <label htmlFor="bookingDate" className="form-label">Booking Date</label>
+                                        <label htmlFor="paymentDate" className="form-label">Payment Date</label>
                                         <input
                                             type="text"
-                                            id="bookingDate"
+                                            id="paymentDate"
                                             className="form-input"
-                                            value={formatDateTime(bookingDate)}
+                                            value={formatDateTime(paymentDate)}
                                             disabled
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="userID" className="form-label">Customer</label>
+                                        <label htmlFor="bookingID" className="form-label">Booking</label>
                                         <select
-                                            id="userID"
+                                            id="bookingID"
                                             className="form-input"
-                                            value={userID}
-                                            onChange={(e) => setUserID(e.target.value)}
+                                            value={bookingID}
+                                            onChange={handleBookingChange}
                                             required
                                         >
-                                            <option value="">Select a customer</option>
-                                            {users.map(user => (
-                                                <option key={user.userID} value={user.userID}>
-                                                    {user.name} - {user.email}
+                                            <option value="">Select a booking</option>
+                                            {bookings.map(booking => (
+                                                <option key={booking.bookingID} value={booking.bookingID}>
+                                                    {`Booking #${booking.bookingID} - ${booking.user.name} - ${formatDateTime(booking.bookingDate)}`}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
 
+                                    {selectedBooking && (
+                                        <div className="booking-details">
+                                            <h3>Booking Details</h3>
+                                            <p>Customer: {selectedBooking.user.name}</p>
+                                            <p>Flight: {selectedBooking.flight.flightNumber}</p>
+                                            <p>Status: {selectedBooking.status}</p>
+                                        </div>
+                                    )}
+
                                     <div className="form-group">
-                                        <label htmlFor="flightID" className="form-label">Flight</label>
+                                        <label htmlFor="paymentMethod" className="form-label">Payment Method</label>
                                         <select
-                                            id="flightID"
+                                            id="paymentMethod"
                                             className="form-input"
-                                            value={flightID}
-                                            onChange={handleFlightChange}
+                                            value={paymentMethod}
+                                            onChange={(e) => setPaymentMethod(e.target.value)}
                                             required
                                         >
-                                            <option value="">Select a flight</option>
-                                            {flights.map(flight => (
-                                                <option key={flight.flightID} value={flight.flightID}>
-                                                    {`${flight.flightNumber} - ${flight.departureAirport.code} to ${flight.arrivalAirport.code}`}
-                                                </option>
-                                            ))}
+                                            <option value="">Select payment method</option>
+                                            <option value="Credit Card">Credit Card</option>
+                                            <option value="Debit Card">Debit Card</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="E-Wallet">E-Wallet</option>
                                         </select>
                                     </div>
 
                                     <div className="flex-row">
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="status" className="form-label">Status</label>
-                                                <select
-                                                    id="status"
+                                                <label htmlFor="amount" className="form-label">Amount (IDR)</label>
+                                                <input
+                                                    type="text"
+                                                    id="amount"
                                                     className="form-input"
-                                                    value={status}
-                                                    onChange={(e) => setStatus(e.target.value)}
+                                                    value={formatPrice(amount)}
+                                                    onChange={handleAmountChange}
+                                                    placeholder="Enter amount"
                                                     required
-                                                >
-                                                    <option value="pending">Pending</option>
-                                                    <option value="confirmed">Confirmed</option>
-                                                    <option value="cancelled">Cancelled</option>
-                                                </select>
+                                                />
                                             </div>
                                         </div>
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="totalPrice" className="form-label">Total Price (IDR)</label>
-                                                <input
-                                                    type="text"
-                                                    id="totalPrice"
+                                                <label htmlFor="paymentStatus" className="form-label">Payment Status</label>
+                                                <select
+                                                    id="paymentStatus"
                                                     className="form-input"
-                                                    value={formatPrice(totalPrice)}
-                                                    onChange={handleTotalPriceChange}
-                                                    placeholder="Enter total price"
+                                                    value={paymentStatus}
+                                                    onChange={(e) => setPaymentStatus(e.target.value)}
                                                     required
-                                                />
+                                                >
+                                                    <option value="pending">Pending</option>
+                                                    <option value="completed">Completed</option>
+                                                    <option value="failed">Failed</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
-                                            Update Booking
+                                            Update Payment
                                         </button>
                                     </div>
                                 </form>
@@ -287,4 +302,4 @@ const EditBooking = () => {
     );
 };
 
-export default EditBooking;
+export default EditPayment;

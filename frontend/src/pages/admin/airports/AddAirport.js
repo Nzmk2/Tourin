@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
-import { useNavigate } from 'react-router-dom';
+// src/pages/admin/airport/AddAirport.js
 
-import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+import React, { useState, useEffect } from 'react';
+import axiosInstance from '../../../api/axiosConfig';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 // Import CSS
 import '../../../assets/styles/Admin.css';
@@ -17,9 +18,10 @@ const AddAirport = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [airportName, setAirportName] = useState('');
-    const [facilities, setFacilities] = useState('');
-    const [location, setLocation] = useState('');
+    const [code, setCode] = useState('');
+    const [name, setName] = useState('');
+    const [city, setCity] = useState('');
+    const [country, setCountry] = useState('');
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
@@ -54,16 +56,13 @@ const AddAirport = () => {
         e.preventDefault();
         try {
             await axiosInstance.post('/airports', {
-                airportName,
-                facilities,
-                location
+                code,
+                name,
+                city,
+                country
             });
             setMsg("Airport added successfully!");
             setMsgType('success');
-            // Reset form fields
-            setAirportName('');
-            setFacilities('');
-            setLocation('');
             setTimeout(() => {
                 navigate('/admin/airports');
             }, 1500);
@@ -93,10 +92,10 @@ const AddAirport = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-building icon"></i> {/* Ikon untuk Airport */}
+                            <i className="uil uil-plane icon"></i>
                             <div>
                                 <h1 className="page-title">Add New Airport</h1>
-                                <p className="page-subtitle">Fill in the airport details to create a record.</p>
+                                <p className="page-subtitle">Create a new airport record.</p>
                             </div>
                         </div>
 
@@ -106,47 +105,64 @@ const AddAirport = () => {
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="form-group">
-                                        <label htmlFor="airportName" className="form-label">Airport Name</label>
+                                        <label htmlFor="code" className="form-label">Airport Code</label>
                                         <input
                                             type="text"
-                                            name="airportName"
-                                            id="airportName"
-                                            placeholder="e.g., Soekarno-Hatta International Airport"
+                                            id="code"
                                             className="form-input"
-                                            value={airportName}
-                                            onChange={(e) => setAirportName(e.target.value)}
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            placeholder="Enter airport code (e.g., CGK, DPS)"
+                                            maxLength="10"
                                             required
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="facilities" className="form-label">Facilities (Comma Separated)</label>
-                                        <textarea
-                                            name="facilities"
-                                            id="facilities"
-                                            placeholder="e.g., WiFi, Lounges, Shops"
-                                            className="form-input"
-                                            value={facilities}
-                                            onChange={(e) => setFacilities(e.target.value)}
-                                            rows="3"
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="location" className="form-label">Location</label>
+                                        <label htmlFor="name" className="form-label">Airport Name</label>
                                         <input
                                             type="text"
-                                            name="location"
-                                            id="location"
-                                            placeholder="e.g., Jakarta, Indonesia"
+                                            id="name"
                                             className="form-input"
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Enter airport name"
                                             required
                                         />
                                     </div>
 
-                                    <div>
+                                    <div className="flex-row">
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="city" className="form-label">City</label>
+                                                <input
+                                                    type="text"
+                                                    id="city"
+                                                    className="form-input"
+                                                    value={city}
+                                                    onChange={(e) => setCity(e.target.value)}
+                                                    placeholder="Enter city"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="country" className="form-label">Country</label>
+                                                <input
+                                                    type="text"
+                                                    id="country"
+                                                    className="form-input"
+                                                    value={country}
+                                                    onChange={(e) => setCountry(e.target.value)}
+                                                    placeholder="Enter country"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
                                             Add Airport
                                         </button>

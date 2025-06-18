@@ -1,12 +1,15 @@
+// src/pages/admin/airport/AirportManagement.js
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
-import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+import axiosInstance from '../../../api/axiosConfig';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 // Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
+
 const AirportManagement = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
@@ -20,6 +23,7 @@ const AirportManagement = () => {
     const [msgType, setMsgType] = useState('info');
     const [showModal, setShowModal] = useState(false);
     const [airportToDelete, setAirportToDelete] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -47,16 +51,15 @@ const AirportManagement = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    useEffect(() => {
-        getAirports();
-    }, []);
-
     const getAirports = async () => {
         try {
+            setLoading(true);
             const response = await axiosInstance.get('/airports');
             setAirports(response.data);
             setMsg('');
+            setLoading(false);
         } catch (error) {
+            setLoading(false);
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
@@ -67,6 +70,10 @@ const AirportManagement = () => {
             console.error("Error fetching airports:", error);
         }
     };
+
+    useEffect(() => {
+        getAirports();
+    }, []);
 
     const confirmDelete = (airportId) => {
         setAirportToDelete(airportId);
@@ -86,7 +93,9 @@ const AirportManagement = () => {
             await axiosInstance.delete(`/airports/${airportToDelete}`);
             setMsg("Airport deleted successfully!");
             setMsgType('success');
-            getAirports();
+            setAirports(prevAirports => 
+                prevAirports.filter(airport => airport.airportID !== airportToDelete)
+            );
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -100,6 +109,24 @@ const AirportManagement = () => {
             setAirportToDelete(null);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-container">
+                <Sidebar
+                    isSidebarClosed={isSidebarClosed}
+                    toggleDarkMode={toggleDarkMode}
+                    isDarkMode={isDarkMode}
+                />
+                <section className="dashboard">
+                    <Navbar toggleSidebar={toggleSidebar} />
+                    <div className="dash-content">
+                        <div className="loading-spinner">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-dashboard-container">
@@ -115,7 +142,7 @@ const AirportManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-building icon"></i>
+                            <i className="uil uil-plane icon"></i>
                             <div>
                                 <h1 className="page-title">Airport Management</h1>
                                 <p className="page-subtitle">Manage all airport details.</p>
@@ -132,31 +159,43 @@ const AirportManagement = () => {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Airport Code</th> {/* Changed to reflect model */}
-                                            <th>Airport Name</th> {/* Changed to reflect model */}
-                                            <th>Facilities</th> {/* Added as per model */}
-                                            <th>Location</th> {/* Added as per model */}
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>City</th>
+                                            <th>Country</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {airports.length > 0 ? (
                                             airports.map((airport, index) => (
-                                                <tr key={airport.airportCode}> {/* Changed key to airportCode */}
+                                                <tr key={airport.airportID}>
                                                     <td>{index + 1}</td>
-                                                    <td>{airport.airportCode}</td>
-                                                    <td>{airport.airportName}</td>
-                                                    <td>{airport.facilities || 'N/A'}</td>
-                                                    <td>{airport.location || 'N/A'}</td>
+                                                    <td>{airport.code}</td>
+                                                    <td>{airport.name}</td>
+                                                    <td>{airport.city}</td>
+                                                    <td>{airport.country}</td>
                                                     <td>
-                                                        <Link to={`/admin/airports/edit/${airport.airportCode}`} className="table-action-button edit">Edit</Link>
-                                                        <button onClick={() => confirmDelete(airport.airportCode)} className="table-action-button delete">Delete</button>
+                                                        <Link 
+                                                            to={`/admin/airports/edit/${airport.airportID}`} 
+                                                            className="table-action-button edit"
+                                                        >
+                                                            Edit
+                                                        </Link>
+                                                        <button 
+                                                            onClick={() => confirmDelete(airport.airportID)} 
+                                                            className="table-action-button delete"
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="6" className="no-data-message">No airports found.</td> {/* Adjusted colSpan */}
+                                                <td colSpan="6" className="no-data-message">
+                                                    No airports found.
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -168,13 +207,17 @@ const AirportManagement = () => {
             </section>
 
             {showModal && (
-                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this airport? This action cannot be undone.</p>
                         <div className="modal-buttons">
-                            <button onClick={executeDelete} className="modal-button confirm">Delete</button>
-                            <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>
+                            <button onClick={executeDelete} className="modal-button confirm">
+                                Delete
+                            </button>
+                            <button onClick={cancelDelete} className="modal-button cancel">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

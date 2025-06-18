@@ -1,4 +1,4 @@
-// src/pages/admin/user/UserManagement.js
+// src/pages/admin/package/PackageManagement.js
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -10,7 +10,7 @@ import Navbar from '../../../components/Navbar';
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
-const UserManagement = () => {
+const PackageManagement = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -18,11 +18,11 @@ const UserManagement = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [users, setUsers] = useState([]);
+    const [packages, setPackages] = useState([]);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [showModal, setShowModal] = useState(false);
-    const [userToDelete, setUserToDelete] = useState(null);
+    const [packageToDelete, setPackageToDelete] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -51,11 +51,11 @@ const UserManagement = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const getUsers = async () => {
+    const getPackages = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/users');
-            setUsers(response.data);
+            const response = await axiosInstance.get('/packages');
+            setPackages(response.data);
             setMsg('');
             setLoading(false);
         } catch (error) {
@@ -64,58 +64,57 @@ const UserManagement = () => {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                setMsg("Failed to load users. Network error or server unavailable.");
+                setMsg("Failed to load packages. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error fetching users:", error);
+            console.error("Error fetching packages:", error);
         }
     };
 
     useEffect(() => {
-        getUsers();
+        getPackages();
     }, []);
 
-    const confirmDelete = (userId) => {
-        setUserToDelete(userId);
+    const confirmDelete = (packageId) => {
+        setPackageToDelete(packageId);
         setShowModal(true);
     };
 
     const cancelDelete = () => {
         setShowModal(false);
-        setUserToDelete(null);
+        setPackageToDelete(null);
     };
 
     const executeDelete = async () => {
         setShowModal(false);
-        if (!userToDelete) return;
+        if (!packageToDelete) return;
 
         try {
-            await axiosInstance.delete(`/users/${userToDelete}`);
-            setMsg("User deleted successfully!");
+            await axiosInstance.delete(`/packages/${packageToDelete}`);
+            setMsg("Package deleted successfully!");
             setMsgType('success');
-            setUsers(prevUsers => 
-                prevUsers.filter(user => user.userID !== userToDelete)
+            setPackages(prevPackages => 
+                prevPackages.filter(pkg => pkg.packageID !== packageToDelete)
             );
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                setMsg("Failed to delete user. Network error or server unavailable.");
+                setMsg("Failed to delete package. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error deleting user:", error);
+            console.error("Error deleting package:", error);
         } finally {
-            setUserToDelete(null);
+            setPackageToDelete(null);
         }
     };
 
-    const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR'
+        }).format(price);
     };
 
     if (loading) {
@@ -150,16 +149,16 @@ const UserManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-users-alt icon"></i>
+                            <i className="uil uil-box icon"></i>
                             <div>
-                                <h1 className="page-title">User Management</h1>
-                                <p className="page-subtitle">Manage all users.</p>
+                                <h1 className="page-title">Package Management</h1>
+                                <p className="page-subtitle">Manage all travel packages.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
-                            <Link to="/admin/users/add" className="action-button">
-                                <i className="uil uil-plus"></i> Add New User
+                            <Link to="/admin/packages/add" className="action-button">
+                                <i className="uil uil-plus"></i> Add New Package
                             </Link>
                             {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
                             <div className="data-table-container">
@@ -167,57 +166,48 @@ const UserManagement = () => {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Profile</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                            <th>Joined Date</th>
-                                            <th>Status</th>
+                                            <th>Image</th>
+                                            <th>Title</th>
+                                            <th>Duration</th>
+                                            <th>Location</th>
+                                            <th>Price</th>
+                                            <th>Max Pax</th>
+                                            <th>Rating</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {users.length > 0 ? (
-                                            users.map((user, index) => (
-                                                <tr key={user.userID}>
+                                        {packages.length > 0 ? (
+                                            packages.map((pkg, index) => (
+                                                <tr key={pkg.packageID}>
                                                     <td>{index + 1}</td>
                                                     <td>
-                                                        {user.profileImage ? (
+                                                        {pkg.image ? (
                                                             <img 
-                                                                src={`data:${user.profileImageType};base64,${user.profileImage}`}
-                                                                alt={user.name}
-                                                                className="user-avatar"
+                                                                src={`data:${pkg.imageType};base64,${pkg.image}`}
+                                                                alt={pkg.title}
+                                                                className="package-thumbnail"
                                                             />
                                                         ) : (
-                                                            <div className="default-avatar">
-                                                                {user.name.charAt(0).toUpperCase()}
-                                                            </div>
+                                                            'No Image'
                                                         )}
                                                     </td>
-                                                    <td>{user.name}</td>
-                                                    <td>{user.email}</td>
-                                                    <td>
-                                                        <span className={`role-badge ${user.role.toLowerCase()}`}>
-                                                            {user.role}
-                                                        </span>
-                                                    </td>
-                                                    <td>{formatDate(user.createdAt)}</td>
-                                                    <td>
-                                                        <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
-                                                            {user.isActive ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </td>
+                                                    <td>{pkg.title}</td>
+                                                    <td>{pkg.duration}</td>
+                                                    <td>{pkg.location}</td>
+                                                    <td>{formatPrice(pkg.price)}</td>
+                                                    <td>{pkg.maxPax}</td>
+                                                    <td>{pkg.rating.toFixed(1)}</td>
                                                     <td>
                                                         <Link 
-                                                            to={`/admin/users/edit/${user.userID}`} 
+                                                            to={`/admin/packages/edit/${pkg.packageID}`} 
                                                             className="table-action-button edit"
                                                         >
                                                             Edit
                                                         </Link>
                                                         <button 
-                                                            onClick={() => confirmDelete(user.userID)} 
+                                                            onClick={() => confirmDelete(pkg.packageID)} 
                                                             className="table-action-button delete"
-                                                            disabled={user.role === 'ADMIN'}
                                                         >
                                                             Delete
                                                         </button>
@@ -226,8 +216,8 @@ const UserManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="no-data-message">
-                                                    No users found.
+                                                <td colSpan="9" className="no-data-message">
+                                                    No packages found.
                                                 </td>
                                             </tr>
                                         )}
@@ -243,7 +233,7 @@ const UserManagement = () => {
                 <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this package? This action cannot be undone.</p>
                         <div className="modal-buttons">
                             <button onClick={executeDelete} className="modal-button confirm">
                                 Delete
@@ -259,4 +249,4 @@ const UserManagement = () => {
     );
 };
 
-export default UserManagement;
+export default PackageManagement;

@@ -1,4 +1,4 @@
-// src/pages/admin/user/AddUser.js
+// src/pages/admin/package/AddPackage.js
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
@@ -10,7 +10,7 @@ import Navbar from '../../../components/Navbar';
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
-const AddUser = () => {
+const AddPackage = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -18,18 +18,33 @@ const AddUser = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [role, setRole] = useState('USER');
-    const [profileImage, setProfileImage] = useState(null);
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [price, setPrice] = useState('');
+    const [duration, setDuration] = useState('');
+    const [maxPax, setMaxPax] = useState('');
+    const [location, setLocation] = useState('');
+    const [destinationID, setDestinationID] = useState('');
+    const [destinations, setDestinations] = useState([]);
+    const [image, setImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
-    const [isActive, setIsActive] = useState(true);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchDestinations = async () => {
+            try {
+                const response = await axiosInstance.get('/destinations');
+                setDestinations(response.data);
+            } catch (error) {
+                console.error("Error fetching destinations:", error);
+                setMsg("Failed to load destinations");
+                setMsgType('danger');
+            }
+        };
+        fetchDestinations();
+    }, []);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -57,7 +72,7 @@ const AddUser = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const handleProfileImageChange = (e) => {
+    const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5000000) { // 5MB limit
@@ -72,69 +87,40 @@ const AddUser = () => {
                 return;
             }
 
-            setProfileImage(file);
+            setImage(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
     };
 
-    const validateForm = () => {
-        if (password !== confirmPassword) {
-            setMsg("Passwords do not match");
-            setMsgType('danger');
-            return false;
-        }
-
-        if (password.length < 6) {
-            setMsg("Password must be at least 6 characters long");
-            setMsgType('danger');
-            return false;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            setMsg("Please enter a valid email address");
-            setMsgType('danger');
-            return false;
-        }
-
-        const phoneRegex = /^\+?[\d\s-]{10,}$/;
-        if (phoneNumber && !phoneRegex.test(phoneNumber)) {
-            setMsg("Please enter a valid phone number");
-            setMsgType('danger');
-            return false;
-        }
-
-        return true;
+    const handlePriceChange = (e) => {
+        const value = e.target.value.replace(/[^\d]/g, '');
+        setPrice(value);
     };
 
-    const saveUser = async (e) => {
+    const savePackage = async (e) => {
         e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
-
         const formData = new FormData();
-        formData.append('name', name);
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('phoneNumber', phoneNumber);
-        formData.append('role', role);
-        formData.append('isActive', isActive);
-        if (profileImage) {
-            formData.append('profileImage', profileImage);
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('price', price);
+        formData.append('duration', duration);
+        formData.append('maxPax', maxPax);
+        formData.append('location', location);
+        formData.append('destinationID', destinationID);
+        if (image) {
+            formData.append('image', image);
         }
 
         try {
-            await axiosInstance.post('/users', formData, {
+            await axiosInstance.post('/packages', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            setMsg("User added successfully!");
+            setMsg("Package added successfully!");
             setMsgType('success');
             setTimeout(() => {
-                navigate('/admin/users');
+                navigate('/admin/packages');
             }, 1500);
         } catch (error) {
             if (error.response) {
@@ -144,8 +130,18 @@ const AddUser = () => {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error adding user:", error);
+            console.error("Error adding package:", error);
         }
+    };
+
+    const formatPrice = (value) => {
+        if (!value) return '';
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
     };
 
     return (
@@ -162,40 +158,40 @@ const AddUser = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-user-plus icon"></i>
+                            <i className="uil uil-box icon"></i>
                             <div>
-                                <h1 className="page-title">Add New User</h1>
-                                <p className="page-subtitle">Create a new user account.</p>
+                                <h1 className="page-title">Add New Package</h1>
+                                <p className="page-subtitle">Create a new travel package.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
                             <div className="form-wrapper">
-                                <form onSubmit={saveUser}>
+                                <form onSubmit={savePackage}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="form-group">
-                                        <label htmlFor="name" className="form-label">Full Name</label>
+                                        <label htmlFor="title" className="form-label">Package Title</label>
                                         <input
                                             type="text"
-                                            id="name"
+                                            id="title"
                                             className="form-input"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            placeholder="Enter full name"
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            placeholder="Enter package title"
                                             required
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="email" className="form-label">Email Address</label>
-                                        <input
-                                            type="email"
-                                            id="email"
+                                        <label htmlFor="description" className="form-label">Description</label>
+                                        <textarea
+                                            id="description"
                                             className="form-input"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter email address"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Enter package description"
+                                            rows="4"
                                             required
                                         />
                                     </div>
@@ -203,28 +199,28 @@ const AddUser = () => {
                                     <div className="flex-row">
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="password" className="form-label">Password</label>
+                                                <label htmlFor="price" className="form-label">Price (IDR)</label>
                                                 <input
-                                                    type="password"
-                                                    id="password"
+                                                    type="text"
+                                                    id="price"
                                                     className="form-input"
-                                                    value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
-                                                    placeholder="Enter password"
+                                                    value={formatPrice(price)}
+                                                    onChange={handlePriceChange}
+                                                    placeholder="Enter price"
                                                     required
                                                 />
                                             </div>
                                         </div>
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                                                <label htmlFor="duration" className="form-label">Duration</label>
                                                 <input
-                                                    type="password"
-                                                    id="confirmPassword"
+                                                    type="text"
+                                                    id="duration"
                                                     className="form-input"
-                                                    value={confirmPassword}
-                                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    placeholder="Confirm password"
+                                                    value={duration}
+                                                    onChange={(e) => setDuration(e.target.value)}
+                                                    placeholder="e.g., 3D/2N"
                                                     required
                                                 />
                                             </div>
@@ -234,41 +230,60 @@ const AddUser = () => {
                                     <div className="flex-row">
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
+                                                <label htmlFor="maxPax" className="form-label">Maximum Participants</label>
                                                 <input
-                                                    type="tel"
-                                                    id="phoneNumber"
+                                                    type="number"
+                                                    id="maxPax"
                                                     className="form-input"
-                                                    value={phoneNumber}
-                                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                                    placeholder="Enter phone number"
+                                                    value={maxPax}
+                                                    onChange={(e) => setMaxPax(e.target.value)}
+                                                    placeholder="Enter max participants"
+                                                    min="1"
+                                                    required
                                                 />
                                             </div>
                                         </div>
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="role" className="form-label">User Role</label>
-                                                <select
-                                                    id="role"
+                                                <label htmlFor="location" className="form-label">Location</label>
+                                                <input
+                                                    type="text"
+                                                    id="location"
                                                     className="form-input"
-                                                    value={role}
-                                                    onChange={(e) => setRole(e.target.value)}
+                                                    value={location}
+                                                    onChange={(e) => setLocation(e.target.value)}
+                                                    placeholder="Enter location"
                                                     required
-                                                >
-                                                    <option value="USER">User</option>
-                                                    <option value="ADMIN">Admin</option>
-                                                </select>
+                                                />
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="profileImage" className="form-label">Profile Image</label>
+                                        <label htmlFor="destinationID" className="form-label">Destination</label>
+                                        <select
+                                            id="destinationID"
+                                            className="form-input"
+                                            value={destinationID}
+                                            onChange={(e) => setDestinationID(e.target.value)}
+                                            required
+                                        >
+                                            <option value="">Select a destination</option>
+                                            {destinations.map(dest => (
+                                                <option key={dest.destinationID} value={dest.destinationID}>
+                                                    {dest.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="image" className="form-label">Package Image</label>
                                         <input
                                             type="file"
-                                            id="profileImage"
+                                            id="image"
                                             className="form-input file-input"
-                                            onChange={handleProfileImageChange}
+                                            onChange={handleImageChange}
                                             accept="image/*"
                                         />
                                         {previewUrl && (
@@ -278,20 +293,9 @@ const AddUser = () => {
                                         )}
                                     </div>
 
-                                    <div className="form-group checkbox-group">
-                                        <label className="checkbox-label">
-                                            <input
-                                                type="checkbox"
-                                                checked={isActive}
-                                                onChange={(e) => setIsActive(e.target.checked)}
-                                            />
-                                            Account Active
-                                        </label>
-                                    </div>
-
                                     <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
-                                            Add User
+                                            Add Package
                                         </button>
                                     </div>
                                 </form>
@@ -304,4 +308,4 @@ const AddUser = () => {
     );
 };
 
-export default AddUser;
+export default AddPackage;

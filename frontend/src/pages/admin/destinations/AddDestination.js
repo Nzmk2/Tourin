@@ -1,4 +1,4 @@
-// src/pages/admin/airline/AddAirline.js
+// src/pages/admin/destination/AddDestination.js
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
@@ -10,7 +10,7 @@ import Navbar from '../../../components/Navbar';
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
-const AddAirline = () => {
+const AddDestination = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -19,10 +19,12 @@ const AddAirline = () => {
     });
 
     const [name, setName] = useState('');
-    const [code, setCode] = useState('');
-    const [website, setWebsite] = useState('');
-    const [logo, setLogo] = useState(null);
+    const [country, setCountry] = useState('');
+    const [city, setCity] = useState('');
+    const [description, setDescription] = useState('');
+    const [image, setImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [isPopular, setIsPopular] = useState(false);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
@@ -53,7 +55,7 @@ const AddAirline = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const handleLogoChange = (e) => {
+    const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5000000) { // 5MB limit
@@ -68,31 +70,33 @@ const AddAirline = () => {
                 return;
             }
 
-            setLogo(file);
+            setImage(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
     };
 
-    const saveAirline = async (e) => {
+    const saveDestination = async (e) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append('name', name);
-        formData.append('code', code);
-        formData.append('website', website);
-        if (logo) {
-            formData.append('logo', logo);
+        formData.append('country', country);
+        formData.append('city', city);
+        formData.append('description', description);
+        formData.append('isPopular', isPopular);
+        if (image) {
+            formData.append('image', image);
         }
 
         try {
-            await axiosInstance.post('/airlines', formData, {
+            await axiosInstance.post('/destinations', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            setMsg("Airline added successfully!");
+            setMsg("Destination added successfully!");
             setMsgType('success');
             setTimeout(() => {
-                navigate('/admin/airlines');
+                navigate('/admin/destinations');
             }, 1500);
         } catch (error) {
             if (error.response) {
@@ -102,7 +106,7 @@ const AddAirline = () => {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error adding airline:", error);
+            console.error("Error adding destination:", error);
         }
     };
 
@@ -120,27 +124,27 @@ const AddAirline = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-plane-fly icon"></i>
+                            <i className="uil uil-map-marker icon"></i>
                             <div>
-                                <h1 className="page-title">Add New Airline</h1>
-                                <p className="page-subtitle">Create a new airline record.</p>
+                                <h1 className="page-title">Add New Destination</h1>
+                                <p className="page-subtitle">Create a new destination record.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
                             <div className="form-wrapper">
-                                <form onSubmit={saveAirline}>
+                                <form onSubmit={saveDestination}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="form-group">
-                                        <label htmlFor="name" className="form-label">Airline Name</label>
+                                        <label htmlFor="name" className="form-label">Destination Name</label>
                                         <input
                                             type="text"
                                             id="name"
                                             className="form-input"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            placeholder="Enter airline name"
+                                            placeholder="Enter destination name"
                                             required
                                         />
                                     </div>
@@ -148,28 +152,28 @@ const AddAirline = () => {
                                     <div className="flex-row">
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="code" className="form-label">Airline Code</label>
+                                                <label htmlFor="city" className="form-label">City</label>
                                                 <input
                                                     type="text"
-                                                    id="code"
+                                                    id="city"
                                                     className="form-input"
-                                                    value={code}
-                                                    onChange={(e) => setCode(e.target.value)}
-                                                    placeholder="Enter airline code"
+                                                    value={city}
+                                                    onChange={(e) => setCity(e.target.value)}
+                                                    placeholder="Enter city"
                                                     required
                                                 />
                                             </div>
                                         </div>
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="website" className="form-label">Website</label>
+                                                <label htmlFor="country" className="form-label">Country</label>
                                                 <input
-                                                    type="url"
-                                                    id="website"
+                                                    type="text"
+                                                    id="country"
                                                     className="form-input"
-                                                    value={website}
-                                                    onChange={(e) => setWebsite(e.target.value)}
-                                                    placeholder="Enter website URL"
+                                                    value={country}
+                                                    onChange={(e) => setCountry(e.target.value)}
+                                                    placeholder="Enter country"
                                                     required
                                                 />
                                             </div>
@@ -177,12 +181,25 @@ const AddAirline = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="logo" className="form-label">Airline Logo</label>
+                                        <label htmlFor="description" className="form-label">Description</label>
+                                        <textarea
+                                            id="description"
+                                            className="form-input"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Enter destination description"
+                                            rows="4"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="image" className="form-label">Destination Image</label>
                                         <input
                                             type="file"
-                                            id="logo"
+                                            id="image"
                                             className="form-input file-input"
-                                            onChange={handleLogoChange}
+                                            onChange={handleImageChange}
                                             accept="image/*"
                                         />
                                         {previewUrl && (
@@ -192,9 +209,20 @@ const AddAirline = () => {
                                         )}
                                     </div>
 
+                                    <div className="form-group checkbox-group">
+                                        <label className="checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={isPopular}
+                                                onChange={(e) => setIsPopular(e.target.checked)}
+                                            />
+                                            Mark as Popular Destination
+                                        </label>
+                                    </div>
+
                                     <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
-                                            Add Airline
+                                            Add Destination
                                         </button>
                                     </div>
                                 </form>
@@ -207,4 +235,4 @@ const AddAirline = () => {
     );
 };
 
-export default AddAirline;
+export default AddDestination;

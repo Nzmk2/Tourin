@@ -1,8 +1,8 @@
-// src/pages/admin/airline/AddAirline.js
+// src/pages/admin/destination/EditDestination.js
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 
@@ -10,7 +10,7 @@ import Navbar from '../../../components/Navbar';
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
-const AddAirline = () => {
+const EditDestination = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -19,13 +19,18 @@ const AddAirline = () => {
     });
 
     const [name, setName] = useState('');
-    const [code, setCode] = useState('');
-    const [website, setWebsite] = useState('');
-    const [logo, setLogo] = useState(null);
+    const [country, setCountry] = useState('');
+    const [city, setCity] = useState('');
+    const [description, setDescription] = useState('');
+    const [image, setImage] = useState(null);
+    const [currentImage, setCurrentImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [isPopular, setIsPopular] = useState(false);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { id } = useParams();
 
     useEffect(() => {
         if (isDarkMode) {
@@ -45,6 +50,31 @@ const AddAirline = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
+    useEffect(() => {
+        const getDestinationById = async () => {
+            try {
+                const response = await axiosInstance.get(`/destinations/${id}`);
+                const destination = response.data;
+                setName(destination.name);
+                setCountry(destination.country);
+                setCity(destination.city);
+                setDescription(destination.description);
+                setIsPopular(destination.isPopular);
+                if (destination.image) {
+                    setCurrentImage(`data:${destination.imageType};base64,${destination.image}`);
+                    setPreviewUrl(`data:${destination.imageType};base64,${destination.image}`);
+                }
+                setLoading(false);
+            } catch (error) {
+                setMsg("Failed to fetch destination data");
+                setMsgType('danger');
+                console.error("Error fetching destination:", error);
+                setLoading(false);
+            }
+        };
+        getDestinationById();
+    }, [id]);
+
     const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
     };
@@ -53,7 +83,7 @@ const AddAirline = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const handleLogoChange = (e) => {
+    const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5000000) { // 5MB limit
@@ -68,31 +98,33 @@ const AddAirline = () => {
                 return;
             }
 
-            setLogo(file);
+            setImage(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
     };
 
-    const saveAirline = async (e) => {
+    const updateDestination = async (e) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append('name', name);
-        formData.append('code', code);
-        formData.append('website', website);
-        if (logo) {
-            formData.append('logo', logo);
+        formData.append('country', country);
+        formData.append('city', city);
+        formData.append('description', description);
+        formData.append('isPopular', isPopular);
+        if (image) {
+            formData.append('image', image);
         }
 
         try {
-            await axiosInstance.post('/airlines', formData, {
+            await axiosInstance.patch(`/destinations/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            setMsg("Airline added successfully!");
+            setMsg("Destination updated successfully!");
             setMsgType('success');
             setTimeout(() => {
-                navigate('/admin/airlines');
+                navigate('/admin/destinations');
             }, 1500);
         } catch (error) {
             if (error.response) {
@@ -102,9 +134,27 @@ const AddAirline = () => {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error adding airline:", error);
+            console.error("Error updating destination:", error);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-container">
+                <Sidebar
+                    isSidebarClosed={isSidebarClosed}
+                    toggleDarkMode={toggleDarkMode}
+                    isDarkMode={isDarkMode}
+                />
+                <section className="dashboard">
+                    <Navbar toggleSidebar={toggleSidebar} />
+                    <div className="dash-content">
+                        <div className="loading-spinner">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-dashboard-container">
@@ -120,27 +170,27 @@ const AddAirline = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-plane-fly icon"></i>
+                            <i className="uil uil-map-marker icon"></i>
                             <div>
-                                <h1 className="page-title">Add New Airline</h1>
-                                <p className="page-subtitle">Create a new airline record.</p>
+                                <h1 className="page-title">Edit Destination</h1>
+                                <p className="page-subtitle">Update destination information.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
                             <div className="form-wrapper">
-                                <form onSubmit={saveAirline}>
+                                <form onSubmit={updateDestination}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="form-group">
-                                        <label htmlFor="name" className="form-label">Airline Name</label>
+                                        <label htmlFor="name" className="form-label">Destination Name</label>
                                         <input
                                             type="text"
                                             id="name"
                                             className="form-input"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            placeholder="Enter airline name"
+                                            placeholder="Enter destination name"
                                             required
                                         />
                                     </div>
@@ -148,28 +198,28 @@ const AddAirline = () => {
                                     <div className="flex-row">
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="code" className="form-label">Airline Code</label>
+                                                <label htmlFor="city" className="form-label">City</label>
                                                 <input
                                                     type="text"
-                                                    id="code"
+                                                    id="city"
                                                     className="form-input"
-                                                    value={code}
-                                                    onChange={(e) => setCode(e.target.value)}
-                                                    placeholder="Enter airline code"
+                                                    value={city}
+                                                    onChange={(e) => setCity(e.target.value)}
+                                                    placeholder="Enter city"
                                                     required
                                                 />
                                             </div>
                                         </div>
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="website" className="form-label">Website</label>
+                                                <label htmlFor="country" className="form-label">Country</label>
                                                 <input
-                                                    type="url"
-                                                    id="website"
+                                                    type="text"
+                                                    id="country"
                                                     className="form-input"
-                                                    value={website}
-                                                    onChange={(e) => setWebsite(e.target.value)}
-                                                    placeholder="Enter website URL"
+                                                    value={country}
+                                                    onChange={(e) => setCountry(e.target.value)}
+                                                    placeholder="Enter country"
                                                     required
                                                 />
                                             </div>
@@ -177,12 +227,25 @@ const AddAirline = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="logo" className="form-label">Airline Logo</label>
+                                        <label htmlFor="description" className="form-label">Description</label>
+                                        <textarea
+                                            id="description"
+                                            className="form-input"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Enter destination description"
+                                            rows="4"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="image" className="form-label">Destination Image</label>
                                         <input
                                             type="file"
-                                            id="logo"
+                                            id="image"
                                             className="form-input file-input"
-                                            onChange={handleLogoChange}
+                                            onChange={handleImageChange}
                                             accept="image/*"
                                         />
                                         {previewUrl && (
@@ -192,9 +255,20 @@ const AddAirline = () => {
                                         )}
                                     </div>
 
+                                    <div className="form-group checkbox-group">
+                                        <label className="checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={isPopular}
+                                                onChange={(e) => setIsPopular(e.target.checked)}
+                                            />
+                                            Mark as Popular Destination
+                                        </label>
+                                    </div>
+
                                     <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
-                                            Add Airline
+                                            Update Destination
                                         </button>
                                     </div>
                                 </form>
@@ -207,4 +281,4 @@ const AddAirline = () => {
     );
 };
 
-export default AddAirline;
+export default EditDestination;

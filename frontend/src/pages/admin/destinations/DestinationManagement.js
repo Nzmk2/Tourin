@@ -1,5 +1,3 @@
-// src/pages/admin/user/UserManagement.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
@@ -10,7 +8,7 @@ import Navbar from '../../../components/Navbar';
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
-const UserManagement = () => {
+const DestinationManagement = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
         return localStorage.getItem("status") === "close";
     });
@@ -18,11 +16,11 @@ const UserManagement = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [users, setUsers] = useState([]);
+    const [destinations, setDestinations] = useState([]);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [showModal, setShowModal] = useState(false);
-    const [userToDelete, setUserToDelete] = useState(null);
+    const [destinationToDelete, setDestinationToDelete] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -51,11 +49,11 @@ const UserManagement = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const getUsers = async () => {
+    const getDestinations = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/users');
-            setUsers(response.data);
+            const response = await axiosInstance.get('/destinations');
+            setDestinations(response.data);
             setMsg('');
             setLoading(false);
         } catch (error) {
@@ -64,58 +62,50 @@ const UserManagement = () => {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                setMsg("Failed to load users. Network error or server unavailable.");
+                setMsg("Failed to load destinations. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error fetching users:", error);
+            console.error("Error fetching destinations:", error);
         }
     };
 
     useEffect(() => {
-        getUsers();
+        getDestinations();
     }, []);
 
-    const confirmDelete = (userId) => {
-        setUserToDelete(userId);
+    const confirmDelete = (destinationId) => {
+        setDestinationToDelete(destinationId);
         setShowModal(true);
     };
 
     const cancelDelete = () => {
         setShowModal(false);
-        setUserToDelete(null);
+        setDestinationToDelete(null);
     };
 
     const executeDelete = async () => {
         setShowModal(false);
-        if (!userToDelete) return;
+        if (!destinationToDelete) return;
 
         try {
-            await axiosInstance.delete(`/users/${userToDelete}`);
-            setMsg("User deleted successfully!");
+            await axiosInstance.delete(`/destinations/${destinationToDelete}`);
+            setMsg("Destination deleted successfully!");
             setMsgType('success');
-            setUsers(prevUsers => 
-                prevUsers.filter(user => user.userID !== userToDelete)
+            setDestinations(prevDestinations => 
+                prevDestinations.filter(destination => destination.destinationID !== destinationToDelete)
             );
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                setMsg("Failed to delete user. Network error or server unavailable.");
+                setMsg("Failed to delete destination. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error deleting user:", error);
+            console.error("Error deleting destination:", error);
         } finally {
-            setUserToDelete(null);
+            setDestinationToDelete(null);
         }
-    };
-
-    const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
     };
 
     if (loading) {
@@ -150,16 +140,16 @@ const UserManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-users-alt icon"></i>
+                            <i className="uil uil-map-marker icon"></i>
                             <div>
-                                <h1 className="page-title">User Management</h1>
-                                <p className="page-subtitle">Manage all users.</p>
+                                <h1 className="page-title">Destination Management</h1>
+                                <p className="page-subtitle">Manage all destination details.</p>
                             </div>
                         </div>
 
                         <div className="management-container">
-                            <Link to="/admin/users/add" className="action-button">
-                                <i className="uil uil-plus"></i> Add New User
+                            <Link to="/admin/destinations/add" className="action-button">
+                                <i className="uil uil-plus"></i> Add New Destination
                             </Link>
                             {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
                             <div className="data-table-container">
@@ -167,57 +157,50 @@ const UserManagement = () => {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Profile</th>
+                                            <th>Image</th>
                                             <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                            <th>Joined Date</th>
-                                            <th>Status</th>
+                                            <th>City</th>
+                                            <th>Country</th>
+                                            <th>Rating</th>
+                                            <th>Popular</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {users.length > 0 ? (
-                                            users.map((user, index) => (
-                                                <tr key={user.userID}>
+                                        {destinations.length > 0 ? (
+                                            destinations.map((destination, index) => (
+                                                <tr key={destination.destinationID}>
                                                     <td>{index + 1}</td>
                                                     <td>
-                                                        {user.profileImage ? (
+                                                        {destination.image ? (
                                                             <img 
-                                                                src={`data:${user.profileImageType};base64,${user.profileImage}`}
-                                                                alt={user.name}
-                                                                className="user-avatar"
+                                                                src={`data:${destination.imageType};base64,${destination.image}`}
+                                                                alt={destination.name}
+                                                                className="destination-thumbnail"
                                                             />
                                                         ) : (
-                                                            <div className="default-avatar">
-                                                                {user.name.charAt(0).toUpperCase()}
-                                                            </div>
+                                                            'No Image'
                                                         )}
                                                     </td>
-                                                    <td>{user.name}</td>
-                                                    <td>{user.email}</td>
+                                                    <td>{destination.name}</td>
+                                                    <td>{destination.city}</td>
+                                                    <td>{destination.country}</td>
+                                                    <td>{destination.rating.toFixed(1)}</td>
                                                     <td>
-                                                        <span className={`role-badge ${user.role.toLowerCase()}`}>
-                                                            {user.role}
-                                                        </span>
-                                                    </td>
-                                                    <td>{formatDate(user.createdAt)}</td>
-                                                    <td>
-                                                        <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
-                                                            {user.isActive ? 'Active' : 'Inactive'}
+                                                        <span className={`status-badge ${destination.isPopular ? 'active' : 'inactive'}`}>
+                                                            {destination.isPopular ? 'Yes' : 'No'}
                                                         </span>
                                                     </td>
                                                     <td>
                                                         <Link 
-                                                            to={`/admin/users/edit/${user.userID}`} 
+                                                            to={`/admin/destinations/edit/${destination.destinationID}`} 
                                                             className="table-action-button edit"
                                                         >
                                                             Edit
                                                         </Link>
                                                         <button 
-                                                            onClick={() => confirmDelete(user.userID)} 
+                                                            onClick={() => confirmDelete(destination.destinationID)} 
                                                             className="table-action-button delete"
-                                                            disabled={user.role === 'ADMIN'}
                                                         >
                                                             Delete
                                                         </button>
@@ -227,7 +210,7 @@ const UserManagement = () => {
                                         ) : (
                                             <tr>
                                                 <td colSpan="8" className="no-data-message">
-                                                    No users found.
+                                                    No destinations found.
                                                 </td>
                                             </tr>
                                         )}
@@ -243,7 +226,7 @@ const UserManagement = () => {
                 <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this destination? This action cannot be undone.</p>
                         <div className="modal-buttons">
                             <button onClick={executeDelete} className="modal-button confirm">
                                 Delete
@@ -259,4 +242,4 @@ const UserManagement = () => {
     );
 };
 
-export default UserManagement;
+export default DestinationManagement;

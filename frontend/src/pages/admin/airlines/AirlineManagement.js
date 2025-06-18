@@ -1,9 +1,10 @@
-// frontend/src/pages/admin/AirlineManagement.jsx
-import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
+// src/pages/admin/airline/AirlineManagement.js
+
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../../api/axiosConfig'; // Sesuaikan path jika perlu
-import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+import axiosInstance from '../../../api/axiosConfig';
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 // Import CSS
 import '../../../assets/styles/Admin.css';
@@ -22,8 +23,8 @@ const AirlineManagement = () => {
     const [msgType, setMsgType] = useState('info');
     const [showModal, setShowModal] = useState(false);
     const [airlineToDelete, setAirlineToDelete] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Efek untuk mengelola mode gelap/terang pada body
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -33,7 +34,6 @@ const AirlineManagement = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Efek untuk mengelola status sidebar (terbuka/tertutup) pada body
     useEffect(() => {
         if (isSidebarClosed) {
             document.body.classList.add("close");
@@ -43,23 +43,23 @@ const AirlineManagement = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    // Menggunakan useCallback untuk fungsi toggleSidebar agar tidak dibuat ulang pada setiap render
-    const toggleSidebar = useCallback(() => {
+    const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
-    }, []);
+    };
 
-    // Menggunakan useCallback untuk fungsi toggleDarkMode agar tidak dibuat ulang pada setiap render
-    const toggleDarkMode = useCallback(() => {
+    const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
-    }, []);
+    };
 
-    // Fungsi untuk mengambil data maskapai
-    const getAirlines = useCallback(async () => { // Menggunakan useCallback
+    const getAirlines = async () => {
         try {
+            setLoading(true);
             const response = await axiosInstance.get('/airlines');
             setAirlines(response.data);
-            setMsg(''); // Bersihkan pesan setelah berhasil memuat data
+            setMsg('');
+            setLoading(false);
         } catch (error) {
+            setLoading(false);
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
@@ -69,38 +69,33 @@ const AirlineManagement = () => {
             }
             console.error("Error fetching airlines:", error);
         }
-    }, []); // Dependensi kosong karena tidak ada nilai dari scope luar yang berubah
+    };
 
-    // Panggil getAirlines saat komponen pertama kali di-mount
     useEffect(() => {
         getAirlines();
-    }, [getAirlines]); // Tambahkan getAirlines sebagai dependensi useEffect
+    }, []);
 
-    // Fungsi untuk menampilkan modal konfirmasi penghapusan
     const confirmDelete = (airlineId) => {
         setAirlineToDelete(airlineId);
         setShowModal(true);
     };
 
-    // Fungsi untuk membatalkan penghapusan (menutup modal)
     const cancelDelete = () => {
         setShowModal(false);
         setAirlineToDelete(null);
     };
 
-    // Fungsi untuk mengeksekusi penghapusan setelah konfirmasi
     const executeDelete = async () => {
-        setShowModal(false); // Tutup modal terlebih dahulu
-        if (!airlineToDelete) return; // Pastikan ada ID yang akan dihapus
+        setShowModal(false);
+        if (!airlineToDelete) return;
 
         try {
-            // Lakukan permintaan DELETE ke backend
             await axiosInstance.delete(`/airlines/${airlineToDelete}`);
             setMsg("Airline deleted successfully!");
             setMsgType('success');
-            // Perbarui state 'airlines' secara lokal dengan memfilter data yang dihapus
-            setAirlines(prevAirlines => prevAirlines.filter(airline => airline.airlineID !== airlineToDelete));
-            // Tidak perlu memanggil getAirlines() lagi karena state sudah diperbarui
+            setAirlines(prevAirlines => 
+                prevAirlines.filter(airline => airline.airlineID !== airlineToDelete)
+            );
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -111,9 +106,27 @@ const AirlineManagement = () => {
             }
             console.error("Error deleting airline:", error);
         } finally {
-            setAirlineToDelete(null); // Reset ID yang akan dihapus
+            setAirlineToDelete(null);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-container">
+                <Sidebar
+                    isSidebarClosed={isSidebarClosed}
+                    toggleDarkMode={toggleDarkMode}
+                    isDarkMode={isDarkMode}
+                />
+                <section className="dashboard">
+                    <Navbar toggleSidebar={toggleSidebar} />
+                    <div className="dash-content">
+                        <div className="loading-spinner">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-dashboard-container">
@@ -129,10 +142,10 @@ const AirlineManagement = () => {
                 <div className="dash-content">
                     <div className="management-page-wrapper">
                         <div className="page-header">
-                            <i className="uil uil-plane-departure icon"></i>
+                            <i className="uil uil-plane-fly icon"></i>
                             <div>
                                 <h1 className="page-title">Airline Management</h1>
-                                <p className="page-subtitle">Manage all airline details.</p>
+                                <p className="page-subtitle">Manage all airlines.</p>
                             </div>
                         </div>
 
@@ -146,10 +159,10 @@ const AirlineManagement = () => {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Airline ID</th>
-                                            <th>Airline Name</th>
-                                            <th>Contact Number</th>
-                                            <th>Operating Region</th>
+                                            <th>Logo</th>
+                                            <th>Name</th>
+                                            <th>Code</th>
+                                            <th>Website</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -158,20 +171,45 @@ const AirlineManagement = () => {
                                             airlines.map((airline, index) => (
                                                 <tr key={airline.airlineID}>
                                                     <td>{index + 1}</td>
-                                                    <td>{airline.airlineID}</td>
-                                                    <td>{airline.airlineName}</td>
-                                                    <td>{airline.contactNumber || 'N/A'}</td> {/* Pastikan properti sesuai dengan model backend Anda */}
-                                                    <td>{airline.operatingRegion || 'N/A'}</td> {/* Pastikan properti sesuai dengan model backend Anda */}
                                                     <td>
-                                                        <Link to={`/admin/airlines/edit/${airline.airlineID}`} className="table-action-button edit">Edit</Link>
-                                                        <button onClick={() => confirmDelete(airline.airlineID)} className="table-action-button delete">Delete</button>
+                                                        {airline.logo ? (
+                                                            <img 
+                                                                src={`data:${airline.logoType};base64,${airline.logo}`}
+                                                                alt={airline.name}
+                                                                className="airline-logo"
+                                                            />
+                                                        ) : (
+                                                            'No Logo'
+                                                        )}
+                                                    </td>
+                                                    <td>{airline.name}</td>
+                                                    <td>{airline.code}</td>
+                                                    <td>
+                                                        <a href={airline.website} target="_blank" rel="noopener noreferrer">
+                                                            {airline.website}
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <Link 
+                                                            to={`/admin/airlines/edit/${airline.airlineID}`} 
+                                                            className="table-action-button edit"
+                                                        >
+                                                            Edit
+                                                        </Link>
+                                                        <button 
+                                                            onClick={() => confirmDelete(airline.airlineID)} 
+                                                            className="table-action-button delete"
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                {/* colSpan disesuaikan dengan jumlah kolom (6) */}
-                                                <td colSpan="6" className="no-data-message">No airlines found.</td>
+                                                <td colSpan="6" className="no-data-message">
+                                                    No airlines found.
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -181,14 +219,19 @@ const AirlineManagement = () => {
                     </div>
                 </div>
             </section>
+
             {showModal && (
-                <div className={`modal-overlay ${showModal ? 'active' : ''}`}> {/* Tambahkan class 'active' */}
+                <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
                         <h3>Confirm Deletion</h3>
-                        <p>Are you sure you want to delete this flight? This action cannot be undone.</p>
+                        <p>Are you sure you want to delete this airline? This action cannot be undone.</p>
                         <div className="modal-buttons">
-                            <button onClick={executeDelete} className="modal-button confirm">Delete</button>
-                            <button onClick={cancelDelete} className="modal-button cancel">Cancel</button>
+                            <button onClick={executeDelete} className="modal-button confirm">
+                                Delete
+                            </button>
+                            <button onClick={cancelDelete} className="modal-button cancel">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

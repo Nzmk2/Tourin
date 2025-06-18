@@ -1,8 +1,10 @@
+// src/pages/admin/airport/EditAirport.js
+
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../../components/Sidebar'; // Sesuaikan path jika perlu
-import Navbar from '../../../components/Navbar';   // Sesuaikan path jika perlu
+import Sidebar from '../../../components/Sidebar';
+import Navbar from '../../../components/Navbar';
 
 // Import CSS
 import '../../../assets/styles/Admin.css';
@@ -16,17 +18,16 @@ const EditAirport = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    // State variables for airport data, strictly matching the Sequelize model
-    const [airportCode, setAirportCode] = useState(''); // Matches airportCode in model
-    const [airportName, setAirportName] = useState(''); // Matches airportName in model
-    const [facilities, setFacilities] = useState('');   // Matches facilities in model (TEXT type, so likely a string)
-    const [location, setLocation] = useState('');       // Matches location in model
+    const [code, setCode] = useState('');
+    const [name, setName] = useState('');
+    const [city, setCity] = useState('');
+    const [country, setCountry] = useState('');
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const { id } = useParams(); // 'id' from URL will be 'airportCode'
+    const { id } = useParams();
 
-    // Effect for Dark Mode
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -36,7 +37,6 @@ const EditAirport = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    // Effect for Sidebar State
     useEffect(() => {
         if (isSidebarClosed) {
             document.body.classList.add("close");
@@ -46,52 +46,42 @@ const EditAirport = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    // Toggle Sidebar Function
+    useEffect(() => {
+        const getAirportById = async () => {
+            try {
+                const response = await axiosInstance.get(`/airports/${id}`);
+                const airport = response.data;
+                setCode(airport.code);
+                setName(airport.name);
+                setCity(airport.city);
+                setCountry(airport.country);
+                setLoading(false);
+            } catch (error) {
+                setMsg("Failed to fetch airport data");
+                setMsgType('danger');
+                console.error("Error fetching airport:", error);
+                setLoading(false);
+            }
+        };
+        getAirportById();
+    }, [id]);
+
     const toggleSidebar = () => {
         setIsSidebarClosed(prevState => !prevState);
     };
 
-    // Toggle Dark Mode Function
     const toggleDarkMode = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    // Fetch Airport Data by ID (using airportCode from params)
-    useEffect(() => {
-        const getAirportById = async () => {
-            try {
-                // Assuming your API endpoint uses 'airportCode' for the ID
-                const response = await axiosInstance.get(`/airports/${id}`);
-                const airportData = response.data;
-
-                // Populate the state variables with fetched data, matching model fields
-                setAirportCode(airportData.airportCode || '');
-                setAirportName(airportData.airportName || '');
-                setFacilities(airportData.facilities || ''); // Facilities is TEXT, so directly set string
-                setLocation(airportData.location || '');
-            } catch (error) {
-                if (error.response) {
-                    setMsg(error.response.data.msg);
-                    setMsgType('danger');
-                } else {
-                    setMsg("Network error or server unavailable.");
-                    setMsgType('danger');
-                }
-                console.error("Error fetching airport data for edit:", error);
-            }
-        };
-        getAirportById();
-    }, [id]); // Dependency array includes 'id' (which is airportCode)
-
-    // Update Airport Function
     const updateAirport = async (e) => {
         e.preventDefault();
         try {
-            // Send data matching the Sequelize model fields
             await axiosInstance.patch(`/airports/${id}`, {
-                airportName,
-                facilities,
-                location
+                code,
+                name,
+                city,
+                country
             });
             setMsg("Airport updated successfully!");
             setMsgType('success');
@@ -110,6 +100,24 @@ const EditAirport = () => {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="admin-dashboard-container">
+                <Sidebar
+                    isSidebarClosed={isSidebarClosed}
+                    toggleDarkMode={toggleDarkMode}
+                    isDarkMode={isDarkMode}
+                />
+                <section className="dashboard">
+                    <Navbar toggleSidebar={toggleSidebar} />
+                    <div className="dash-content">
+                        <div className="loading-spinner">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
     return (
         <div className="admin-dashboard-container">
             <Sidebar
@@ -127,7 +135,7 @@ const EditAirport = () => {
                             <i className="uil uil-plane icon"></i>
                             <div>
                                 <h1 className="page-title">Edit Airport</h1>
-                                <p className="page-subtitle">Update the airport details below.</p>
+                                <p className="page-subtitle">Update airport information.</p>
                             </div>
                         </div>
 
@@ -137,66 +145,64 @@ const EditAirport = () => {
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
                                     <div className="form-group">
-                                        <label htmlFor="airportCode" className="form-label">Airport Code</label>
+                                        <label htmlFor="code" className="form-label">Airport Code</label>
                                         <input
                                             type="text"
-                                            name="airportCode"
-                                            id="airportCode"
-                                            placeholder="e.g., CGK"
+                                            id="code"
                                             className="form-input"
-                                            value={airportCode}
-                                            // airportCode is primary key, usually not editable after creation
-                                            // You might want to make this readonly or display it as text.
-                                            // For this example, it's kept as input but is not sent in PATCH.
-                                            // If it's editable and you need to change it, your backend PATCH
-                                            // will need to support changing primary keys, which is unusual.
-                                            readOnly // Makes it non-editable
-                                            disabled // Makes it non-editable and visually different
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="airportName" className="form-label">Airport Name</label>
-                                        <input
-                                            type="text"
-                                            name="airportName"
-                                            id="airportName"
-                                            placeholder="e.g., Soekarno-Hatta International Airport"
-                                            className="form-input"
-                                            value={airportName}
-                                            onChange={(e) => setAirportName(e.target.value)}
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            placeholder="Enter airport code (e.g., CGK, DPS)"
+                                            maxLength="10"
                                             required
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="facilities" className="form-label">Facilities (Comma Separated)</label>
-                                        <textarea
-                                            name="facilities"
-                                            id="facilities"
-                                            placeholder="e.g., WiFi, Lounges, Shops"
-                                            className="form-input"
-                                            value={facilities}
-                                            onChange={(e) => setFacilities(e.target.value)}
-                                            rows="3"
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="location" className="form-label">Location</label>
+                                        <label htmlFor="name" className="form-label">Airport Name</label>
                                         <input
                                             type="text"
-                                            name="location"
-                                            id="location"
-                                            placeholder="e.g., Jakarta, Indonesia"
+                                            id="name"
                                             className="form-input"
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Enter airport name"
                                             required
                                         />
                                     </div>
 
-                                    <div>
+                                    <div className="flex-row">
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="city" className="form-label">City</label>
+                                                <input
+                                                    type="text"
+                                                    id="city"
+                                                    className="form-input"
+                                                    value={city}
+                                                    onChange={(e) => setCity(e.target.value)}
+                                                    placeholder="Enter city"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="country" className="form-label">Country</label>
+                                                <input
+                                                    type="text"
+                                                    id="country"
+                                                    className="form-input"
+                                                    value={country}
+                                                    onChange={(e) => setCountry(e.target.value)}
+                                                    placeholder="Enter country"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-actions">
                                         <button type="submit" className="form-submit-button">
                                             Update Airport
                                         </button>
