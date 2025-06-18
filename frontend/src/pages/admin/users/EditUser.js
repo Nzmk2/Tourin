@@ -1,5 +1,3 @@
-// src/pages/admin/user/EditUser.js
-
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -18,19 +16,21 @@ const EditUser = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [role, setRole] = useState('');
-    const [profileImage, setProfileImage] = useState(null);
-    const [currentProfileImage, setCurrentProfileImage] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(null);
-    const [isActive, setIsActive] = useState(true);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        passportNumber: '',
+        role: 'USER',
+        isActive: true
+    });
+
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -55,17 +55,18 @@ const EditUser = () => {
     useEffect(() => {
         const getUserById = async () => {
             try {
-                const response = await axiosInstance.get(`/users/${id}`);
+                const response = await axiosInstance.get(`/api/users/${id}`);
                 const user = response.data;
-                setName(user.name);
-                setEmail(user.email);
-                setPhoneNumber(user.phoneNumber || '');
-                setRole(user.role);
-                setIsActive(user.isActive);
-                if (user.profileImage) {
-                    setCurrentProfileImage(`data:${user.profileImageType};base64,${user.profileImage}`);
-                    setPreviewUrl(`data:${user.profileImageType};base64,${user.profileImage}`);
-                }
+                setFormData({
+                    firstName: user.firstName || '',
+                    lastName: user.lastName || '',
+                    email: user.email || '',
+                    password: '',
+                    confirmPassword: '',
+                    passportNumber: user.passportNumber || '',
+                    role: user.role || 'USER',
+                    isActive: user.isActive !== undefined ? user.isActive : true
+                });
                 setLoading(false);
             } catch (error) {
                 setMsg("Failed to fetch user data");
@@ -85,35 +86,29 @@ const EditUser = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
-    const handleProfileImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5000000) { // 5MB limit
-                setMsg("File size must be less than 5MB");
-                setMsgType('danger');
-                return;
-            }
-
-            if (!file.type.match('image.*')) {
-                setMsg("Please select an image file");
-                setMsgType('danger');
-                return;
-            }
-
-            setProfileImage(file);
-            setPreviewUrl(URL.createObjectURL(file));
-        }
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
     const validateForm = () => {
-        if (password || confirmPassword) {
-            if (password !== confirmPassword) {
+        if (!formData.firstName.trim() || !formData.lastName.trim()) {
+            setMsg("First name and last name are required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (formData.password || formData.confirmPassword) {
+            if (formData.password !== formData.confirmPassword) {
                 setMsg("Passwords do not match");
                 setMsgType('danger');
                 return false;
             }
 
-            if (password.length < 6) {
+            if (formData.password.length < 6) {
                 setMsg("Password must be at least 6 characters long");
                 setMsgType('danger');
                 return false;
@@ -121,15 +116,14 @@ const EditUser = () => {
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(formData.email)) {
             setMsg("Please enter a valid email address");
             setMsgType('danger');
             return false;
         }
 
-        const phoneRegex = /^\+?[\d\s-]{10,}$/;
-        if (phoneNumber && !phoneRegex.test(phoneNumber)) {
-            setMsg("Please enter a valid phone number");
+        if (formData.passportNumber && !/^[A-Z0-9]{6,9}$/i.test(formData.passportNumber)) {
+            setMsg("Invalid passport number format. Must be 6-9 alphanumeric characters");
             setMsgType('danger');
             return false;
         }
@@ -144,25 +138,25 @@ const EditUser = () => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('email', email);
-        if (password) {
-            formData.append('password', password);
-        }
-        formData.append('phoneNumber', phoneNumber);
-        formData.append('role', role);
-        formData.append('isActive', isActive);
-        if (profileImage) {
-            formData.append('profileImage', profileImage);
+        setIsSubmitting(true);
+        setMsg('');
+
+        const payload = {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            passportNumber: formData.passportNumber,
+            role: formData.role,
+            isActive: formData.isActive
+        };
+
+        // Only include password if it's been changed
+        if (formData.password) {
+            payload.password = formData.password;
         }
 
         try {
-            await axiosInstance.patch(`/users/${id}`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            await axiosInstance.patch(`/api/users/${id}`, payload);
             setMsg("User updated successfully!");
             setMsgType('success');
             setTimeout(() => {
@@ -170,13 +164,15 @@ const EditUser = () => {
             }, 1500);
         } catch (error) {
             if (error.response) {
-                setMsg(error.response.data.msg);
+                setMsg(error.response.data.msg || 'Failed to update user');
                 setMsgType('danger');
             } else {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
             console.error("Error updating user:", error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -215,7 +211,7 @@ const EditUser = () => {
                             <i className="uil uil-user-circle icon"></i>
                             <div>
                                 <h1 className="page-title">Edit User</h1>
-                                <p className="page-subtitle">Update user account information.</p>
+                                <p className="page-subtitle">Update user account information</p>
                             </div>
                         </div>
 
@@ -224,17 +220,39 @@ const EditUser = () => {
                                 <form onSubmit={updateUser}>
                                     {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
 
-                                    <div className="form-group">
-                                        <label htmlFor="name" className="form-label">Full Name</label>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            className="form-input"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            placeholder="Enter full name"
-                                            required
-                                        />
+                                    <div className="flex-row">
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="firstName" className="form-label">First Name</label>
+                                                <input
+                                                    type="text"
+                                                    id="firstName"
+                                                    name="firstName"
+                                                    className="form-input"
+                                                    value={formData.firstName}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Enter first name"
+                                                    required
+                                                    disabled={isSubmitting}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-col-half">
+                                            <div className="form-group">
+                                                <label htmlFor="lastName" className="form-label">Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    id="lastName"
+                                                    name="lastName"
+                                                    className="form-input"
+                                                    value={formData.lastName}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Enter last name"
+                                                    required
+                                                    disabled={isSubmitting}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="form-group">
@@ -242,11 +260,13 @@ const EditUser = () => {
                                         <input
                                             type="email"
                                             id="email"
+                                            name="email"
                                             className="form-input"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            value={formData.email}
+                                            onChange={handleInputChange}
                                             placeholder="Enter email address"
                                             required
+                                            disabled={isSubmitting}
                                         />
                                     </div>
 
@@ -259,10 +279,12 @@ const EditUser = () => {
                                                 <input
                                                     type="password"
                                                     id="password"
+                                                    name="password"
                                                     className="form-input"
-                                                    value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    value={formData.password}
+                                                    onChange={handleInputChange}
                                                     placeholder="Enter new password"
+                                                    disabled={isSubmitting}
                                                 />
                                             </div>
                                         </div>
@@ -274,10 +296,12 @@ const EditUser = () => {
                                                 <input
                                                     type="password"
                                                     id="confirmPassword"
+                                                    name="confirmPassword"
                                                     className="form-input"
-                                                    value={confirmPassword}
-                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    value={formData.confirmPassword}
+                                                    onChange={handleInputChange}
                                                     placeholder="Confirm new password"
+                                                    disabled={isSubmitting}
                                                 />
                                             </div>
                                         </div>
@@ -286,15 +310,20 @@ const EditUser = () => {
                                     <div className="flex-row">
                                         <div className="flex-col-half">
                                             <div className="form-group">
-                                                <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
+                                                <label htmlFor="passportNumber" className="form-label">Passport Number</label>
                                                 <input
-                                                    type="tel"
-                                                    id="phoneNumber"
+                                                    type="text"
+                                                    id="passportNumber"
+                                                    name="passportNumber"
                                                     className="form-input"
-                                                    value={phoneNumber}
-                                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                                    placeholder="Enter phone number"
+                                                    value={formData.passportNumber}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Enter passport number"
+                                                    disabled={isSubmitting}
                                                 />
+                                                <small className="form-text text-muted">
+                                                    6-9 alphanumeric characters
+                                                </small>
                                             </div>
                                         </div>
                                         <div className="flex-col-half">
@@ -302,10 +331,12 @@ const EditUser = () => {
                                                 <label htmlFor="role" className="form-label">User Role</label>
                                                 <select
                                                     id="role"
+                                                    name="role"
                                                     className="form-input"
-                                                    value={role}
-                                                    onChange={(e) => setRole(e.target.value)}
+                                                    value={formData.role}
+                                                    onChange={handleInputChange}
                                                     required
+                                                    disabled={isSubmitting}
                                                 >
                                                     <option value="USER">User</option>
                                                     <option value="ADMIN">Admin</option>
@@ -314,36 +345,22 @@ const EditUser = () => {
                                         </div>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label htmlFor="profileImage" className="form-label">Profile Image</label>
-                                        <input
-                                            type="file"
-                                            id="profileImage"
-                                            className="form-input file-input"
-                                            onChange={handleProfileImageChange}
-                                            accept="image/*"
-                                        />
-                                        {previewUrl && (
-                                            <div className="image-preview">
-                                                <img src={previewUrl} alt="Preview" />
-                                            </div>
-                                        )}
-                                    </div>
-
                                     <div className="form-group checkbox-group">
                                         <label className="checkbox-label">
                                             <input
                                                 type="checkbox"
-                                                checked={isActive}
-                                                onChange={(e) => setIsActive(e.target.checked)}
+                                                name="isActive"
+                                                checked={formData.isActive}
+                                                onChange={handleInputChange}
+                                                disabled={isSubmitting}
                                             />
                                             Account Active
                                         </label>
                                     </div>
 
                                     <div className="form-actions">
-                                        <button type="submit" className="form-submit-button">
-                                            Update User
+                                        <button type="submit" className="form-submit-button" disabled={isSubmitting}>
+                                            {isSubmitting ? 'Updating...' : 'Update User'}
                                         </button>
                                     </div>
                                 </form>

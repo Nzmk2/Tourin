@@ -1,5 +1,3 @@
-// src/pages/admin/user/UserManagement.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
@@ -43,19 +41,14 @@ const UserManagement = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    const toggleSidebar = () => {
-        setIsSidebarClosed(prevState => !prevState);
-    };
-
-    const toggleDarkMode = () => {
-        setIsDarkMode(prevState => !prevState);
-    };
-
     const getUsers = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/users');
-            setUsers(response.data);
+            const response = await axiosInstance.get('/api/users');
+            console.log('Users data received:', response.data);
+            // Filter hanya user dengan role USER
+            const filteredUsers = response.data.filter(user => user.role === 'USER');
+            setUsers(filteredUsers);
             setMsg('');
             setLoading(false);
         } catch (error) {
@@ -75,6 +68,14 @@ const UserManagement = () => {
         getUsers();
     }, []);
 
+    const toggleSidebar = () => {
+        setIsSidebarClosed(prevState => !prevState);
+    };
+
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevState => !prevState);
+    };
+
     const confirmDelete = (userId) => {
         setUserToDelete(userId);
         setShowModal(true);
@@ -90,12 +91,10 @@ const UserManagement = () => {
         if (!userToDelete) return;
 
         try {
-            await axiosInstance.delete(`/users/${userToDelete}`);
+            await axiosInstance.delete(`/api/users/${userToDelete}`);
             setMsg("User deleted successfully!");
             setMsgType('success');
-            setUsers(prevUsers => 
-                prevUsers.filter(user => user.userID !== userToDelete)
-            );
+            getUsers(); // Refresh the user list after deletion
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -111,6 +110,7 @@ const UserManagement = () => {
     };
 
     const formatDate = (date) => {
+        if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -153,7 +153,7 @@ const UserManagement = () => {
                             <i className="uil uil-users-alt icon"></i>
                             <div>
                                 <h1 className="page-title">User Management</h1>
-                                <p className="page-subtitle">Manage all users.</p>
+                                <p className="page-subtitle">Manage all users</p>
                             </div>
                         </div>
 
@@ -170,63 +170,48 @@ const UserManagement = () => {
                                             <th>Profile</th>
                                             <th>Name</th>
                                             <th>Email</th>
-                                            <th>Role</th>
+                                            <th>Passport Number</th>
                                             <th>Joined Date</th>
-                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {users.length > 0 ? (
-                                            users.map((user, index) => (
-                                                <tr key={user.userID}>
-                                                    <td>{index + 1}</td>
-                                                    <td>
-                                                        {user.profileImage ? (
-                                                            <img 
-                                                                src={`data:${user.profileImageType};base64,${user.profileImage}`}
-                                                                alt={user.name}
-                                                                className="user-avatar"
-                                                            />
-                                                        ) : (
+                                            users.map((user, index) => {
+                                                const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
+                                                
+                                                return (
+                                                    <tr key={user?.userID || index}>
+                                                        <td>{index + 1}</td>
+                                                        <td>
                                                             <div className="default-avatar">
-                                                                {user.name.charAt(0).toUpperCase()}
+                                                                {fullName ? fullName.charAt(0).toUpperCase() : 'U'}
                                                             </div>
-                                                        )}
-                                                    </td>
-                                                    <td>{user.name}</td>
-                                                    <td>{user.email}</td>
-                                                    <td>
-                                                        <span className={`role-badge ${user.role.toLowerCase()}`}>
-                                                            {user.role}
-                                                        </span>
-                                                    </td>
-                                                    <td>{formatDate(user.createdAt)}</td>
-                                                    <td>
-                                                        <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
-                                                            {user.isActive ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <Link 
-                                                            to={`/admin/users/edit/${user.userID}`} 
-                                                            className="table-action-button edit"
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                        <button 
-                                                            onClick={() => confirmDelete(user.userID)} 
-                                                            className="table-action-button delete"
-                                                            disabled={user.role === 'ADMIN'}
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))
+                                                        </td>
+                                                        <td>{fullName || 'N/A'}</td>
+                                                        <td>{user?.email || 'N/A'}</td>
+                                                        <td>{user?.passportNumber || 'N/A'}</td>
+                                                        <td>{formatDate(user?.createdAt)}</td>
+                                                        <td>
+                                                            <Link 
+                                                                to={`/admin/users/edit/${user?.userID}`} 
+                                                                className="table-action-button edit"
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                            <button 
+                                                                onClick={() => confirmDelete(user?.userID)} 
+                                                                className="table-action-button delete"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="no-data-message">
+                                                <td colSpan="7" className="no-data-message">
                                                     No users found.
                                                 </td>
                                             </tr>
