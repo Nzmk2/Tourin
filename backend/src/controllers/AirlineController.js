@@ -6,19 +6,19 @@ export const getAirlines = async(req, res) => {
             attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
         });
 
-        // Transform response to include base64 image
-        const airlinesWithImages = airlines.map(airline => {
-            const airlineData = airline.toJSON();
-            if (airlineData.logo) {
-                airlineData.logoUrl = `data:${airlineData.logoType};base64,${airlineData.logo.toString('base64')}`;
+        // Transform logo binary data to base64 string
+        const airlinesData = airlines.map(airline => {
+            const data = airline.toJSON();
+            if (data.logo) {
+                // Convert Buffer to base64 string but keep the original property names
+                data.logo = data.logo.toString('base64');
             }
-            delete airlineData.logo; // Remove binary data
-            delete airlineData.logoType; // Remove mime type
-            return airlineData;
+            return data;
         });
 
-        res.json(airlinesWithImages);
+        res.json(airlinesData);
     } catch (error) {
+        console.error('Error in getAirlines:', error);
         res.status(500).json({ msg: error.message });
     }
 };
@@ -47,25 +47,45 @@ export const getAirlineById = async(req, res) => {
 
 export const createAirline = async(req, res) => {
     try {
-        const { name, code } = req.body;
-        let logo = null;
-        let logoType = null;
+        console.log('Request body:', req.body);
+        console.log('Request file:', req.file);
 
-        // Handle image upload if exists
-        if (req.file) {
-            logo = req.file.buffer;
-            logoType = req.file.mimetype;
+        const { name, code } = req.body;
+        
+        if (!name || !code) {
+            return res.status(400).json({ 
+                msg: "Name and code are required fields" 
+            });
         }
 
-        await Airline.create({
+        const airlineData = {
             name: name,
-            code: code,
-            logo: logo,
-            logoType: logoType
-        });
+            code: code
+        };
 
-        res.json({ msg: "Airline Created Successfully" });
+        // Handle logo if uploaded
+        if (req.file) {
+            airlineData.logo = req.file.buffer;
+            airlineData.logoType = req.file.mimetype;
+        }
+
+        const airline = await Airline.create(airlineData);
+        
+        res.status(201).json({
+            msg: "Airline Created Successfully",
+            airline: {
+                airlineID: airline.airlineID,
+                name: airline.name,
+                code: airline.code
+            }
+        });
     } catch (error) {
+        console.error('Error in createAirline:', error);
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({
+                msg: "Airline code must be unique"
+            });
+        }
         res.status(500).json({ msg: error.message });
     }
 };

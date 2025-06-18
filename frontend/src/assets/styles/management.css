@@ -128,6 +128,12 @@ body.dark .management-container {
     box-shadow: none;
 }
 
+.airline-logo {
+    max-width: 100px;
+    max-height: 50px;
+    object-fit: contain;
+}
+
 /* Tombol Aksi (dari Admin.css) */
 .action-button {
     background-color: var(--primary-color);

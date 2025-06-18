@@ -59,10 +59,10 @@ const AdminDashboard = () => {
 
             try {
                 const [usersCount, bookingsCount, flightsCount, recentBookingsData] = await Promise.all([
-                    axiosInstance.get('/users/count'),
-                    axiosInstance.get('/bookings/count'),
-                    axiosInstance.get('/flights/count'),
-                    axiosInstance.get('/bookings/recent')
+                    axiosInstance.get('/api/users/count'),
+                    axiosInstance.get('/api/bookings/count'),
+                    axiosInstance.get('/api/flights/count'),
+                    axiosInstance.get('/api/bookings/recent')
                 ]);
 
                 setTotalUsers(usersCount.data.count.toLocaleString());
@@ -82,11 +82,16 @@ const AdminDashboard = () => {
                 setRecentBookings(formattedBookings);
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
-                setError(err.response?.data?.msg || "Failed to load dashboard data. Please try again later.");
-                setTotalUsers('0');
-                setTotalBookings('0');
-                setTotalFlights('0');
-                setRecentBookings([]);
+                if (err.response) {
+                    console.log('Error response:', err.response);
+                    setError(`Error: ${err.response.data.msg || err.response.statusText}`);
+                } else if (err.request) {
+                    console.log('Error request:', err.request);
+                    setError("Network error. Please check your connection.");
+                } else {
+                    console.log('Error:', err.message);
+                    setError(err.message);
+                }
             } finally {
                 setLoading(false);
             }

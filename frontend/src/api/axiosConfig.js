@@ -2,30 +2,38 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
     baseURL: 'http://localhost:5000',
-    withCredentials: true,
-    headers: {
-        'Content-Type': 'application/json'
-    }
+    withCredentials: true
 });
 
-// Tambahkan logging untuk debugging
+// Request interceptor
 axiosInstance.interceptors.request.use(
     (config) => {
-        console.log('Request URL:', config.url);
-        console.log('Request Method:', config.method);
-        console.log('Request Headers:', config.headers);
+        // Don't set Content-Type for FormData
+        if (!(config.data instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
         
         const accessToken = localStorage.getItem('accessToken');
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;
         }
+
+        console.log('Request Config:', {
+            url: config.url,
+            method: config.method,
+            headers: config.headers,
+            data: config.data instanceof FormData ? 'FormData' : config.data
+        });
+
         return config;
     },
     (error) => {
+        console.error('Request Error:', error);
         return Promise.reject(error);
     }
 );
 
+// Response interceptor remains the same
 axiosInstance.interceptors.response.use(
     (response) => {
         console.log('Response:', response);

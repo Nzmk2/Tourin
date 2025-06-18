@@ -1,6 +1,4 @@
-// src/pages/admin/airline/EditAirline.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
@@ -18,17 +16,43 @@ const EditAirline = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [name, setName] = useState('');
-    const [code, setCode] = useState('');
-    const [website, setWebsite] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        code: ''
+    });
     const [logo, setLogo] = useState(null);
-    const [currentLogo, setCurrentLogo] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
     const { id } = useParams();
+    const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        const getAirlineById = async () => {
+            try {
+                const response = await axiosInstance.get(`/api/airlines/${id}`);
+                const airline = response.data;
+                setFormData({
+                    name: airline.name,
+                    code: airline.code
+                });
+                if (airline.logo) {
+                    const logoUrl = `data:${airline.logoType};base64,${airline.logo}`;
+                    setPreviewUrl(logoUrl);
+                }
+                setLoading(false);
+            } catch (error) {
+                setMsg(error.response?.data?.msg || "Failed to fetch airline data");
+                setMsgType('danger');
+                console.error("Error fetching airline:", error);
+                setLoading(false);
+            }
+        };
+        getAirlineById();
+    }, [id]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -48,35 +72,15 @@ const EditAirline = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    useEffect(() => {
-        const getAirlineById = async () => {
-            try {
-                const response = await axiosInstance.get(`/airlines/${id}`);
-                const airline = response.data;
-                setName(airline.name);
-                setCode(airline.code);
-                setWebsite(airline.website);
-                if (airline.logo) {
-                    setCurrentLogo(`data:${airline.logoType};base64,${airline.logo}`);
-                    setPreviewUrl(`data:${airline.logoType};base64,${airline.logo}`);
-                }
-                setLoading(false);
-            } catch (error) {
-                setMsg("Failed to fetch airline data");
-                setMsgType('danger');
-                console.error("Error fetching airline:", error);
-                setLoading(false);
-            }
-        };
-        getAirlineById();
-    }, [id]);
+    const toggleSidebar = () => setIsSidebarClosed(prev => !prev);
+    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
-    const toggleSidebar = () => {
-        setIsSidebarClosed(prevState => !prevState);
-    };
-
-    const toggleDarkMode = () => {
-        setIsDarkMode(prevState => !prevState);
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleLogoChange = (e) => {
@@ -99,36 +103,55 @@ const EditAirline = () => {
         }
     };
 
+    const validateForm = () => {
+        if (!formData.name.trim()) {
+            setMsg("Airline name is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (!formData.code.trim()) {
+            setMsg("Airline code is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (formData.code.length > 10) {
+            setMsg("Airline code must be 10 characters or less");
+            setMsgType('danger');
+            return false;
+        }
+
+        return true;
+    };
+
     const updateAirline = async (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('code', code);
-        formData.append('website', website);
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+        const formPayload = new FormData();
+        formPayload.append('name', formData.name.trim());
+        formPayload.append('code', formData.code.trim());
         if (logo) {
-            formData.append('logo', logo);
+            formPayload.append('logo', logo);
         }
 
         try {
-            await axiosInstance.patch(`/airlines/${id}`, formData, {
+            await axiosInstance.patch(`/api/airlines/${id}`, formPayload, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
             setMsg("Airline updated successfully!");
             setMsgType('success');
-            setTimeout(() => {
-                navigate('/admin/airlines');
-            }, 1500);
+            setTimeout(() => navigate('/admin/airlines'), 1500);
         } catch (error) {
-            if (error.response) {
-                setMsg(error.response.data.msg);
-                setMsgType('danger');
-            } else {
-                setMsg("Network error or server unavailable.");
-                setMsgType('danger');
-            }
-            console.error("Error updating airline:", error);
+            console.error('Error updating airline:', error);
+            setMsg(error.response?.data?.msg || "Failed to update airline");
+            setMsgType('danger');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -167,7 +190,7 @@ const EditAirline = () => {
                             <i className="uil uil-plane-fly icon"></i>
                             <div>
                                 <h1 className="page-title">Edit Airline</h1>
-                                <p className="page-subtitle">Update airline information.</p>
+                                <p className="page-subtitle">Update airline information</p>
                             </div>
                         </div>
 
@@ -181,54 +204,58 @@ const EditAirline = () => {
                                         <input
                                             type="text"
                                             id="name"
+                                            name="name"
                                             className="form-input"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
+                                            value={formData.name}
+                                            onChange={handleInputChange}
                                             placeholder="Enter airline name"
                                             required
+                                            disabled={isSubmitting}
                                         />
                                     </div>
 
-                                    <div className="flex-row">
-                                        <div className="flex-col-half">
-                                            <div className="form-group">
-                                                <label htmlFor="code" className="form-label">Airline Code</label>
-                                                <input
-                                                    type="text"
-                                                    id="code"
-                                                    className="form-input"
-                                                    value={code}
-                                                    onChange={(e) => setCode(e.target.value)}
-                                                    placeholder="Enter airline code"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex-col-half">
-                                            <div className="form-group">
-                                                <label htmlFor="website" className="form-label">Website</label>
-                                                <input
-                                                    type="url"
-                                                    id="website"
-                                                    className="form-input"
-                                                    value={website}
-                                                    onChange={(e) => setWebsite(e.target.value)}
-                                                    placeholder="Enter website URL"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
+                                    <div className="form-group">
+                                        <label htmlFor="code" className="form-label">Airline Code</label>
+                                        <input
+                                            type="text"
+                                            id="code"
+                                            name="code"
+                                            className="form-input"
+                                            value={formData.code}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter airline code (max 10 characters)"
+                                            maxLength={10}
+                                            required
+                                            disabled={isSubmitting}
+                                        />
+                                        <small className="form-text text-muted">
+                                            Maximum 10 characters
+                                        </small>
                                     </div>
 
                                     <div className="form-group">
                                         <label htmlFor="logo" className="form-label">Airline Logo</label>
-                                        <input
-                                            type="file"
-                                            id="logo"
-                                            className="form-input file-input"
-                                            onChange={handleLogoChange}
-                                            accept="image/*"
-                                        />
+                                        <div className="custom-file-upload">
+                                            <input
+                                                type="file"
+                                                id="logo"
+                                                ref={fileInputRef}
+                                                onChange={handleLogoChange}
+                                                accept="image/*"
+                                                style={{ display: 'none' }}
+                                                disabled={isSubmitting}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="upload-button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={isSubmitting}
+                                            >
+                                                <i className="uil uil-image-upload"></i>
+                                                Choose Logo
+                                            </button>
+                                            {logo && <span className="file-name">{logo.name}</span>}
+                                        </div>
                                         {previewUrl && (
                                             <div className="image-preview">
                                                 <img src={previewUrl} alt="Preview" />
@@ -237,8 +264,12 @@ const EditAirline = () => {
                                     </div>
 
                                     <div className="form-actions">
-                                        <button type="submit" className="form-submit-button">
-                                            Update Airline
+                                        <button 
+                                            type="submit" 
+                                            className="form-submit-button"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? 'Updating...' : 'Update Airline'}
                                         </button>
                                     </div>
                                 </form>

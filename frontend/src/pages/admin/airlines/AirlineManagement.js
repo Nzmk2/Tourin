@@ -1,5 +1,3 @@
-// src/pages/admin/airline/AirlineManagement.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
@@ -54,7 +52,7 @@ const AirlineManagement = () => {
     const getAirlines = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/airlines');
+            const response = await axiosInstance.get('/api/airlines');
             setAirlines(response.data);
             setMsg('');
             setLoading(false);
@@ -90,7 +88,7 @@ const AirlineManagement = () => {
         if (!airlineToDelete) return;
 
         try {
-            await axiosInstance.delete(`/airlines/${airlineToDelete}`);
+            await axiosInstance.delete(`/api/airlines/${airlineToDelete}`);
             setMsg("Airline deleted successfully!");
             setMsgType('success');
             setAirlines(prevAirlines => 
@@ -145,7 +143,7 @@ const AirlineManagement = () => {
                             <i className="uil uil-plane-fly icon"></i>
                             <div>
                                 <h1 className="page-title">Airline Management</h1>
-                                <p className="page-subtitle">Manage all airlines.</p>
+                                <p className="page-subtitle">Manage all airlines</p>
                             </div>
                         </div>
 
@@ -162,7 +160,6 @@ const AirlineManagement = () => {
                                             <th>Logo</th>
                                             <th>Name</th>
                                             <th>Code</th>
-                                            <th>Website</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -185,11 +182,6 @@ const AirlineManagement = () => {
                                                     <td>{airline.name}</td>
                                                     <td>{airline.code}</td>
                                                     <td>
-                                                        <a href={airline.website} target="_blank" rel="noopener noreferrer">
-                                                            {airline.website}
-                                                        </a>
-                                                    </td>
-                                                    <td>
                                                         <Link 
                                                             to={`/admin/airlines/edit/${airline.airlineID}`} 
                                                             className="table-action-button edit"
@@ -207,7 +199,7 @@ const AirlineManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="6" className="no-data-message">
+                                                <td colSpan="5" className="no-data-message">
                                                     No airlines found.
                                                 </td>
                                             </tr>

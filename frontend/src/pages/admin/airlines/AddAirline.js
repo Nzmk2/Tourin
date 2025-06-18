@@ -16,13 +16,15 @@ const AddAirline = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [name, setName] = useState('');
-    const [code, setCode] = useState('');
-    const [website, setWebsite] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        code: '',
+    });
     const [logo, setLogo] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
@@ -44,12 +46,15 @@ const AddAirline = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    const toggleSidebar = () => {
-        setIsSidebarClosed(prevState => !prevState);
-    };
+    const toggleSidebar = () => setIsSidebarClosed(prev => !prev);
+    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
-    const toggleDarkMode = () => {
-        setIsDarkMode(prevState => !prevState);
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleLogoChange = (e) => {
@@ -72,40 +77,55 @@ const AddAirline = () => {
         }
     };
 
-    const handleUploadClick = () => {
-        fileInputRef.current.click();
+    const validateForm = () => {
+        if (!formData.name.trim()) {
+            setMsg("Airline name is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (!formData.code.trim()) {
+            setMsg("Airline code is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (formData.code.length > 10) {
+            setMsg("Airline code must be 10 characters or less");
+            setMsgType('danger');
+            return false;
+        }
+
+        return true;
     };
 
     const saveAirline = async (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('code', code);
-        formData.append('website', website);
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+        const formPayload = new FormData();
+        formPayload.append('name', formData.name);
+        formPayload.append('code', formData.code);
         if (logo) {
-            formData.append('logo', logo);
+            formPayload.append('logo', logo);
         }
 
         try {
-            await axiosInstance.post('/airlines', formData, {
+            await axiosInstance.post('/api/airlines', formPayload, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
             setMsg("Airline added successfully!");
             setMsgType('success');
-            setTimeout(() => {
-                navigate('/admin/airlines');
-            }, 1500);
+            setTimeout(() => navigate('/admin/airlines'), 1500);
         } catch (error) {
-            if (error.response) {
-                setMsg(error.response.data.msg);
-                setMsgType('danger');
-            } else {
-                setMsg("Network error or server unavailable.");
-                setMsgType('danger');
-            }
-            console.error("Error adding airline:", error);
+            console.error('Error adding airline:', error);
+            setMsg(error.response?.data?.msg || "Failed to add airline");
+            setMsgType('danger');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -126,7 +146,7 @@ const AddAirline = () => {
                             <i className="uil uil-plane-fly icon"></i>
                             <div>
                                 <h1 className="page-title">Add New Airline</h1>
-                                <p className="page-subtitle">Create a new airline record.</p>
+                                <p className="page-subtitle">Create a new airline record</p>
                             </div>
                         </div>
 
@@ -140,43 +160,33 @@ const AddAirline = () => {
                                         <input
                                             type="text"
                                             id="name"
+                                            name="name"
                                             className="form-input"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
+                                            value={formData.name}
+                                            onChange={handleInputChange}
                                             placeholder="Enter airline name"
                                             required
+                                            disabled={isSubmitting}
                                         />
                                     </div>
 
-                                    <div className="flex-row">
-                                        <div className="flex-col-half">
-                                            <div className="form-group">
-                                                <label htmlFor="code" className="form-label">Airline Code</label>
-                                                <input
-                                                    type="text"
-                                                    id="code"
-                                                    className="form-input"
-                                                    value={code}
-                                                    onChange={(e) => setCode(e.target.value)}
-                                                    placeholder="Enter airline code"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex-col-half">
-                                            <div className="form-group">
-                                                <label htmlFor="website" className="form-label">Website</label>
-                                                <input
-                                                    type="url"
-                                                    id="website"
-                                                    className="form-input"
-                                                    value={website}
-                                                    onChange={(e) => setWebsite(e.target.value)}
-                                                    placeholder="Enter website URL"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
+                                    <div className="form-group">
+                                        <label htmlFor="code" className="form-label">Airline Code</label>
+                                        <input
+                                            type="text"
+                                            id="code"
+                                            name="code"
+                                            className="form-input"
+                                            value={formData.code}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter airline code (max 10 characters)"
+                                            maxLength={10}
+                                            required
+                                            disabled={isSubmitting}
+                                        />
+                                        <small className="form-text text-muted">
+                                            Maximum 10 characters
+                                        </small>
                                     </div>
 
                                     <div className="form-group">
@@ -189,11 +199,13 @@ const AddAirline = () => {
                                                 onChange={handleLogoChange}
                                                 accept="image/*"
                                                 style={{ display: 'none' }}
+                                                disabled={isSubmitting}
                                             />
                                             <button 
                                                 type="button" 
                                                 className="upload-button"
-                                                onClick={handleUploadClick}
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={isSubmitting}
                                             >
                                                 <i className="uil uil-image-upload"></i>
                                                 Choose Logo
@@ -208,8 +220,12 @@ const AddAirline = () => {
                                     </div>
 
                                     <div className="form-actions">
-                                        <button type="submit" className="form-submit-button">
-                                            Add Airline
+                                        <button 
+                                            type="submit" 
+                                            className="form-submit-button"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? 'Adding...' : 'Add Airline'}
                                         </button>
                                     </div>
                                 </form>
