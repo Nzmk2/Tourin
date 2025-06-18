@@ -55,26 +55,40 @@ const AddAirport = () => {
     const saveAirport = async (e) => {
         e.preventDefault();
         try {
-            await axiosInstance.post('/airports', {
+            console.log('Sending request to:', '/api/airports');
+            console.log('Data:', {
                 code,
                 name,
                 city,
                 country
             });
+            
+            const response = await axiosInstance.post('/api/airports', {
+                code,
+                name,
+                city,
+                country
+            });
+            
+            console.log('Response:', response);
+            
             setMsg("Airport added successfully!");
             setMsgType('success');
             setTimeout(() => {
                 navigate('/admin/airports');
             }, 1500);
         } catch (error) {
+            console.error('Full error:', error);
+            console.error('Error config:', error.config);
+            console.error('Error response:', error.response);
+            
             if (error.response) {
-                setMsg(error.response.data.msg);
+                setMsg(error.response.data.msg || 'Error occurred while adding airport');
                 setMsgType('danger');
             } else {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error adding airport:", error);
         }
     };
 

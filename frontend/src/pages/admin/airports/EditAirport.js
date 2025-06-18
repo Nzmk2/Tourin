@@ -49,7 +49,7 @@ const EditAirport = () => {
     useEffect(() => {
         const getAirportById = async () => {
             try {
-                const response = await axiosInstance.get(`/airports/${id}`);
+                const response = await axiosInstance.get(`/api/airports/${id}`); // Tambahkan prefix '/api'
                 const airport = response.data;
                 setCode(airport.code);
                 setName(airport.name);
@@ -77,7 +77,7 @@ const EditAirport = () => {
     const updateAirport = async (e) => {
         e.preventDefault();
         try {
-            await axiosInstance.patch(`/airports/${id}`, {
+            await axiosInstance.patch(`/api/airports/${id}`, { // Tambahkan prefix '/api'
                 code,
                 name,
                 city,

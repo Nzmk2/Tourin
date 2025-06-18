@@ -54,7 +54,7 @@ const AirportManagement = () => {
     const getAirports = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/airports');
+            const response = await axiosInstance.get('/api/airports'); // Tambahkan prefix '/api'
             setAirports(response.data);
             setMsg('');
             setLoading(false);
@@ -90,7 +90,7 @@ const AirportManagement = () => {
         if (!airportToDelete) return;
 
         try {
-            await axiosInstance.delete(`/airports/${airportToDelete}`);
+            await axiosInstance.delete(`/api/airports/${airportToDelete}`); // Tambahkan prefix '/api'
             setMsg("Airport deleted successfully!");
             setMsgType('success');
             setAirports(prevAirports => 

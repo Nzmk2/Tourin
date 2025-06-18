@@ -44,42 +44,33 @@ const app = express();
 // Middleware
 app.use(cors({
     credentials: true,
-    origin: 'http://localhost:3000'
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'], // tambahkan ini
+    allowedHeaders: ['Content-Type', 'Authorization'] // tambahkan ini
 }));
+
+// Body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Error handling untuk file uploads
+// Routes
+app.use('/api', AirportRoutes); // pastikan ini sudah benar
+
+// Error handling
 app.use((err, req, res, next) => {
-    if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({
-                success: false,
-                message: 'File too large. Maximum size is 5MB.'
-            });
-        }
-        return res.status(400).json({
-            success: false,
-            message: `Upload error: ${err.message}`
-        });
-    }
-
-    if (err.name === 'SequelizeDatabaseError') {
-        return res.status(400).json({
-            success: false,
-            message: 'Database error',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
-        });
-    }
-
-    next(err);
+    console.error(err.stack);
+    res.status(500).json({
+        success: false,
+        message: 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 // Routes
 app.use('/api/auth', AuthRoutes);
 app.use('/api', AirlineRoutes);
-app.use('/api', AirportRoutes);
+app.use('/api', AirportRoutes); // Pastikan ini sudah benar
 app.use('/api', FlightRoutes);
 app.use('/api', BookingRoutes);
 app.use('/api', PaymentRoutes);
@@ -98,6 +89,7 @@ app.use((err, req, res, next) => {
 
 // Handle 404
 app.use((req, res) => {
+    console.log(`404 - Not Found: ${req.method} ${req.originalUrl}`); // tambahkan logging
     res.status(404).json({
         success: false,
         message: 'Route not found'

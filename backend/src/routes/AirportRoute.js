@@ -10,6 +10,7 @@ import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
+// Tambahkan slash di depan
 router.get('/airports', getAirports);
 router.get('/airports/:id', getAirportById);
 router.post('/airports', verifyToken, createAirport);

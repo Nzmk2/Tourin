@@ -7,6 +7,7 @@ export const getAirports = async(req, res) => {
         });
         res.json(airports);
     } catch (error) {
+        console.error('Error in getAirports:', error); // Tambahkan logging
         res.status(500).json({ msg: error.message });
     }
 };

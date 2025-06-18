@@ -1,22 +1,43 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000', // Sesuaikan dengan port backend Anda
-  withCredentials: true, // Penting untuk mengirim cookie (refresh token)
+    baseURL: 'http://localhost:5000',
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json'
+    }
 });
 
-// Optional: Interceptor untuk menambahkan access token ke setiap request
+// Tambahkan logging untuk debugging
 axiosInstance.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem('accessToken');
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    (config) => {
+        console.log('Request URL:', config.url);
+        console.log('Request Method:', config.method);
+        console.log('Request Headers:', config.headers);
+        
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+);
+
+axiosInstance.interceptors.response.use(
+    (response) => {
+        console.log('Response:', response);
+        return response;
+    },
+    (error) => {
+        console.error('Axios Error:', {
+            config: error.config,
+            response: error.response
+        });
+        return Promise.reject(error);
+    }
 );
 
 export default axiosInstance;
