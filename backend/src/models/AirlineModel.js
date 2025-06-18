@@ -18,8 +18,13 @@ const Airline = db.define('airlines', {
         allowNull: false,
         unique: true
     },
-    logoURL: {
-        type: DataTypes.STRING
+    logo: {
+        type: DataTypes.BLOB('long'),  // Untuk menyimpan gambar dalam bentuk binary
+        allowNull: true
+    },
+    logoType: {
+        type: DataTypes.STRING,  // Untuk menyimpan tipe MIME dari gambar
+        allowNull: true
     }
 }, {
     freezeTableName: true

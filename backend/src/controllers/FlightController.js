@@ -6,12 +6,28 @@ export const getFlights = async(req, res) => {
     try {
         const flights = await Flight.findAll({
             include: [
-                { model: Airline },
+                { 
+                    model: Airline,
+                    attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
+                },
                 { model: Airport, as: 'DepartureAirport' },
                 { model: Airport, as: 'DestinationAirport' }
             ]
         });
-        res.json(flights);
+
+        // Transform response untuk menangani BLOB image
+        const transformedFlights = flights.map(flight => {
+            const flightData = flight.toJSON();
+            if (flightData.Airline?.logo) {
+                flightData.Airline.logoUrl = 
+                    `data:${flightData.Airline.logoType};base64,${flightData.Airline.logo.toString('base64')}`;
+                delete flightData.Airline.logo;
+                delete flightData.Airline.logoType;
+            }
+            return flightData;
+        });
+
+        res.json(transformedFlights);
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
@@ -25,13 +41,27 @@ export const getFlightById = async(req, res) => {
                 flightID: req.params.id
             },
             include: [
-                { model: Airline },
+                { 
+                    model: Airline,
+                    attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
+                },
                 { model: Airport, as: 'DepartureAirport' },
                 { model: Airport, as: 'DestinationAirport' }
             ]
         });
+
         if(!flight) return res.status(404).json({ msg: "Flight not found" });
-        res.json(flight);
+
+        // Transform response untuk menangani BLOB image
+        const flightData = flight.toJSON();
+        if (flightData.Airline?.logo) {
+            flightData.Airline.logoUrl = 
+                `data:${flightData.Airline.logoType};base64,${flightData.Airline.logo.toString('base64')}`;
+            delete flightData.Airline.logo;
+            delete flightData.Airline.logoType;
+        }
+
+        res.json(flightData);
     } catch (error) {
         res.status(500).json({ msg: error.message });
     }

@@ -12,14 +12,30 @@ export const getBookings = async(req, res) => {
                 { 
                     model: Flight,
                     include: [
-                        { model: Airline },
+                        { 
+                            model: Airline,
+                            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
+                        },
                         { model: Airport, as: 'DepartureAirport' },
                         { model: Airport, as: 'DestinationAirport' }
                     ]
                 }
             ]
         });
-        res.status(200).json(response);
+
+        // Transform response untuk menangani BLOB image
+        const transformedResponse = response.map(booking => {
+            const bookingData = booking.toJSON();
+            if (bookingData.Flight?.Airline?.logo) {
+                bookingData.Flight.Airline.logoUrl = 
+                    `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
+                delete bookingData.Flight.Airline.logo;
+                delete bookingData.Flight.Airline.logoType;
+            }
+            return bookingData;
+        });
+
+        res.status(200).json(transformedResponse);
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
@@ -37,14 +53,31 @@ export const getBookingById = async(req, res) => {
                 { 
                     model: Flight,
                     include: [
-                        { model: Airline },
+                        { 
+                            model: Airline,
+                            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
+                        },
                         { model: Airport, as: 'DepartureAirport' },
                         { model: Airport, as: 'DestinationAirport' }
                     ]
                 }
             ]
         });
-        res.status(200).json(response);
+
+        if (!response) {
+            return res.status(404).json({ msg: "Booking not found" });
+        }
+
+        // Transform response untuk menangani BLOB image
+        const bookingData = response.toJSON();
+        if (bookingData.Flight?.Airline?.logo) {
+            bookingData.Flight.Airline.logoUrl = 
+                `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
+            delete bookingData.Flight.Airline.logo;
+            delete bookingData.Flight.Airline.logoType;
+        }
+
+        res.status(200).json(bookingData);
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
@@ -54,9 +87,8 @@ export const getBookingById = async(req, res) => {
 export const createBooking = async(req, res) => {
     try {
         const { flightID, totalPrice } = req.body;
-        const userID = req.user.userId; // Assuming user data is in request after authentication
+        const userID = req.user.userId;
 
-        // Check if flight exists and has available seats
         const flight = await Flight.findByPk(flightID);
         if (!flight) {
             return res.status(404).json({ msg: "Flight not found" });
@@ -65,7 +97,6 @@ export const createBooking = async(req, res) => {
             return res.status(400).json({ msg: "No seats available" });
         }
 
-        // Create booking
         const booking = await Booking.create({
             userID: userID,
             flightID: flightID,
@@ -73,7 +104,6 @@ export const createBooking = async(req, res) => {
             status: 'pending'
         });
 
-        // Update available seats
         await Flight.update(
             { availableSeats: flight.availableSeats - 1 },
             { where: { flightID: flightID } }
@@ -120,7 +150,6 @@ export const deleteBooking = async(req, res) => {
         });
         if(!booking) return res.status(404).json({ msg: "Booking not found" });
         
-        // Return the seat to available seats if booking is cancelled
         if (booking.status !== 'cancelled') {
             const flight = await Flight.findByPk(booking.flightID);
             await Flight.update(
@@ -143,21 +172,37 @@ export const deleteBooking = async(req, res) => {
 
 export const getUserBookings = async(req, res) => {
     try {
-        const userID = req.user.userId; // Assuming user data is in request after authentication
+        const userID = req.user.userId;
         const bookings = await Booking.findAll({
             where: { userID },
             include: [
                 { 
                     model: Flight,
                     include: [
-                        { model: Airline },
+                        { 
+                            model: Airline,
+                            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
+                        },
                         { model: Airport, as: 'DepartureAirport' },
                         { model: Airport, as: 'DestinationAirport' }
                     ]
                 }
             ]
         });
-        res.status(200).json(bookings);
+
+        // Transform response untuk menangani BLOB image
+        const transformedBookings = bookings.map(booking => {
+            const bookingData = booking.toJSON();
+            if (bookingData.Flight?.Airline?.logo) {
+                bookingData.Flight.Airline.logoUrl = 
+                    `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
+                delete bookingData.Flight.Airline.logo;
+                delete bookingData.Flight.Airline.logoType;
+            }
+            return bookingData;
+        });
+
+        res.status(200).json(transformedBookings);
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });

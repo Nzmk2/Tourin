@@ -24,8 +24,13 @@ const Destination = db.define('destinations', {
     description: {
         type: DataTypes.TEXT
     },
-    imageURL: {
-        type: DataTypes.STRING
+    image: {
+        type: DataTypes.BLOB('long'),  // Untuk menyimpan gambar dalam bentuk binary
+        allowNull: true
+    },
+    imageType: {
+        type: DataTypes.STRING,  // Untuk menyimpan tipe MIME dari gambar
+        allowNull: true
     },
     rating: {
         type: DataTypes.FLOAT,

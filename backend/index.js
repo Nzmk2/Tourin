@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import multer from 'multer';
 import db from "./src/config/Database.js";
 import cookieParser from "cookie-parser";
 
@@ -23,6 +24,9 @@ import PaymentRoutes from "./src/routes/PaymentRoute.js";
 import DestinationRoutes from "./src/routes/DestinationRoute.js";
 import PackageRoutes from "./src/routes/PackageRoute.js";
 
+// Import upload middleware
+import { upload } from './src/middleware/uploadMiddleware.js';
+
 const app = express();
 
 // Database connection and synchronization
@@ -30,19 +34,7 @@ const app = express();
     try {
         await db.authenticate();
         console.log('Database Connected...');
-        
-        // Sync all models with database
-        // Choose ONE of these sync options:
-
-        // Option 1: This will create tables if they don't exist (safest option)
         await db.sync();
-        
-        // Option 2: This will update tables if they exist, create if they don't
-        // await db.sync({ alter: true });
-        
-        // Option 3: This will drop existing tables and create new ones (DANGEROUS in production)
-        // await db.sync({ force: true });
-
         console.log('Database synchronized successfully');
     } catch (error) {
         console.error('Database connection error:', error);
@@ -55,7 +47,34 @@ app.use(cors({
     origin: 'http://localhost:3000'
 }));
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Error handling untuk file uploads
+app.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                success: false,
+                message: 'File too large. Maximum size is 5MB.'
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            message: `Upload error: ${err.message}`
+        });
+    }
+
+    if (err.name === 'SequelizeDatabaseError') {
+        return res.status(400).json({
+            success: false,
+            message: 'Database error',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+
+    next(err);
+});
 
 // Routes
 app.use('/api/auth', AuthRoutes);

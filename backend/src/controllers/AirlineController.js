@@ -3,9 +3,21 @@ import Airline from "../models/AirlineModel.js";
 export const getAirlines = async(req, res) => {
     try {
         const airlines = await Airline.findAll({
-            attributes: ['airlineID', 'name', 'code', 'logoURL']
+            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
         });
-        res.json(airlines);
+
+        // Transform response to include base64 image
+        const airlinesWithImages = airlines.map(airline => {
+            const airlineData = airline.toJSON();
+            if (airlineData.logo) {
+                airlineData.logoUrl = `data:${airlineData.logoType};base64,${airlineData.logo.toString('base64')}`;
+            }
+            delete airlineData.logo; // Remove binary data
+            delete airlineData.logoType; // Remove mime type
+            return airlineData;
+        });
+
+        res.json(airlinesWithImages);
     } catch (error) {
         res.status(500).json({ msg: error.message });
     }
@@ -19,20 +31,39 @@ export const getAirlineById = async(req, res) => {
             }
         });
         if(!airline) return res.status(404).json({ msg: "Airline not found" });
-        res.json(airline);
+
+        const airlineData = airline.toJSON();
+        if (airlineData.logo) {
+            airlineData.logoUrl = `data:${airlineData.logoType};base64,${airlineData.logo.toString('base64')}`;
+        }
+        delete airlineData.logo;
+        delete airlineData.logoType;
+
+        res.json(airlineData);
     } catch (error) {
         res.status(500).json({ msg: error.message });
     }
 };
 
 export const createAirline = async(req, res) => {
-    const { name, code, logoURL } = req.body;
     try {
+        const { name, code } = req.body;
+        let logo = null;
+        let logoType = null;
+
+        // Handle image upload if exists
+        if (req.file) {
+            logo = req.file.buffer;
+            logoType = req.file.mimetype;
+        }
+
         await Airline.create({
             name: name,
             code: code,
-            logoURL: logoURL
+            logo: logo,
+            logoType: logoType
         });
+
         res.json({ msg: "Airline Created Successfully" });
     } catch (error) {
         res.status(500).json({ msg: error.message });
@@ -48,12 +79,19 @@ export const updateAirline = async(req, res) => {
         });
         if(!airline) return res.status(404).json({ msg: "Airline not found" });
         
-        const { name, code, logoURL } = req.body;
-        await Airline.update({
+        const { name, code } = req.body;
+        const updateData = {
             name: name,
-            code: code,
-            logoURL: logoURL
-        }, {
+            code: code
+        };
+
+        // Update image only if new file is uploaded
+        if (req.file) {
+            updateData.logo = req.file.buffer;
+            updateData.logoType = req.file.mimetype;
+        }
+
+        await Airline.update(updateData, {
             where: {
                 airlineID: req.params.id
             }
