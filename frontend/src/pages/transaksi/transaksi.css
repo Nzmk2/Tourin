@@ -1,0 +1,161 @@
+/* Base Container */
+.transaksi-container {
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 960px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+/* Breadcrumbs */
+.transaksi-breadcrumbs {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 12px;
+}
+
+/* Header */
+.transaksi-header h2 {
+  font-size: 26px;
+  margin: 0;
+}
+
+.transaksi-header p {
+  margin: 5px 0 20px;
+  color: #444;
+}
+
+/* Ticket Card */
+.transaksi-ticket {
+  display: flex;
+  background: #fefefe;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+/* Left and Right Time Section */
+.transaksi-ticket-left,
+.transaksi-ticket-right {
+  width: 20%;
+  background: #f5f5f5;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.transaksi-time {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.transaksi-airport {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Center Section */
+.transaksi-ticket-center {
+  flex: 1;
+  padding: 20px;
+  border-left: 1px dashed #ccc;
+  border-right: 1px dashed #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.transaksi-passenger-name {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.transaksi-boarding-pass {
+  font-size: 14px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.transaksi-class {
+  background-color: #ffcad4;
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.transaksi-flight-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.transaksi-flight-info span {
+  font-weight: bold;
+  color: #555;
+}
+
+/* Barcode and Code */
+.transaksi-barcode {
+  margin-top: 20px;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: #000;
+}
+
+.transaksi-code {
+  font-size: 13px;
+  margin-top: 4px;
+  color: #666;
+}
+
+/* Price and Download */
+.transaksi-price-download {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.transaksi-price {
+  font-size: 26px;
+  font-weight: bold;
+  margin-right: 20px;
+}
+
+.transaksi-download {
+  background-color: #e60023;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Terms & Conditions */
+.transaksi-terms {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.transaksi-terms h3,
+.transaksi-terms h4 {
+  margin-top: 20px;
+}
+
+.transaksi-terms ul {
+  padding-left: 20px;
+  margin-top: 8px;
+}
+
+.transaksi-terms a {
+  color: #007bff;
+  text-decoration: underline;
+}

@@ -40,7 +40,8 @@ import PaymentManagement from './pages/admin/payments/PaymentManagement';
 
 import Utama from './pages/dashboard/Utama';
 import FlightSearchPage from './pages/pencarian/FlightSearchPage';
-
+import Pilihan from './pages/transaksi/pilihan';
+import Transaksi from './pages/transaksi/transaksi';
 
 function App() {
   return (
@@ -54,6 +55,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/flight" element={<FlightSearchPage />} />
+          <Route path="/flight/choose" element={<Pilihan />} />
+          <Route path="/flight/transaksi" element={<Transaksi />} />
 
           {/* Admin Protected Routes */}
           {/* Specific route for /admin/dashboard - Important for direct links */}
