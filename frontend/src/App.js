@@ -37,6 +37,11 @@ import EditBooking from './pages/admin/bookings/EditBooking';
 // Payment Management - Updated Paths (Correct as per previous step)
 import PaymentManagement from './pages/admin/payments/PaymentManagement';
 
+
+import Utama from './pages/dashboard/Utama';
+import FlightSearchPage from './pages/pencarian/FlightSearchPage';
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -45,9 +50,10 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Utama />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/flight" element={<FlightSearchPage />} />
 
           {/* Admin Protected Routes */}
           {/* Specific route for /admin/dashboard - Important for direct links */}

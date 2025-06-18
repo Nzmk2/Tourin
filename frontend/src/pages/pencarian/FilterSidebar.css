@@ -1,0 +1,155 @@
+/* src/components/FilterSidebar.css */
+.filter-sidebar-container {
+    width: 280px; /* Adjusted width for better fit, w-64 is 256px */
+    padding: 24px; /* Sudah ada padding 24px di semua sisi */
+    background-color: #f9fafb; /* gray-50 */
+    border-right: 1px solid #e5e7eb; /* border-r border-gray-200 */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* subtle shadow */
+}
+
+/* ... (kode lainnya tetap sama) ... */
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px; /* mb-6 */
+    padding-bottom: 16px; /* Add padding at bottom */
+    border-bottom: 1px solid #e5e7eb; /* Separator line */
+}
+
+.filter-header h3 {
+    font-weight: 700; /* font-bold */
+    font-size: 1.125rem; /* text-lg */
+    color: #1f2937; /* Darker gray */
+}
+
+.filter-header button {
+    color: #3b82f6; /* blue-500 */
+    font-size: 0.875rem; /* text-sm */
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    font-weight: 600; /* Semi-bold */
+}
+
+.filter-header button:hover {
+    color: #2563eb; /* blue-600 */
+}
+
+.filter-section {
+    margin-bottom: 24px; /* mb-6 */
+}
+
+.filter-section:last-child {
+    margin-bottom: 0;
+}
+
+.filter-section h4 {
+    font-weight: 700; /* font-bold */
+    color: #1f2937; /* Darker gray */
+    margin-bottom: 16px; /* mb-3, increased spacing */
+    font-size: 1rem; /* Base font size */
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* space-y-2, increased gap */
+}
+
+.filter-option-item {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ensure it takes full width for alignment */
+}
+
+.filter-option-item label {
+    display: flex;
+    align-items: center;
+    width: 100%; /* Make label clickable across width */
+    cursor: pointer;
+}
+
+.filter-option-item input[type="checkbox"] {
+    appearance: none; /* Remove default checkbox style */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    height: 18px; /* Slightly larger */
+    width: 18px; /* Slightly larger */
+    min-width: 18px; /* Prevent shrinking */
+    border: 2px solid #d1d5db; /* gray-300 */
+    border-radius: 4px; /* rounded */
+    background-color: white;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.filter-option-item input[type="checkbox"]:checked {
+    background-color: #2563eb; /* blue-600 */
+    border-color: #2563eb;
+}
+
+.filter-option-item input[type="checkbox"]:checked::after {
+    content: '\2713'; /* Checkmark character */
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.filter-option-item label span {
+    margin-left: 12px; /* ml-2, increased spacing */
+    color: #374151; /* gray-700 */
+    flex-grow: 1; /* Allow text to grow and push price to right */
+}
+
+.filter-option-item .price {
+    margin-left: auto; /* Push price to the far right */
+    color: #6b7280; /* gray-500 */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500; /* Medium weight */
+}
+
+.filter-option-item img {
+    margin-right: 8px; /* Adjust margin for airline logo */
+    width: 24px; /* w-6 */
+    height: 24px; /* h-6 */
+    border-radius: 50%; /* rounded-full */
+    object-fit: contain; /* Ensure logo fits */
+    background-color: #e5e7eb; /* Light background for placeholder */
+}
+
+/* Specific styling for airline options to align them correctly */
+.airline-options .filter-option-item label {
+    justify-content: flex-start; /* Align items to the start */
+}
+
+.airline-options {
+    max-height: 280px; /* max-h-60, increased height to show more */
+    overflow-y: auto;
+    padding-right: 8px; /* Add padding for scrollbar */
+}
+
+/* Scrollbar styling for webkit browsers */
+.airline-options::-webkit-scrollbar {
+    width: 8px;
+}
+
+.airline-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.airline-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.airline-options::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

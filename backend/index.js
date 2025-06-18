@@ -1,24 +1,24 @@
 import express from "express";
-import db from "./config/database.js";
+import db from "./src/config/database.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
 // Impor Model untuk sinkronisasi (hanya diperlukan sekali untuk membuat tabel)
-import AirlineModel from "./models/AirlineModel.js";
-import AirportModel from "./models/AirportModel.js";
-import UserModel from "./models/UserModel.js";
-import FlightModel from "./models/FlightModel.js";
-import BookingModel from "./models/BookingModel.js";
-import PaymentModel from "./models/PaymentModel.js";
+import AirlineModel from "./src/models/AirlineModel.js";
+import AirportModel from "./src/models/AirportModel.js";
+import UserModel from "./src/models/UserModel.js";
+import FlightModel from "./src/models/FlightModel.js";
+import BookingModel from "./src/models/BookingModel.js";
+import PaymentModel from "./src/models/PaymentModel.js";
 
 // Impor Rute
-import AirlineRoute from "./routes/AirlineRoute.js";
-import AirportRoute from "./routes/AirportRoute.js";
-import FlightRoute from "./routes/FlightRoute.js";
-import BookingRoute from "./routes/BookingRoute.js";
-import PaymentRoute from "./routes/PaymentRoute.js";
-import UserRoute from "./routes/UserRoute.js";
-import AuthRoute from "./routes/AuthRoute.js";
+import AirlineRoute from "./src/routes/AirlineRoute.js";
+import AirportRoute from "./src/routes/AirportRoute.js";
+import FlightRoute from "./src/routes/FlightRoute.js";
+import BookingRoute from "./src/routes/BookingRoute.js";
+import PaymentRoute from "./src/routes/PaymentRoute.js";
+import UserRoute from "./src/routes/UserRoute.js";
+import AuthRoute from "./src/routes/AuthRoute.js";
 
 const app = express();
 
