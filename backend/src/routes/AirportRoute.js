@@ -5,14 +5,15 @@ import {
     createAirport,
     updateAirport,
     deleteAirport
-} from "../controllers/AirportController.js"; // Corrected path AND typo 'Airport'
+} from "../controllers/AirportController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
 router.get('/airports', getAirports);
 router.get('/airports/:id', getAirportById);
-router.post('/airports', createAirport);
-router.patch('/airports/:id', updateAirport);
-router.delete('/airports/:id', deleteAirport);
+router.post('/airports', verifyToken, createAirport);
+router.patch('/airports/:id', verifyToken, updateAirport);
+router.delete('/airports/:id', verifyToken, deleteAirport);
 
 export default router;

@@ -1,37 +1,22 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
-import Airline from "./AirlineModel.js"; // Pastikan path benar
-import Airport from "./AirportModel.js"; // Pastikan path benar
+import db from "../config/Database.js";
+import Airline from "./AirlineModel.js";
+import Airport from "./AirportModel.js";
 
 const { DataTypes } = Sequelize;
 
 const Flight = db.define('flights', {
     flightID: {
-        type: DataTypes.INTEGER, // INTEGER Primary Key, auto-increment
+        type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
-        allowNull: false
+        autoIncrement: true
     },
     flightNumber: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
-    },
-    arrivalTime: {
-        type: DataTypes.DATE,
         allowNull: false
     },
-    departureTime: {
-        type: DataTypes.DATE,
-        allowNull: false
-    },
-    availableSeats: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    // Foreign keys
     airlineID: {
-        type: DataTypes.STRING, // ✅ DIUBAH: Sekarang menjadi STRING untuk cocok dengan AirlineModel.airlineID
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Airline,
@@ -39,33 +24,35 @@ const Flight = db.define('flights', {
         }
     },
     departureAirportCode: {
-        type: DataTypes.STRING, // Merujuk ke AirportModel.airportCode (STRING)
-        allowNull: false,
-        references: {
-            model: Airport,
-            key: 'airportCode'
-        }
+        type: DataTypes.STRING(10),
+        allowNull: false
     },
     destinationAirportCode: {
-        type: DataTypes.STRING, // Merujuk ke AirportModel.airportCode (STRING)
-        allowNull: false,
-        references: {
-            model: Airport,
-            key: 'airportCode'
-        }
+        type: DataTypes.STRING(10),
+        allowNull: false
+    },
+    departureTime: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    arrivalTime: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false
+    },
+    availableSeats: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
 }, {
     freezeTableName: true
 });
 
-// Define associations
-Airline.hasMany(Flight, { foreignKey: 'airlineID' });
 Flight.belongsTo(Airline, { foreignKey: 'airlineID' });
-
-Airport.hasMany(Flight, { foreignKey: 'departureAirportCode', as: 'DepartingFlights' });
-Flight.belongsTo(Airport, { foreignKey: 'departureAirportCode', as: 'DepartureAirport' });
-
-Airport.hasMany(Flight, { foreignKey: 'destinationAirportCode', as: 'ArrivingFlights' });
-Flight.belongsTo(Airport, { foreignKey: 'destinationAirportCode', as: 'DestinationAirport' });
+Flight.belongsTo(Airport, { as: 'DepartureAirport', foreignKey: 'departureAirportCode', targetKey: 'code' });
+Flight.belongsTo(Airport, { as: 'DestinationAirport', foreignKey: 'destinationAirportCode', targetKey: 'code' });
 
 export default Flight;

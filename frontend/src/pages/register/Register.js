@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 import { useNavigate, Link } from 'react-router-dom';
-import '../../assets/styles/Register.css';
+import '../../assets/styles/Login.css';
 import loginImage from '../../assets/img/login.jpg';
 
 const Register = () => {
@@ -12,13 +12,35 @@ const Register = () => {
     const [confPassword, setConfPassword] = useState('');
     const [passportNumber, setPassportNumber] = useState('');
     const [msg, setMsg] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Basic validation function
+    const validateForm = () => {
+        if (password !== confPassword) {
+            setMsg("Passwords don't match");
+            return false;
+        }
+        if (password.length < 6) {
+            setMsg("Password must be at least 6 characters long");
+            return false;
+        }
+        if (!email.includes('@')) {
+            setMsg("Please enter a valid email address");
+            return false;
+        }
+        return true;
+    };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setMsg('');
+        
+        if (!validateForm()) return;
+
+        setLoading(true);
         try {
-            await axiosInstance.post('/register', {
+            await axiosInstance.post('/api/auth/register', {
                 firstName,
                 lastName,
                 email,
@@ -27,8 +49,12 @@ const Register = () => {
                 passportNumber,
                 role: 'user'
             });
+
             setMsg("Registration successful! You can now log in.");
-            navigate('/login');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -36,8 +62,18 @@ const Register = () => {
                 setMsg("Registration failed. Network error or server unavailable.");
             }
             console.error("Registration error:", error);
+        } finally {
+            setLoading(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="pageloader is-active is-light">
+                <span className="title">Processing Registration...</span>
+            </div>
+        );
+    }
 
     return (
         <div className="session">
@@ -53,14 +89,14 @@ const Register = () => {
                 <h1 className="app-title">Tourin</h1>
                 <h1 className="welcome-message">Create your Tourin account</h1>
                 {msg && (
-                    <div className={`notification ${msg.includes('successful') ? 'is-success' : 'is-danger'} is-light`}>
+                    <div className={`notification ${msg.includes('successful') ? 'success-msg' : 'error-msg'}`}>
                         {msg}
                     </div>
                 )}
 
                 <div className="floating-label">
                     <input
-                        placeholder="First Name"
+                        placeholder=" "
                         type="text"
                         name="firstName"
                         id="firstName"
@@ -69,7 +105,7 @@ const Register = () => {
                         onChange={(e) => setFirstName(e.target.value)}
                         required
                     />
-                    <label htmlFor="firstName">First Name:</label>
+                    <label htmlFor="firstName">First Name</label>
                     <div className="icon">
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -80,7 +116,7 @@ const Register = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Last Name"
+                        placeholder=" "
                         type="text"
                         name="lastName"
                         id="lastName"
@@ -89,7 +125,7 @@ const Register = () => {
                         onChange={(e) => setLastName(e.target.value)}
                         required
                     />
-                    <label htmlFor="lastName">Last Name:</label>
+                    <label htmlFor="lastName">Last Name</label>
                     <div className="icon">
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -100,7 +136,7 @@ const Register = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Email"
+                        placeholder=" "
                         type="email"
                         name="email"
                         id="email"
@@ -109,7 +145,7 @@ const Register = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-                    <label htmlFor="email">Email:</label>
+                    <label htmlFor="email">Email</label>
                     <div className="icon">
                         <svg enableBackground="new 0 0 100 100" version="1.1" viewBox="0 0 100 100" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
@@ -125,7 +161,7 @@ const Register = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Password"
+                        placeholder=" "
                         type="password"
                         name="password"
                         id="password"
@@ -134,7 +170,7 @@ const Register = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-                    <label htmlFor="password">Password:</label>
+                    <label htmlFor="password">Password</label>
                     <div className="icon">
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
@@ -150,7 +186,7 @@ const Register = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Confirm Password"
+                        placeholder=" "
                         type="password"
                         name="confPassword"
                         id="confPassword"
@@ -159,7 +195,7 @@ const Register = () => {
                         onChange={(e) => setConfPassword(e.target.value)}
                         required
                     />
-                    <label htmlFor="confPassword">Confirm Password:</label>
+                    <label htmlFor="confPassword">Confirm Password</label>
                     <div className="icon">
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
@@ -175,7 +211,7 @@ const Register = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Passport Number (Optional)"
+                        placeholder=" "
                         type="text"
                         name="passportNumber"
                         id="passportNumber"
@@ -183,7 +219,7 @@ const Register = () => {
                         value={passportNumber}
                         onChange={(e) => setPassportNumber(e.target.value)}
                     />
-                    <label htmlFor="passportNumber">Passport Number (Optional):</label>
+                    <label htmlFor="passportNumber">Passport Number (Optional)</label>
                     <div className="icon">
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 16H7v-2h10v2zm0-4H7V8h10v6z"/>
@@ -193,12 +229,17 @@ const Register = () => {
                 </div>
 
                 <div className="button-group">
-                    <button type="submit" className="register-button">Register</button> {/* <--- Tambahkan className="register-button" di sini */}
+                    <button 
+                        type="submit" 
+                        className="login-button"
+                        disabled={loading}
+                    >
+                        {loading ? 'Registering...' : 'Register'}
+                    </button>
                     <p className="login-text">Already have an account?{' '}
                         <Link to="/login" className="login-link">Sign In</Link>
                     </p>
                 </div>
-
             </form>
         </div>
     );

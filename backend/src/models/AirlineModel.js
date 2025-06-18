@@ -1,23 +1,24 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 
 const { DataTypes } = Sequelize;
 
 const Airline = db.define('airlines', {
     airlineID: {
-        type: DataTypes.STRING, // Sudah STRING, Primary Key
+        type: DataTypes.INTEGER,
         primaryKey: true,
-        allowNull: false,
-        unique: true
+        autoIncrement: true
     },
-    airlineName: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    contactNumber: {
-        type: DataTypes.STRING
+    code: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+        unique: true
     },
-    operatingRegion: {
+    logoURL: {
         type: DataTypes.STRING
     }
 }, {

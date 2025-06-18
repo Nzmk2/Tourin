@@ -5,14 +5,15 @@ import {
     createAirline,
     updateAirline,
     deleteAirline
-} from "../controllers/AirlineController.js"; // Corrected path
+} from "../controllers/AirlineController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
 router.get('/airlines', getAirlines);
 router.get('/airlines/:id', getAirlineById);
-router.post('/airlines', createAirline);
-router.patch('/airlines/:id', updateAirline);
-router.delete('/airlines/:id', deleteAirline);
+router.post('/airlines', verifyToken, createAirline);
+router.patch('/airlines/:id', verifyToken, updateAirline);
+router.delete('/airlines/:id', verifyToken, deleteAirline);
 
 export default router;

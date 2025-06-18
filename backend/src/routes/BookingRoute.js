@@ -1,5 +1,3 @@
-// Path: backend/routes/BookingRoute.js
-
 import express from "express";
 import {
     getBookings,
@@ -7,18 +5,18 @@ import {
     createBooking,
     updateBooking,
     deleteBooking,
-    getBookingCount,
-    getRecentBookings // <<<--- TAMBAHKAN INI
+    getUserBookings
 } from "../controllers/BookingController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-router.get('/bookings', getBookings);
-router.get('/bookings/count', getBookingCount);
-router.get('/bookings/recent', getRecentBookings); // <<<--- TAMBAHKAN RUTE INI
-router.get('/bookings/:id', getBookingById);
-router.post('/bookings', createBooking);
-router.patch('/bookings/:id', updateBooking);
-router.delete('/bookings/:id', deleteBooking);
+// Public routes
+router.get('/bookings', verifyToken, getBookings);
+router.get('/bookings/:id', verifyToken, getBookingById);
+router.post('/bookings', verifyToken, createBooking);
+router.patch('/bookings/:id', verifyToken, updateBooking);
+router.delete('/bookings/:id', verifyToken, deleteBooking);
+router.get('/user/bookings', verifyToken, getUserBookings);
 
 export default router;

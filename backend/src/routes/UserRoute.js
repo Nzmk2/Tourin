@@ -1,22 +1,27 @@
 import express from "express";
-import {
-    getUsers,
-    getUserById,
+import { 
+    getUsers, 
+    getUserById, 
     createUser, 
-    updateUser,
-    deleteUser,
+    updateUser, 
+    deleteUser, 
     getUserCount,
     getUsersByEmail
 } from "../controllers/UserController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { adminOnly } from "../middleware/adminAuth.js";
 
 const router = express.Router();
 
-router.get('/users', getUsers);
-router.get('/users/count', getUserCount);
-router.get('/users/:id', getUserById);
-router.get('/users/search-by-email', getUsersByEmail); // Pastikan ini sebelum /users/:id jika ID bisa berupa 'search-by-email'
-router.patch('/users/:id', updateUser);
-router.delete('/users/:id', deleteUser);
-router.post('/users', createUser); 
+// Public routes
+router.post('/users', createUser);  // Allow user creation without authentication
+
+// Protected routes
+router.get('/users', verifyToken, adminOnly, getUsers);
+router.get('/users/count', verifyToken, adminOnly, getUserCount);
+router.get('/users/search', verifyToken, adminOnly, getUsersByEmail);
+router.get('/users/:id', verifyToken, getUserById);
+router.patch('/users/:id', verifyToken, updateUser);
+router.delete('/users/:id', verifyToken, adminOnly, deleteUser);
 
 export default router;

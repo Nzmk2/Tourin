@@ -1,5 +1,5 @@
 import User from "../models/UserModel.js";
-import bcrypt from "bcrypt"; // Keep this import
+import bcrypt from "bcryptjs";
 
 export const getUsers = async (req, res) => {
     try {
@@ -17,81 +17,98 @@ export const createUser = async (req, res) => {
     const { firstName, lastName, email, password, passportNumber, role } = req.body;
 
     try {
-        // Basic validation before hashing (optional, but good practice for immediate feedback)
+        // Validation
         if (!firstName || !lastName || !email || !password || !role) {
-            return res.status(400).json({ msg: "All required fields (first name, last name, email, password, role) must be provided." });
+            return res.status(400).json({ msg: "All required fields must be provided" });
         }
 
-        // Hash the password before saving
+        // Check if email already exists
+        const existingUser = await User.findOne({
+            where: { email: email }
+        });
+
+        if (existingUser) {
+            return res.status(409).json({ msg: "Email already registered" });
+        }
+
+        // Hash password
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        await User.create({
+        // Create user
+        const newUser = await User.create({
             firstName: firstName,
             lastName: lastName,
             email: email,
-            password: hashedPassword, // Use the hashed password here
+            password: hashedPassword,
             passportNumber: passportNumber,
             role: role
         });
-        res.status(201).json({ msg: "User created successfully!" });
-    } catch (error) {
-        // --- IMPORTANT: This section is key to debugging ---
-        console.error("Error creating user (message):", error.message);
-        // Log the full error object to see more details, especially from Sequelize
-        console.error("Full error object creating user:", error);
 
-        // Check if it's a Sequelize validation error specifically
-        if (error.name === 'SequelizeUniqueConstraintError' || error.name === 'SequelizeValidationError') {
-            // Extract more user-friendly messages from Sequelize errors
-            const errors = error.errors.map(err => err.message);
-            return res.status(400).json({ msg: errors.join(', ') || "Validation error." });
+        res.status(201).json({
+            msg: "User created successfully",
+            user: {
+                userID: newUser.userID,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
+    } catch (error) {
+        console.error("Error creating user:", error);
+        
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ 
+                msg: "A user with this passport number already exists" 
+            });
         }
-        // For other types of errors
-        res.status(500).json({ msg: error.message || "Failed to create user due to an internal server error." });
+
+        res.status(500).json({ 
+            msg: "Failed to create user",
+            error: error.message 
+        });
     }
 };
 
 export const getUserById = async (req, res) => {
-    console.log("Attempting to fetch user with ID:", req.params.id);
     try {
-        const response = await User.findOne({
-            attributes: ['userID', 'firstName', 'lastName', 'email', 'passportNumber', 'role'],
+        const user = await User.findOne({
             where: {
                 userID: req.params.id
-            }
+            },
+            attributes: ['userID', 'firstName', 'lastName', 'email', 'passportNumber', 'role']
         });
-        if (!response) {
-            console.log("User not found for ID:", req.params.id);
-            return res.status(404).json({ msg: "User not found." });
+
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
         }
-        console.log("User found:", response.toJSON());
-        res.status(200).json(response);
+
+        res.status(200).json(user);
     } catch (error) {
-        console.log("Error fetching user by ID:", error.message);
+        console.log(error.message);
         res.status(500).json({ msg: error.message });
     }
 };
 
 export const getUsersByEmail = async (req, res) => {
     try {
-        const { email } = req.query; 
+        const { email } = req.query;
+        
         if (!email) {
-            return res.status(400).json({ msg: "Email query parameter is required." });
+            return res.status(400).json({ msg: "Email query parameter is required" });
         }
 
         const users = await User.findAll({
-            where: {
-                email: email
-            },
-            attributes: ['userID', 'firstName', 'lastName', 'email'] 
+            where: { email: email },
+            attributes: ['userID', 'firstName', 'lastName', 'email', 'role']
         });
 
-        if (users.length > 0) {
-            res.status(200).json(users);
-        } else {
-            res.status(404).json({ msg: "User with this email not found." });
+        if (users.length === 0) {
+            return res.status(404).json({ msg: "No users found with this email" });
         }
+
+        res.status(200).json(users);
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
@@ -99,44 +116,73 @@ export const getUsersByEmail = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
+    const { firstName, lastName, email, passportNumber, role, password } = req.body;
+    
     try {
-        const { firstName, lastName, email, passportNumber, role, password } = req.body;
-        let updateData = { firstName, lastName, email, passportNumber, role };
+        // Check if user has permission (admin or own profile)
+        if (req.userID != req.params.id && req.role !== 'admin') {
+            return res.status(403).json({ 
+                msg: "You can only update your own profile unless you're an admin" 
+            });
+        }
 
-        // If a new password is provided, hash it before updating
+        const user = await User.findOne({
+            where: { userID: req.params.id }
+        });
+
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        let updateData = { firstName, lastName, email, passportNumber };
+
+        // Only allow role update if user is admin
+        if (req.role === 'admin' && role) {
+            updateData.role = role;
+        }
+
+        // Only hash and update password if it's provided
         if (password) {
             const salt = await bcrypt.genSalt();
             updateData.password = await bcrypt.hash(password, salt);
         }
 
-        const [affectedRows] = await User.update(updateData, { // Use updateData here
-            where: {
-                userID: req.params.id
-            }
+        await User.update(updateData, {
+            where: { userID: req.params.id }
         });
-        
-        if (affectedRows === 0) {
-            return res.status(404).json({ msg: "User not found or no changes made." });
-        }
 
-        res.status(200).json({ msg: "User updated" });
+        res.status(200).json({ 
+            msg: "User updated successfully",
+            updatedFields: Object.keys(updateData)
+        });
     } catch (error) {
         console.log(error.message);
+        
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ 
+                msg: "Email or passport number already in use" 
+            });
+        }
+
         res.status(500).json({ msg: error.message });
     }
 };
 
 export const deleteUser = async (req, res) => {
     try {
-        const deletedRows = await User.destroy({
-            where: {
-                userID: req.params.id
-            }
+        const user = await User.findOne({
+            where: { userID: req.params.id }
         });
-        if (deletedRows === 0) {
-            return res.status(404).json({ msg: "User not found." });
+
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
         }
-        res.status(200).json({ msg: "User deleted" });
+
+        await User.destroy({
+            where: { userID: req.params.id }
+        });
+
+        res.status(200).json({ msg: "User deleted successfully" });
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });
@@ -146,11 +192,13 @@ export const deleteUser = async (req, res) => {
 export const getUserCount = async (req, res) => {
     try {
         const count = await User.count({
-            where: {
-                role: 'user'
-            }
+            where: { role: 'user' }
         });
-        res.status(200).json({ count });
+        
+        res.status(200).json({ 
+            count: count,
+            timestamp: new Date().toISOString()
+        });
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ msg: error.message });

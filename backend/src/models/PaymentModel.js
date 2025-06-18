@@ -1,46 +1,43 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
-import Booking from "./BookingModel.js"; // Pastikan path benar
+import db from "../config/Database.js";
+import Booking from "./BookingModel.js";
 
 const { DataTypes } = Sequelize;
 
 const Payment = db.define('payments', {
     paymentID: {
-        type: DataTypes.STRING, // STRING Primary Key
+        type: DataTypes.INTEGER,
         primaryKey: true,
-        allowNull: false
+        autoIncrement: true
     },
-    transactionDateTime: {
-        type: DataTypes.DATE,
+    bookingID: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Booking,
+            key: 'bookingID'
+        }
+    },
+    amount: {
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
     paymentMethod: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    amount: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
-    },
     paymentStatus: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.ENUM('pending', 'completed', 'failed'),
+        defaultValue: 'pending'
     },
-    // Foreign key
-    bookingID: {
-        type: DataTypes.STRING, // Merujuk ke BookingModel.bookingID (STRING)
-        allowNull: false,
-        references: {
-            model: Booking,
-            key: 'bookingID'
-        }
+    paymentDate: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
 }, {
     freezeTableName: true
 });
 
-// Define association
-Booking.hasOne(Payment, { foreignKey: 'bookingID' });
 Payment.belongsTo(Booking, { foreignKey: 'bookingID' });
 
 export default Payment;

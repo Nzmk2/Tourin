@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const decoded = jwtDecode(token);
       return {
-        id: decoded.userId,
+        userID: decoded.userID,
         email: decoded.email,
         role: decoded.role,
         firstName: decoded.firstName,
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = useCallback(async () => {
     try {
-      const response = await axiosInstance.get('/token');
+      const response = await axiosInstance.get('/api/auth/token');
       const accessToken = response.data.accessToken;
       localStorage.setItem('accessToken', accessToken);
       const decodedUser = parseUserFromToken(accessToken);
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
       if (accessToken) {
         const success = await refreshToken();
         if (success) {
-          interval = setInterval(refreshToken, 10 * 60 * 1000);
+          interval = setInterval(refreshToken, 14 * 60 * 1000); // Refresh every 14 minutes
         } else {
           navigate('/login');
         }
@@ -67,69 +67,74 @@ export const AuthProvider = ({ children }) => {
     };
 
     verifyAuth();
-
     return () => clearInterval(interval);
   }, [refreshToken, navigate]);
 
   const login = async (email, password) => {
-  setLoading(true);
-  console.log("Attempting login for:", email); // <-- Tambahkan ini
-  try {
-    const response = await axiosInstance.post('/login', { email, password });
-    const accessToken = response.data.accessToken;
-    localStorage.setItem('accessToken', accessToken);
-    console.log("Access Token received and stored:", accessToken); // <-- Tambahkan ini
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post('/api/auth/login', { 
+        email, 
+        password 
+      });
 
-    const decodedUser = parseUserFromToken(accessToken);
-    setIsAuthenticated(true);
-    setUser(decodedUser);
-    console.log("User authenticated and set:", decodedUser); // <-- Tambahkan ini
+      const { accessToken } = response.data;
+      localStorage.setItem('accessToken', accessToken);
 
-    navigate('/admin'); // Redirect ke /admin
-    console.log("Navigating to /admin"); // <-- Tambahkan ini
+      const decodedUser = parseUserFromToken(accessToken);
+      setUser(decodedUser);
+      setIsAuthenticated(true);
 
-  } catch (error) {
-    console.error("Login error:", error); // <-- Pastikan ini ada dan perhatikan outputnya
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem('accessToken');
-    throw error;
-  } finally {
+      // Redirect based on role
+      if (decodedUser.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+
+      return decodedUser;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-        // --- PASTIKAN BARIS INI BENAR ---
-        // Jika Anda menggunakan axiosInstance yang diatur base URL-nya
-        await axiosInstance.post('/logout'); // PASTIKAN METHODNYA POST dan URLNYA '/logout'
-
-        // Atau jika Anda memanggil langsung axios tanpa instance:
-        // await axios.post('http://localhost:5000/logout'); // PASTIKAN URL LENGKAP DAN METHOD POST
-
-        localStorage.removeItem('accessToken');
-        setIsAuthenticated(false);
-        setUser(null);
-        navigate('/login'); // Arahkan ke halaman login setelah logout berhasil
-        console.log("Logged out successfully");
+      await axiosInstance.delete('/api/auth/logout');
+      localStorage.removeItem('accessToken');
+      setIsAuthenticated(false);
+      setUser(null);
+      navigate('/login');
     } catch (error) {
-        console.error("Logout error:", error);
-        // Meskipun ada error dari backend (misal 404), tetap hapus token di frontend
-        localStorage.removeItem('accessToken');
-        setIsAuthenticated(false);
-        setUser(null);
-        navigate('/login');
+      console.error("Logout error:", error);
+      // Still clear local state even if server request fails
+      localStorage.removeItem('accessToken');
+      setIsAuthenticated(false);
+      setUser(null);
+      navigate('/login');
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      user, 
+      login, 
+      logout, 
+      loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

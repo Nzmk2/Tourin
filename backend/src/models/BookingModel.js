@@ -1,18 +1,18 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 import User from "./UserModel.js";
-import Flight from "./FlightModel.js"; // Pastikan path benar
+import Flight from "./FlightModel.js";
 
 const { DataTypes } = Sequelize;
 
 const Booking = db.define('bookings', {
     bookingID: {
-        type: DataTypes.STRING, // STRING Primary Key
+        type: DataTypes.INTEGER,
         primaryKey: true,
-        allowNull: false
+        autoIncrement: true
     },
     userID: {
-        type: DataTypes.INTEGER, // Merujuk ke UserModel.userID (INTEGER)
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: User,
@@ -20,22 +20,30 @@ const Booking = db.define('bookings', {
         }
     },
     flightID: {
-        type: DataTypes.INTEGER, // Merujuk ke FlightModel.flightID (INTEGER)
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Flight,
             key: 'flightID'
         }
+    },
+    bookingDate: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    },
+    status: {
+        type: DataTypes.ENUM('pending', 'confirmed', 'cancelled'),
+        defaultValue: 'pending'
+    },
+    totalPrice: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false
     }
 }, {
     freezeTableName: true
 });
 
-// Define associations
-User.hasMany(Booking, { foreignKey: 'userID' });
 Booking.belongsTo(User, { foreignKey: 'userID' });
-
-Flight.hasMany(Booking, { foreignKey: 'flightID' });
 Booking.belongsTo(Flight, { foreignKey: 'flightID' });
 
 export default Booking;

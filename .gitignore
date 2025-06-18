@@ -34,3 +34,5 @@
 /frontend/yarn-debug.log*
 /backend/yarn-error.log*
 /frontend/yarn-error.log*
+
+.env

@@ -1,11 +1,11 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 
 const { DataTypes } = Sequelize;
 
 const User = db.define('users', {
     userID: {
-        type: DataTypes.INTEGER, // INTEGER Primary Key, auto-increment
+        type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
@@ -33,10 +33,14 @@ const User = db.define('users', {
         type: DataTypes.STRING,
         unique: true
     },
-    role: { // NEW FIELD: User Role
+    role: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'user' // Default role for new registrations
+        defaultValue: 'user'
+    },
+    refresh_token: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 }, {
     freezeTableName: true

@@ -1,6 +1,5 @@
-// seeders/userSeeder.js
-import db from '../src/config/database.js'; // Adjust path based on your project structure
-import User from '../src/models/UserModel.js'; // Adjust path
+import db from '../src/config/Database.js';
+import User from '../src/models/UserModel.js';
 import bcrypt from 'bcryptjs';
 
 const seedUsers = async () => {
@@ -9,34 +8,19 @@ const seedUsers = async () => {
         await db.authenticate();
         console.log('Database connection has been established successfully for user seeder.');
 
-        // This will attempt to sync the model, creating the 'users' table if it doesn't exist
+        // Sync the model with alter option
         await User.sync({ alter: true });
         console.log('User model synchronized for user seeder.');
 
         const usersToSeed = [
             {
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'john.doe@example.com',
-                password: 'password123',
-                passportNumber: 'JD123456',
-                role: 'user'
-            },
-            {
-                firstName: 'Jane',
-                lastName: 'Smith',
-                email: 'jane.smith@example.com',
-                password: 'password456',
-                passportNumber: 'JS789012',
-                role: 'user'
-            },
-            {
-                firstName: 'Peter',
-                lastName: 'Jones',
-                email: 'peter.jones@example.com',
-                password: 'password789',
-                passportNumber: 'PJ345678',
-                role: 'user'
+                firstName: 'Regular',
+                lastName: 'User',
+                email: 'user@tourin.com',
+                password: 'user123',
+                passportNumber: 'USER001',
+                role: 'user',
+                refresh_token: null
             }
         ];
 
@@ -48,19 +32,15 @@ const seedUsers = async () => {
 
             if (existingUser) {
                 console.log(`User with email ${userData.email} already exists. Skipping creation.`);
-                continue; // Move to the next user
+                continue;
             }
 
             const salt = await bcrypt.genSalt();
             const hashedPassword = await bcrypt.hash(userData.password, salt);
 
             await User.create({
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                email: userData.email,
-                password: hashedPassword,
-                passportNumber: userData.passportNumber,
-                role: userData.role
+                ...userData,
+                password: hashedPassword
             });
 
             console.log(`User '${userData.email}' created successfully!`);
@@ -69,7 +49,7 @@ const seedUsers = async () => {
     } catch (error) {
         console.error('Error seeding users:', error);
     } finally {
-        await db.close(); // Close the database connection after seeding
+        await db.close();
         console.log('Database connection closed for user seeder.');
     }
 };

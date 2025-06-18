@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import '../../assets/styles/Login.css';
@@ -11,9 +11,15 @@ const Login = () => {
     const { login, isAuthenticated, loading } = useAuth();
     const navigate = useNavigate();
 
-    React.useEffect(() => {
+    // Redirect if already authenticated
+    useEffect(() => {
         if (isAuthenticated) {
-            navigate('/admin');
+            const userData = JSON.parse(localStorage.getItem('user'));
+            if (userData?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         }
     }, [isAuthenticated, navigate]);
 
@@ -21,7 +27,9 @@ const Login = () => {
         e.preventDefault();
         setMsg('');
         try {
-            await login(email, password);
+            const userData = await login(email, password);
+            localStorage.setItem('user', JSON.stringify(userData));
+            // Navigation is handled in the useEffect above
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
@@ -42,7 +50,6 @@ const Login = () => {
     return (
         <div className="session">
             <div className="left" style={{ backgroundImage: `url(${loginImage})` }}>
-                {/* SVG icon for Nuva Logo */}
                 <svg enableBackground="new 0 0 300 302.5" version="1.1" viewBox="0 0 300 302.5" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                     <style type="text/css">
                         {`.st01{fill:#fff;}`}
@@ -57,7 +64,7 @@ const Login = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Email"
+                        placeholder=" "
                         type="email"
                         name="email"
                         id="email"
@@ -66,9 +73,8 @@ const Login = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-                    <label htmlFor="email">Email:</label>
+                    <label htmlFor="email">Email</label>
                     <div className="icon">
-                        {/* SVG icon for Email */}
                         <svg enableBackground="new 0 0 100 100" version="1.1" viewBox="0 0 100 100" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
                                 {`.st0{fill:none;}`}
@@ -83,7 +89,7 @@ const Login = () => {
 
                 <div className="floating-label">
                     <input
-                        placeholder="Password"
+                        placeholder=" "
                         type="password"
                         name="password"
                         id="password"
@@ -92,9 +98,8 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-                    <label htmlFor="password">Password:</label>
+                    <label htmlFor="password">Password</label>
                     <div className="icon">
-                        {/* SVG icon for Password */}
                         <svg enableBackground="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
                             <style type="text/css">
                                 {`.st0{fill:none;}.st1{fill:#010101;}`}
@@ -108,8 +113,14 @@ const Login = () => {
                 </div>
 
                 <div className="button-group">
-                    <button type="submit" className="login-button">Log in</button>
-                    <p className="signup-text">Didn't have an account?{' '}
+                    <button 
+                        type="submit" 
+                        className="login-button"
+                        disabled={loading}
+                    >
+                        {loading ? 'Logging in...' : 'Log in'}
+                    </button>
+                    <p className="signup-text">Don't have an account?{' '}
                         <Link to="/register" className="signup-link">Sign Up</Link>
                     </p>
                 </div>
