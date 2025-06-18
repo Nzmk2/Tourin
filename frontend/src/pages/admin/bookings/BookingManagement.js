@@ -1,5 +1,3 @@
-// src/pages/admin/booking/BookingManagement.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
@@ -95,7 +93,6 @@ const BookingManagement = () => {
             });
             setMsg("Booking cancelled successfully!");
             setMsgType('success');
-            // Update booking status in the state
             setBookings(prevBookings => 
                 prevBookings.map(booking => 
                     booking.bookingID === bookingToCancel 
@@ -185,6 +182,9 @@ const BookingManagement = () => {
                         </div>
 
                         <div className="management-container">
+                            <Link to="/admin/bookings/add" className="action-button">
+                                <i className="uil uil-plus"></i> Add New Booking
+                            </Link>
                             {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
                             <div className="data-table-container">
                                 <table className="data-table">

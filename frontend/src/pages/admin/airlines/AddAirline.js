@@ -1,6 +1,4 @@
-// src/pages/admin/airline/AddAirline.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
@@ -26,6 +24,7 @@ const AddAirline = () => {
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -71,6 +70,10 @@ const AddAirline = () => {
             setLogo(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current.click();
     };
 
     const saveAirline = async (e) => {
@@ -178,13 +181,25 @@ const AddAirline = () => {
 
                                     <div className="form-group">
                                         <label htmlFor="logo" className="form-label">Airline Logo</label>
-                                        <input
-                                            type="file"
-                                            id="logo"
-                                            className="form-input file-input"
-                                            onChange={handleLogoChange}
-                                            accept="image/*"
-                                        />
+                                        <div className="custom-file-upload">
+                                            <input
+                                                type="file"
+                                                id="logo"
+                                                ref={fileInputRef}
+                                                onChange={handleLogoChange}
+                                                accept="image/*"
+                                                style={{ display: 'none' }}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="upload-button"
+                                                onClick={handleUploadClick}
+                                            >
+                                                <i className="uil uil-image-upload"></i>
+                                                Choose Logo
+                                            </button>
+                                            {logo && <span className="file-name">{logo.name}</span>}
+                                        </div>
                                         {previewUrl && (
                                             <div className="image-preview">
                                                 <img src={previewUrl} alt="Preview" />

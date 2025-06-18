@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import './Header.css'; // Import the CSS file
+import { Link } from 'react-router-dom';
+import LogoImage from '../../assets/img/logo.png'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu if you want to add it later
@@ -7,10 +9,10 @@ const Header = () => {
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        {/* Tiket.com Logo - Replace with your actual logo or text */}
+        {/*Replace with your actual logo or text */}
         <a href="/" className="navbar-logo">
-          <img src="https://www.tiket.com/assets/img/logo-white.png" alt="Tiket.com Logo" className="logo-img" />
-          <span className="logo-text">.COM</span>
+          <img src={LogoImage} alt="Tourin" className="logo-img" />
+          <span className="logo-text"></span>
         </a>
 
         {/* Search Bar */}
@@ -44,8 +46,9 @@ const Header = () => {
       </div>
 
       <div className="navbar-right">
-        <button className="btn-masuk">Masuk</button>
-        <button className="btn-daftar">Daftar</button>
+        {/* Changed to Link components */}
+        <Link to="/login" className="btn-masuk">Masuk</Link>
+        <Link to="/register" className="btn-daftar">Daftar</Link>
       </div>
 
       {/* Optional: Mobile menu toggle button */}
@@ -60,12 +63,12 @@ const Header = () => {
             <li className="mobile-nav-item"><a href="/about" className="mobile-nav-link">About Us</a></li>
             <li className="mobile-nav-item"><a href="/destination" className="mobile-nav-link">Destination</a></li>
             <li className="mobile-nav-item"><a href="/packages" className="mobile-nav-link">Packages</a></li>
-            <li className="mobile-nav-item"><a href="/gallery" className="mobile-nav-link">Gallery</a></li>
-            <li className="mobile-nav-item"><a href="/contact" className="mobile-nav-link">Contact Us</a></li>
+            <li className="mobile-nav-item"><a href="/gallery" className="mobile-nav-item">Gallery</a></li>
+            <li className="mobile-nav-item"><a href="/contact" className="mobile-nav-item">Contact Us</a></li>
           </ul>
           <div className="mobile-auth-buttons">
-            <button className="btn-masuk-mobile">Masuk</button>
-            <button className="btn-daftar-mobile">Daftar</button>
+            <Link to="/login" className="btn-masuk-mobile">Masuk</Link>
+            <Link to="/register" className="btn-daftar-mobile">Daftar</Link>
           </div>
         </div>
       )} */}

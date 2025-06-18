@@ -1,39 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Popular.css'; // Import the CSS file
 
-// Import your images. Make sure these paths are correct relative to Popular.js
-import italySanMiguelImg from './shanghai.jpg'; // Assuming you have this image
-import dubaiBurjKhalifaImg from './shanghai.jpg'; // Assuming you have this image
-import japanKyotoTempleImg from './shanghai.jpg'; // Assuming you have this image
-
 const Popular = () => {
-  // Data for the destination cards
-  const destinations = [
-    {
-      id: 1,
-      country: 'ITALY',
-      city: 'SAN MIGUEL',
-      image: italySanMiguelImg,
-      description: 'Fusce hic augue velit wisi quisibusdam pariatur, iusto.',
-      rating: 5 // Or an array like [1, 1, 1, 1, 1] if you want to render stars dynamically
-    },
-    {
-      id: 2,
-      country: 'DUBAI',
-      city: 'BURJ KHALIFA',
-      image: dubaiBurjKhalifaImg,
-      description: 'Fusce hic augue velit wisi quisibusdam pariatur, iusto.',
-      rating: 5
-    },
-    {
-      id: 3,
-      country: 'JAPAN',
-      city: 'KYOTO TEMPLE',
-      image: japanKyotoTempleImg,
-      description: 'Fusce hic augue velit wisi quisibusdam pariatur, iusto.',
-      rating: 5
-    },
-  ];
+  const [destinations, setDestinations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        // Assuming your backend is running on http://localhost:5000
+        // You might need to adjust this URL based on your actual backend setup
+        const response = await fetch('http://localhost:5000/destinations'); 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setDestinations(data);
+      } catch (e) {
+        setError(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDestinations();
+  }, []);
 
   const renderStars = (rating) => {
     const stars = [];
@@ -48,6 +40,14 @@ const Popular = () => {
     return <div className="card-rating">{stars}</div>;
   };
 
+  if (loading) {
+    return <section className="popular-destination-section">Loading popular destinations...</section>;
+  }
+
+  if (error) {
+    return <section className="popular-destination-section">Error: {error.message}</section>;
+  }
+
   return (
     <section className="popular-destination-section">
       <div className="section-header">
@@ -60,19 +60,24 @@ const Popular = () => {
       </div>
 
       <div className="destination-cards-container">
-        {destinations.map(dest => (
-          <div className="destination-card" key={dest.id}>
-            <div className="card-image-wrapper">
-              <img src={dest.image} alt={dest.city} className="card-image" />
-              {renderStars(dest.rating)} {/* Render stars here */}
+        {destinations.length > 0 ? (
+          destinations.map(dest => (
+            <div className="destination-card" key={dest.destinationID}>
+              <div className="card-image-wrapper">
+                <img src={dest.imageUrl} alt={dest.city} className="card-image" />
+                {/* Assuming your backend provides a 'rating' field, otherwise you might need to add it or default it */}
+                {renderStars(dest.rating || 5)} 
+              </div>
+              <div className="card-content">
+                <p className="card-country">{dest.country}</p>
+                <h3 className="card-city">{dest.city}</h3>
+                <p className="card-description">{dest.description}</p>
+              </div>
             </div>
-            <div className="card-content">
-              <p className="card-country">{dest.country}</p>
-              <h3 className="card-city">{dest.city}</h3>
-              <p className="card-description">{dest.description}</p>
-            </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p>No popular destinations found.</p>
+        )}
       </div>
 
       <div className='button-container'>

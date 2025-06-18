@@ -68,7 +68,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/flight" element={<FlightSearchPage />} />
           <Route path="/flight/choose" element={<Pilihan />} />
-          <Route path="/flight/transaksi" element={<Transaksi />} />
+          <Route path="/flight/choose/transaksi" element={<Transaksi />} />
 
           {/* Admin Protected Routes */}
           <Route

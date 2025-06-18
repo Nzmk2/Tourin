@@ -1,6 +1,4 @@
-// src/pages/admin/package/AddPackage.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
@@ -9,6 +7,9 @@ import Navbar from '../../../components/Navbar';
 // Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
+
+// Current Date and Time: 2025-06-18 20:05:39
+// Current User's Login: Nzmk2
 
 const AddPackage = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
@@ -31,6 +32,7 @@ const AddPackage = () => {
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         const fetchDestinations = async () => {
@@ -90,6 +92,10 @@ const AddPackage = () => {
             setImage(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current.click();
     };
 
     const handlePriceChange = (e) => {
@@ -279,13 +285,25 @@ const AddPackage = () => {
 
                                     <div className="form-group">
                                         <label htmlFor="image" className="form-label">Package Image</label>
-                                        <input
-                                            type="file"
-                                            id="image"
-                                            className="form-input file-input"
-                                            onChange={handleImageChange}
-                                            accept="image/*"
-                                        />
+                                        <div className="custom-file-upload">
+                                            <input
+                                                type="file"
+                                                id="image"
+                                                ref={fileInputRef}
+                                                onChange={handleImageChange}
+                                                accept="image/*"
+                                                style={{ display: 'none' }}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="upload-button"
+                                                onClick={handleUploadClick}
+                                            >
+                                                <i className="uil uil-image-upload"></i>
+                                                Choose Image
+                                            </button>
+                                            {image && <span className="file-name">{image.name}</span>}
+                                        </div>
                                         {previewUrl && (
                                             <div className="image-preview">
                                                 <img src={previewUrl} alt="Preview" />
