@@ -35,9 +35,9 @@ const EditBooking = () => {
         const fetchData = async () => {
             try {
                 const [bookingRes, usersRes, flightsRes] = await Promise.all([
-                    axiosInstance.get(`/bookings/${id}`),
-                    axiosInstance.get('/users'),
-                    axiosInstance.get('/flights')
+                    axiosInstance.get(`/api/bookings/${id}`),    // Add /api prefix
+                    axiosInstance.get('/api/users'),             // Add /api prefix
+                    axiosInstance.get('/api/flights')            // Add /api prefix
                 ]);
 
                 const booking = bookingRes.data;
@@ -104,7 +104,7 @@ const EditBooking = () => {
         e.preventDefault();
 
         try {
-            await axiosInstance.patch(`/bookings/${id}`, {
+            await axiosInstance.patch(`/api/bookings/${id}`, {
                 userID,
                 flightID,
                 status,

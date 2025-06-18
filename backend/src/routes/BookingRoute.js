@@ -11,7 +11,7 @@ import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-// Public routes
+// Add leading slash to all routes
 router.get('/bookings', verifyToken, getBookings);
 router.get('/bookings/:id', verifyToken, getBookingById);
 router.post('/bookings', verifyToken, createBooking);

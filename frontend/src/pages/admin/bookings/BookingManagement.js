@@ -52,7 +52,7 @@ const BookingManagement = () => {
     const getBookings = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/bookings');
+            const response = await axiosInstance.get('/api/bookings');    // Add /api prefix
             setBookings(response.data);
             setMsg('');
             setLoading(false);
@@ -88,7 +88,7 @@ const BookingManagement = () => {
         if (!bookingToCancel) return;
 
         try {
-            await axiosInstance.patch(`/bookings/${bookingToCancel}`, {
+            await axiosInstance.patch(`/api/bookings/${bookingToCancel}`, {    // Add /api prefix
                 status: 'cancelled'
             });
             setMsg("Booking cancelled successfully!");

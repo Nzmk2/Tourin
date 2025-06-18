@@ -32,8 +32,8 @@ const AddBooking = () => {
         const fetchData = async () => {
             try {
                 const [usersRes, flightsRes] = await Promise.all([
-                    axiosInstance.get('/users'),
-                    axiosInstance.get('/flights')
+                    axiosInstance.get('/api/users'),        // Add /api prefix
+                    axiosInstance.get('/api/flights')       // Add /api prefix
                 ]);
                 setUsers(usersRes.data);
                 setFlights(flightsRes.data);
@@ -92,7 +92,7 @@ const AddBooking = () => {
         e.preventDefault();
 
         try {
-            await axiosInstance.post('/bookings', {
+            await axiosInstance.post('/api/bookings', {
                 userID,
                 flightID,
                 status,

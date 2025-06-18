@@ -23,13 +23,14 @@ import BookingRoutes from "./src/routes/BookingRoute.js";
 import PaymentRoutes from "./src/routes/PaymentRoute.js";
 import DestinationRoutes from "./src/routes/DestinationRoute.js";
 import PackageRoutes from "./src/routes/PackageRoute.js";
+import UserRoutes from "./src/routes/UserRoute.js";
 
 // Import upload middleware
 import { upload } from './src/middleware/uploadMiddleware.js';
 
 const app = express();
 
-// Database connection and synchronization
+// Database connection
 (async () => {
     try {
         await db.authenticate();
@@ -45,51 +46,62 @@ const app = express();
 app.use(cors({
     credentials: true,
     origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'], // tambahkan ini
-    allowedHeaders: ['Content-Type', 'Authorization'] // tambahkan ini
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// Routes
-app.use('/api', AirportRoutes); // pastikan ini sudah benar
-
-// Error handling
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Something went wrong!',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.originalUrl}`);
+    next();
 });
 
 // Routes
 app.use('/api/auth', AuthRoutes);
+app.use('/api', UserRoutes);
 app.use('/api', AirlineRoutes);
-app.use('/api', AirportRoutes); // Pastikan ini sudah benar
+app.use('/api', AirportRoutes);
 app.use('/api', FlightRoutes);
 app.use('/api', BookingRoutes);
 app.use('/api', PaymentRoutes);
 app.use('/api', DestinationRoutes);
 app.use('/api', PackageRoutes);
 
-// Error handling middleware
+// Multer error handling
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                success: false,
+                message: 'File is too large'
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
+    next(err);
+});
+
+// General error handling
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(err.status || 500).json({
         success: false,
-        message: 'Something went wrong!',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        message: err.message || 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
 
-// Handle 404
+// 404 handler
 app.use((req, res) => {
-    console.log(`404 - Not Found: ${req.method} ${req.originalUrl}`); // tambahkan logging
+    console.log(`404 - Not Found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({
         success: false,
         message: 'Route not found'
