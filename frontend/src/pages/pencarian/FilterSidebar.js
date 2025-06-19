@@ -1,13 +1,12 @@
-// src/components/FilterSidebar.js
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosConfig.js'; // Import axios instance
+import axiosInstance from '../../api/axiosConfig.js';
 import './FilterSidebar.css';
 import './App.css';
 
 const FilterSidebar = ({ onFilterChange }) => {
   const [selectedTransits, setSelectedTransits] = useState([]);
   const [selectedAirlines, setSelectedAirlines] = useState([]);
-  const [airlines, setAirlines] = useState([]); // State for fetched airlines
+  const [airlines, setAirlines] = useState([]);
   const [loadingAirlines, setLoadingAirlines] = useState(true);
   const [errorAirlines, setErrorAirlines] = useState(null);
 
@@ -16,16 +15,8 @@ const FilterSidebar = ({ onFilterChange }) => {
       setLoadingAirlines(true);
       setErrorAirlines(null);
       try {
-        // Perbaikan: Gunakan axiosInstance tanpa URL lengkap
-        const response = await axiosInstance.get('/airlines');
-        // Perbaikan: Axios langsung memberikan response.data
-        const transformedAirlines = response.data.map(airline => ({
-          ...airline,
-          // Tambah logoUrl jika ada logo dan logoType
-          logoUrl: airline.logo && airline.logoType ? 
-            `data:${airline.logoType};base64,${airline.logo}` : null
-        }));
-        setAirlines(transformedAirlines);
+        const response = await axiosInstance.get('/api/airlines');
+        setAirlines(response.data);
       } catch (error) {
         console.error("Failed to fetch airlines:", error);
         setErrorAirlines(error.message || 'Failed to load airlines');
@@ -46,7 +37,6 @@ const FilterSidebar = ({ onFilterChange }) => {
   };
 
   const handleAirlineChange = (event) => {
-    // Perbaikan: Parse nilai ke integer karena airlineID adalah number
     const value = parseInt(event.target.value, 10);
     setSelectedAirlines(prev => {
       const newAirlines = prev.includes(value) ? 
@@ -61,6 +51,14 @@ const FilterSidebar = ({ onFilterChange }) => {
     setSelectedTransits([]);
     setSelectedAirlines([]);
     onFilterChange({ transits: [], airlines: [] });
+  };
+
+  // Helper: bikin data url inline dari logo/logoType
+  const getLogoSrc = (airline) => {
+    if (airline.logo && airline.logoType) {
+      return `data:${airline.logoType};base64,${airline.logo}`;
+    }
+    return null;
   };
 
   return (
@@ -83,7 +81,6 @@ const FilterSidebar = ({ onFilterChange }) => {
                 onChange={handleTransitChange}
               />
               <span>Langsung</span>
-              {/* You'll need to calculate this price based on actual direct flights */}
               <span className="price">Rp 511.229</span> 
             </label>
           </div>
@@ -96,7 +93,6 @@ const FilterSidebar = ({ onFilterChange }) => {
                 onChange={handleTransitChange}
               />
               <span>1 transit</span>
-              {/* You'll need to calculate this price based on actual 1-transit flights */}
               <span className="price">Rp 1.193.200</span>
             </label>
           </div>
@@ -121,27 +117,25 @@ const FilterSidebar = ({ onFilterChange }) => {
           {loadingAirlines ? (
             <div>Loading airlines...</div>
           ) : errorAirlines ? (
-            <div>Error loading airlines: {errorAirlines.message}</div>
+            <div>Error loading airlines: {errorAirlines}</div>
           ) : airlines.length > 0 ? (
             airlines.map(airline => (
               <div key={airline.airlineID} className="filter-option-item">
                 <label className="filter-option-item">
                   <input
                     type="checkbox"
-                    value={airline.airlineID} // Use airlineID for value
+                    value={airline.airlineID}
                     checked={selectedAirlines.includes(airline.airlineID)}
                     onChange={handleAirlineChange}
                   />
-                  {airline.logoUrl ? (
-                    <img src={airline.logoUrl} alt={airline.name} className="airline-logo" />
+                  {/* Pakai logo/logoType langsung */}
+                  {getLogoSrc(airline) ? (
+                    <img src={getLogoSrc(airline)} alt={airline.name} className="airline-logo" />
                   ) : (
                     <img src={`https://via.placeholder.com/20?text=${airline.name[0]}`} alt={airline.name} />
                   )}
                   <span>{airline.name}</span>
-                  {/* You might want to display the lowest price for this airline if available */}
-                  <span className="price">
-                    {/* Placeholder for airline specific price */}
-                  </span>
+                  <span className="price"></span>
                 </label>
               </div>
             ))

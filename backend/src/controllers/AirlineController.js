@@ -6,19 +6,14 @@ export const getAirlines = async(req, res) => {
             attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
         });
 
-        // Transform untuk menambahkan logoUrl
-        const transformedAirlines = airlines.map(airline => {
+        // logo harus diubah ke base64 string jika ada
+        const result = airlines.map(airline => {
             const data = airline.toJSON();
-            if (data.logo && data.logoType) {
-                data.logoUrl = `data:${data.logoType};base64,${data.logo.toString('base64')}`;
-            }
-            // Hapus data binary dari response
-            delete data.logo;
-            delete data.logoType;
+            if (data.logo) data.logo = data.logo.toString('base64');
             return data;
         });
 
-        res.status(200).json(transformedAirlines);
+        res.status(200).json(result);
     } catch (error) {
         console.error('Error in getAirlines:', error);
         res.status(500).json({ msg: error.message });
