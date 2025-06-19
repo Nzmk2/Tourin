@@ -1,13 +1,108 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig.js';
 import FlightCard from './FlightCard.js';
+import FilterSidebar from './FilterSidebar.js';
 import './FlightList.css';
 import './App.css';
 
-const FlightList = ({ searchParams }) => {
+// FlightSummary Component
+const FlightSummary = ({ searchParams, formatDateForDisplay, flights }) => {
+  const firstFlight = flights && flights.length > 0 ? flights[0] : null;
+
+  return (
+    <div className="flight-summary-container">
+      <div className="flight-route-info">
+        <div className="route-header">
+          <div className="route-airports">
+            <div className="airport departure">
+              <span className="airport-code">{searchParams.departureCity}</span>
+              <span className="airport-name">
+                {firstFlight?.DepartureAirport?.name
+                  ? `${firstFlight.DepartureAirport.name} (${firstFlight.DepartureAirport.code})`
+                  : searchParams.departureCity}
+              </span>
+            </div>
+            <div className="route-arrow">→</div>
+            <div className="airport arrival">
+              <span className="airport-code">{searchParams.arrivalCity}</span>
+              <span className="airport-name">
+                {firstFlight?.DestinationAirport?.name
+                  ? `${firstFlight.DestinationAirport.name} (${firstFlight.DestinationAirport.code})`
+                  : searchParams.arrivalCity}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flight-dates">
+          <div className="date-item">
+            <div className="date-label">
+              <i className="fas fa-plane-departure"></i>
+              <span>Tanggal Berangkat</span>
+            </div>
+            <div className="date-value">
+              {searchParams.departureDate
+                ? formatDateForDisplay(searchParams.departureDate)
+                : 'N/A'}
+            </div>
+          </div>
+          
+          <div className="date-separator"></div>
+          
+          <div className="date-item">
+            <div className="date-label">
+              <i className="fas fa-plane-arrival"></i>
+              <span>Tanggal Pulang</span>
+            </div>
+            <div className="date-value">
+              {searchParams.returnDate
+                ? formatDateForDisplay(searchParams.returnDate)
+                : 'N/A'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main FlightList Component
+const FlightList = () => {
   const [flights, setFlights] = useState([]);
+  const [filteredFlights, setFilteredFlights] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  const location = useLocation();
+  const searchParams = location.state || {};
+
+  const handleFilterChange = ({ transits, airlines }) => {
+    let filtered = [...flights];
+    
+    if (transits.length > 0) {
+      filtered = filtered.filter(flight => {
+        if (transits.includes('direct')) {
+          return flight.transitCount === 0;
+        }
+        if (transits.includes('1-transit')) {
+          return flight.transitCount === 1;
+        }
+        if (transits.includes('2-transits')) {
+          return flight.transitCount >= 2;
+        }
+        return true;
+      });
+    }
+
+    if (airlines.length > 0) {
+      filtered = filtered.filter(flight => 
+        airlines.includes(flight.airlineID)
+      );
+    }
+
+    setFilteredFlights(filtered);
+  };
 
   useEffect(() => {
     const fetchFlights = async () => {
@@ -15,10 +110,18 @@ const FlightList = ({ searchParams }) => {
       setError(null);
 
       try {
-        // Fetch semua penerbangan tanpa parameter
-        const res = await axiosInstance.get('/api/flights');
-        console.log('All flights:', res.data);
+        let url = '/api/flights';
+        if (searchParams.departureCity && searchParams.arrivalCity) {
+          url += `?departureCode=${searchParams.departureCity}&destinationCode=${searchParams.arrivalCity}`;
+          if (searchParams.departureDate) {
+            url += `&departureDate=${searchParams.departureDate}`;
+          }
+        }
+
+        const res = await axiosInstance.get(url);
+        console.log('Filtered flights:', res.data);
         setFlights(res.data);
+        setFilteredFlights(res.data);
       } catch (err) {
         console.error('Error fetching flights:', err);
         setError(err.response?.data?.msg || 'Gagal memuat data penerbangan');
@@ -28,35 +131,15 @@ const FlightList = ({ searchParams }) => {
     };
 
     fetchFlights();
-  }, []); // Hapus searchParams dari dependency array
+  }, [searchParams]);
 
-  // Calculate lowest price flight
   const getLowestPriceFlight = () => {
-    if (!flights.length) return null;
-    return flights.reduce((min, flight) =>
+    if (!filteredFlights.length) return null;
+    return filteredFlights.reduce((min, flight) =>
       parseFloat(flight.price) < parseFloat(min.price) ? flight : min
-    , flights[0]);
+    , filteredFlights[0]);
   };
 
-  // Calculate shortest duration flight
-  const getShortestDurationFlight = () => {
-    if (!flights.length) return null;
-    return flights.reduce((shortest, flight) => {
-      // Hitung durasi dalam menit untuk setiap penerbangan
-      const getDurationInMinutes = (flight) => {
-        const departure = new Date(flight.departureTime);
-        const arrival = new Date(flight.arrivalTime);
-        return Math.round((arrival - departure) / (1000 * 60));
-      };
-
-      const currentDuration = getDurationInMinutes(flight);
-      const shortestDuration = getDurationInMinutes(shortest);
-
-      return currentDuration < shortestDuration ? flight : shortest;
-    }, flights[0]);
-  };
-
-  // Format durasi
   const formatDuration = (flight) => {
     const departure = new Date(flight.departureTime);
     const arrival = new Date(flight.arrivalTime);
@@ -66,59 +149,66 @@ const FlightList = ({ searchParams }) => {
     return `${hours}j ${minutes}m`;
   };
 
+  const formatDateForDisplay = (dateTime) => {
+    const date = new Date(dateTime);
+    return date.toLocaleDateString('id-ID', { 
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (loading) return <div className="flight-list-container">Loading...</div>;
   if (error) return <div className="flight-list-container">{error}</div>;
 
   const lowestPriceFlight = getLowestPriceFlight();
-  const shortestDurationFlight = getShortestDurationFlight();
 
   return (
     <div className="flight-list-container">
-      <div className="flight-summary">
-        <div className="flight-summary-details">
-          <div className="flight-summary-item">
-            <p>Harga terendah</p>
-            <p className="price-highlight">
-              {lowestPriceFlight ? `Rp ${parseFloat(lowestPriceFlight.price).toLocaleString('id-ID')}` : 'N/A'}
-            </p>
-            <p>{lowestPriceFlight ? formatDuration(lowestPriceFlight) : 'N/A'}</p>
-          </div>
-          <div className="flight-summary-item">
-            <p>Durasi tersingkat</p>
-            <p>
-              {shortestDurationFlight ? `Rp ${parseFloat(shortestDurationFlight.price).toLocaleString('id-ID')}` : 'N/A'}
-            </p>
-            <p>{shortestDurationFlight ? formatDuration(shortestDurationFlight) : 'N/A'}</p>
-          </div>
-        </div>
-        <button className="flight-summary-more-button">Lainnya</button>
-      </div>
-
-      {flights.length > 0 && (
-        <div className="recommended-flight-section">
-          <p>Penerbangan langsung termurah</p>
-          <FlightCard
-            flight={lowestPriceFlight}
-            isRecommended={true}
-          />
-        </div>
-      )}
-
-      <div className="all-flights-section">
-        <h3>Semua Penerbangan {flights.length > 0 && `(${flights.length})`}:</h3>
-        {flights.length === 0 ? (
-          <div className="no-flights-message">Tidak ada penerbangan ditemukan.</div>
-        ) : (
-          flights.map(flight => (
-            <FlightCard 
-              key={flight.flightID} 
-              flight={{
-                ...flight,
-                duration: formatDuration(flight)
-              }} 
+      <div className="flight-list-layout">
+        <FilterSidebar 
+          onFilterChange={handleFilterChange}
+          flights={flights}
+        />
+        
+        <div className="flight-list-content">
+          {searchParams.departureCity && searchParams.arrivalCity && (
+            <FlightSummary 
+              searchParams={searchParams}
+              formatDateForDisplay={formatDateForDisplay}
+              flights={filteredFlights}
             />
-          ))
-        )}
+          )}
+
+          {filteredFlights.length > 0 && (
+            <div className="recommended-flight-section">
+              <p>Penerbangan langsung termurah</p>
+              <FlightCard
+                flight={lowestPriceFlight}
+                isRecommended={true}
+              />
+            </div>
+          )}
+
+          <div className="all-flights-section">
+            <h3>Semua Penerbangan {filteredFlights.length > 0 && `(${filteredFlights.length})`}:</h3>
+            {filteredFlights.length === 0 ? (
+              <div className="no-flights-message">Tidak ada penerbangan ditemukan.</div>
+            ) : (
+              filteredFlights.map(flight => (
+                <FlightCard 
+                  key={flight.flightID} 
+                  flight={{
+                    ...flight,
+                    duration: formatDuration(flight)
+                  }} 
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

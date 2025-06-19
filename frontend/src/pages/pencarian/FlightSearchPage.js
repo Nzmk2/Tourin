@@ -13,7 +13,6 @@ const FlightSearchPage = () => {
       <Header />
 
       <div className="main-content">
-        <FilterSidebar />
         <FlightList />
       </div>
     </div>

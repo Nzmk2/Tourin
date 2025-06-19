@@ -1,4 +1,3 @@
-// src/Hero.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig.js';
@@ -8,13 +7,22 @@ const Hero = () => {
     const navigate = useNavigate();
     const [departureCity, setDepartureCity] = useState('');
     const [arrivalCity, setArrivalCity] = useState('');
-    const today = new Date().toISOString().split('T')[0];
+    const [isDropdownOpen, setIsDropdownOpen] = useState({
+        departure: false,
+        arrival: false
+    });
+    
+    // Initialize with current date
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
     const [departureDate, setDepartureDate] = useState(today);
     const [returnDate, setReturnDate] = useState(() => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         return tomorrow.toISOString().split('T')[0];
     });
+    
     const [airportOptions, setAirportOptions] = useState([]);
     const [loadingAirports, setLoadingAirports] = useState(true);
     const [errorAirports, setErrorAirports] = useState(null);
@@ -45,12 +53,15 @@ const Hero = () => {
         fetchAirports();
     }, []);
 
-
     const formatDateForDisplay = (dateString) => {
         if (!dateString) return 'DD/MM/YYYY';
         const date = new Date(dateString);
-        const options = { day: 'numeric', month: 'short', year: 'numeric' };
-        return date.toLocaleDateString('en-GB', options);
+        const options = { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric'
+        };
+        return date.toLocaleDateString('id-ID', options);
     };
 
     const handleSwapCities = () => {
@@ -70,66 +81,134 @@ const Hero = () => {
         });
     };
 
+    const toggleDropdown = (type) => {
+        setIsDropdownOpen(prev => ({
+            departure: false,
+            arrival: false,
+            [type]: !prev[type]
+        }));
+    };
+
+    const handleCitySelect = (type, value) => {
+        if (type === 'departure') {
+            setDepartureCity(value);
+        } else {
+            setArrivalCity(value);
+        }
+        setIsDropdownOpen(prev => ({
+            ...prev,
+            [type]: false
+        }));
+    };
+
     return (
         <div className="hero-container">
             <div className="hero-content">
                 <h1 className="main-title">Tourin Aja</h1>
-                <h2 className="text-title">Tourin hadir sebagai sahabat perjalanan terbaikmu! Kami menawarkan pengalaman wisata yang menyenangkan, nyaman, dan penuh petualangan ke berbagai destinasi impian. Dengan harga terjangkau dan layanan profesional, setiap perjalanan bersama Tourin akan menjadi kenangan tak terlupakan. Nikmati keindahan alam, kekayaan budaya, hingga kuliner khas daerah dengan cara yang seru dan aman. Saatnya wujudkan liburan impianmu bersama Tourin – #TravelWithTourin!</h2>
+                <h2 className="text-title">Tourin hadir sebagai sahabat perjalanan terbaikmu! Kami menawarkan pengalaman wisata yang menyenangkan, nyaman, dan penuh petualangan ke berbagai destinasi impian.</h2>
 
                 <form onSubmit={handleSearch} className="search-form">
-                    <div className="input-group origin-destination">
+                    <div className="search-grid">
                         <div className="input-field city-input">
                             <label>Dari</label>
-                            {loadingAirports ? <p>Memuat bandara...</p> :
-                                <select value={departureCity} onChange={(e) => setDepartureCity(e.target.value)}>
+                            <div className="custom-select" onClick={() => toggleDropdown('departure')}>
+                                <div className="selected-value">
+                                    {loadingAirports ? "Memuat bandara..." : 
+                                        airportOptions.find(airport => airport.airportCode === departureCity)?.airportName
+                                    }
+                                </div>
+                                <div className={`select-dropdown ${isDropdownOpen.departure ? 'open' : ''}`}>
                                     {airportOptions.map((airport) => (
-                                        <option key={airport.airportCode} value={airport.airportCode}>
-                                            {airport.airportName} ({airport.airportCode})
-                                        </option>
+                                        <div
+                                            key={airport.airportCode}
+                                            className="select-option"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCitySelect('departure', airport.airportCode);
+                                            }}
+                                        >
+                                            <div className="airport-info">
+                                                <span className="airport-name">{airport.airportName}</span>
+                                                <span className="airport-code">{airport.airportCode}</span>
+                                            </div>
+                                            <span className="airport-city">{airport.city}, {airport.country}</span>
+                                        </div>
                                     ))}
-                                </select>}
+                                </div>
+                            </div>
                         </div>
+
                         <button type="button" className="swap-button" onClick={handleSwapCities}>
                             ⇄
                         </button>
+
                         <div className="input-field city-input">
                             <label>Ke</label>
-                            {loadingAirports ? <p>Memuat bandara...</p> :
-                                <select value={arrivalCity} onChange={(e) => setArrivalCity(e.target.value)}>
+                            <div className="custom-select" onClick={() => toggleDropdown('arrival')}>
+                                <div className="selected-value">
+                                    {loadingAirports ? "Memuat bandara..." : 
+                                        airportOptions.find(airport => airport.airportCode === arrivalCity)?.airportName
+                                    }
+                                </div>
+                                <div className={`select-dropdown ${isDropdownOpen.arrival ? 'open' : ''}`}>
                                     {airportOptions.map((airport) => (
-                                        <option key={airport.airportCode} value={airport.airportCode}>
-                                            {airport.airportName} ({airport.airportCode})
-                                        </option>
+                                        <div
+                                            key={airport.airportCode}
+                                            className="select-option"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCitySelect('arrival', airport.airportCode);
+                                            }}
+                                        >
+                                            <div className="airport-info">
+                                                <span className="airport-name">{airport.airportName}</span>
+                                                <span className="airport-code">{airport.airportCode}</span>
+                                            </div>
+                                            <span className="airport-city">{airport.city}, {airport.country}</span>
+                                        </div>
                                     ))}
-                                </select>}
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="input-group dates-search">
                         <div className="input-field date-input">
                             <label>Tanggal Pergi</label>
-                            <input
-                                type="date"
-                                value={departureDate}
-                                min={today} // Tambahkan minimum date
-                                onChange={(e) => setDepartureDate(e.target.value)}
-                            />
-                            <span className="date-display">{formatDateForDisplay(departureDate)}</span>
+                            <div className="date-picker-wrapper">
+                                <input
+                                    type="date"
+                                    value={departureDate}
+                                    min={today}
+                                    onChange={(e) => setDepartureDate(e.target.value)}
+                                />
+                                <div className="date-display">
+                                    <span>{formatDateForDisplay(departureDate)}</span>
+                                    <svg className="calendar-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
+
                         <div className="input-field date-input">
                             <label>Tanggal Pulang</label>
-                            <input
-                                type="date"
-                                value={returnDate}
-                                min={departureDate} // Minimum adalah tanggal keberangkatan
-                                onChange={(e) => setReturnDate(e.target.value)}
-                            />
-                            <span className="date-display">{formatDateForDisplay(returnDate)}</span>
+                            <div className="date-picker-wrapper">
+                                <input
+                                    type="date"
+                                    value={returnDate}
+                                    min={departureDate}
+                                    onChange={(e) => setReturnDate(e.target.value)}
+                                />
+                                <div className="date-display">
+                                    <span>{formatDateForDisplay(returnDate)}</span>
+                                    <svg className="calendar-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
+
                         <button type="submit" className="search-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                            </svg>
+                            Cari Penerbangan
                         </button>
                     </div>
                 </form>
