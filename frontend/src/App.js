@@ -67,8 +67,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/flight" element={<FlightSearchPage />} />
-          <Route path="/flight/choose" element={<Pilihan />} />
-          <Route path="/flight/choose/transaksi" element={<Transaksi />} />
+          <Route path="/pilihan" element={<Pilihan />} />
+          <Route path="/pilihan/transaksi" element={<Transaksi />} />
 
           {/* Admin Protected Routes */}
           <Route
