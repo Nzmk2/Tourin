@@ -4,7 +4,6 @@ import axiosInstance from '../../api/axiosConfig.js';
 import FlightCard from './FlightCard.js';
 import FilterSidebar from './FilterSidebar.js';
 import './FlightList.css';
-import './App.css';
 
 // FlightSummary Component
 const FlightSummary = ({ searchParams, formatDateForDisplay, flights }) => {
@@ -77,24 +76,9 @@ const FlightList = () => {
   const location = useLocation();
   const searchParams = location.state || {};
 
-  const handleFilterChange = ({ transits, airlines }) => {
+  const handleFilterChange = ({ airlines }) => {
     let filtered = [...flights];
     
-    if (transits.length > 0) {
-      filtered = filtered.filter(flight => {
-        if (transits.includes('direct')) {
-          return flight.transitCount === 0;
-        }
-        if (transits.includes('1-transit')) {
-          return flight.transitCount === 1;
-        }
-        if (transits.includes('2-transits')) {
-          return flight.transitCount >= 2;
-        }
-        return true;
-      });
-    }
-
     if (airlines.length > 0) {
       filtered = filtered.filter(flight => 
         airlines.includes(flight.airlineID)
@@ -119,9 +103,26 @@ const FlightList = () => {
         }
 
         const res = await axiosInstance.get(url);
-        console.log('Filtered flights:', res.data);
-        setFlights(res.data);
-        setFilteredFlights(res.data);
+        
+        // Get airlines data for each flight
+        const flightsWithAirlines = await Promise.all(res.data.map(async flight => {
+          if (flight.airlineID) {
+            try {
+              const airlineRes = await axiosInstance.get(`/api/airlines/${flight.airlineID}`);
+              return {
+                ...flight,
+                Airline: airlineRes.data
+              };
+            } catch (err) {
+              console.error(`Failed to fetch airline data for flight ${flight.flightID}:`, err);
+              return flight;
+            }
+          }
+          return flight;
+        }));
+
+        setFlights(flightsWithAirlines);
+        setFilteredFlights(flightsWithAirlines);
       } catch (err) {
         console.error('Error fetching flights:', err);
         setError(err.response?.data?.msg || 'Gagal memuat data penerbangan');
@@ -138,15 +139,6 @@ const FlightList = () => {
     return filteredFlights.reduce((min, flight) =>
       parseFloat(flight.price) < parseFloat(min.price) ? flight : min
     , filteredFlights[0]);
-  };
-
-  const formatDuration = (flight) => {
-    const departure = new Date(flight.departureTime);
-    const arrival = new Date(flight.arrivalTime);
-    const durationMs = arrival - departure;
-    const hours = Math.floor(durationMs / (1000 * 60 * 60));
-    const minutes = Math.round((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}j ${minutes}m`;
   };
 
   const formatDateForDisplay = (dateTime) => {
@@ -170,7 +162,6 @@ const FlightList = () => {
       <div className="flight-list-layout">
         <FilterSidebar 
           onFilterChange={handleFilterChange}
-          flights={flights}
         />
         
         <div className="flight-list-content">
@@ -184,7 +175,7 @@ const FlightList = () => {
 
           {filteredFlights.length > 0 && (
             <div className="recommended-flight-section">
-              <p>Penerbangan langsung termurah</p>
+              <p>Penerbangan termurah</p>
               <FlightCard
                 flight={lowestPriceFlight}
                 isRecommended={true}
@@ -200,10 +191,7 @@ const FlightList = () => {
               filteredFlights.map(flight => (
                 <FlightCard 
                   key={flight.flightID} 
-                  flight={{
-                    ...flight,
-                    duration: formatDuration(flight)
-                  }} 
+                  flight={flight}
                 />
               ))
             )}

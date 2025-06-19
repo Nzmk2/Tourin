@@ -28,7 +28,7 @@ const Payment = db.define('payments', {
     },
     paymentStatus: {
         type: DataTypes.ENUM('pending', 'completed', 'failed'),
-        defaultValue: 'pending'
+        defaultValue: 'completed'
     },
     paymentDate: {
         type: DataTypes.DATE,

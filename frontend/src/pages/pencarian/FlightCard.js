@@ -7,16 +7,6 @@ const FlightCard = ({ flight }) => {
 
   if (!flight) return null;
 
-  // Fungsi untuk menghitung durasi
-  const calculateDuration = (departure, arrival) => {
-    const departureTime = new Date(departure);
-    const arrivalTime = new Date(arrival);
-    const durationMs = arrivalTime - departureTime;
-    const hours = Math.floor(durationMs / (1000 * 60 * 60));
-    const minutes = Math.round((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}j ${minutes}m`;
-  };
-
   // Format harga
   const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID', {
@@ -27,17 +17,22 @@ const FlightCard = ({ flight }) => {
     }).format(price);
   };
 
-  // Handle airline logo (binary/BLOB) with MIME type
+  // Handle airline logo
   const getAirlineLogo = () => {
     if (flight.Airline?.logo && flight.Airline?.logoType) {
       return `data:${flight.Airline.logoType};base64,${flight.Airline.logo}`;
     }
-    // fallback to placeholder
     return `https://via.placeholder.com/36?text=${flight.Airline?.name?.[0] || '?'}`;
   };
 
   const handlePilih = () => {
-    navigate('/pilihan', { state: { flight } });
+    navigate('/pilihan', { 
+      state: { 
+        flight,
+        currentUser: 'Nzmk2',
+        currentDateTime: '2025-06-19 17:31:20'
+      } 
+    });
   };
 
   return (
@@ -50,9 +45,6 @@ const FlightCard = ({ flight }) => {
             className="airline-logo"
           />
           <span className="airline-name">{flight.Airline?.name || 'Unknown Airline'}</span>
-          {flight.highlights && (
-            <span className="flight-card-highlight">{flight.highlights}</span>
-          )}
         </div>
         <div className="flight-card-price-info">
           <span className="flight-card-price">{formatPrice(flight.price)}</span>
@@ -73,11 +65,8 @@ const FlightCard = ({ flight }) => {
           <span className="airport-city">{flight.DepartureAirport?.city}</span>
         </div>
         <div className="flight-detail-duration">
-          <p>{calculateDuration(flight.departureTime, flight.arrivalTime)}</p>
           <div className="flight-detail-line">
-            <span>
-              {flight.transitCount ? `${flight.transitCount} Transit` : 'Langsung'}
-            </span>
+            <span className="flight-line-icon">✈</span>
           </div>
         </div>
         <div className="flight-detail-time">
@@ -94,9 +83,6 @@ const FlightCard = ({ flight }) => {
       </div>
 
       <div className="flight-card-actions">
-        <button onClick={() => console.log('Detail clicked')}>Detail</button>
-        <button onClick={() => console.log('Benefits clicked')}>Keuntungan</button>
-        <button onClick={() => console.log('Refund clicked')}>Refund</button>
         <button className="select-button" onClick={handlePilih}>
           Pilih
         </button>

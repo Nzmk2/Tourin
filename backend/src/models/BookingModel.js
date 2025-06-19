@@ -32,8 +32,8 @@ const Booking = db.define('bookings', {
         defaultValue: DataTypes.NOW
     },
     status: {
-        type: DataTypes.ENUM('pending', 'confirmed', 'cancelled'),
-        defaultValue: 'pending'
+        type: DataTypes.ENUM('booked', 'cancelled'),
+        defaultValue: 'booked'
     },
     totalPrice: {
         type: DataTypes.DECIMAL(10, 2),
