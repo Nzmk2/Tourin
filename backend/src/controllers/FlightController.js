@@ -14,93 +14,45 @@ export {
 
 // Definisi fungsi-fungsi
 // Definisi fungsi-fungsi
-const getFlights = async(req, res) => {
-    try {
-        const { 
-            departureCity, 
-            destinationCity, 
-            departureDate,
-            returnDate,
-            passengers 
-        } = req.query;
-
-        // Parse departure date to start and end of day
-        const startDate = new Date(departureDate);
-        startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(departureDate);
-        endDate.setHours(23, 59, 59, 999);
-
-        // Base query conditions
-        const whereConditions = {
-            departureTime: {
-                [Op.between]: [startDate, endDate]
-            }
-        };
-
-        // Add passenger count condition if specified
-        if (passengers) {
-            whereConditions.availableSeats = {
-                [Op.gte]: parseInt(passengers)
-            };
+const getFlights = async (req, res) => {
+  try {
+    const flights = await Flight.findAll({
+      include: [
+        {
+          model: Airline,
+          attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
+        },
+        {
+          model: Airport,
+          as: 'DepartureAirport',
+          attributes: ['code', 'name', 'city']
+        },
+        {
+          model: Airport,
+          as: 'DestinationAirport',
+          attributes: ['code', 'name', 'city']
         }
+      ],
+      order: [['departureTime', 'ASC']]
+    });
 
-        const flights = await Flight.findAll({
-            where: whereConditions,
-            include: [
-                { 
-                    model: Airline,
-                    required: true,
-                    attributes: ['airlineID', 'name', 'code']
-                },
-                { 
-                    model: Airport, 
-                    as: 'DepartureAirport',
-                    required: true,
-                    attributes: ['name', 'code', 'city'],
-                    where: departureCity ? { city: departureCity } : {}
-                },
-                { 
-                    model: Airport, 
-                    as: 'DestinationAirport',
-                    required: true,
-                    attributes: ['name', 'code', 'city'],
-                    where: destinationCity ? { city: destinationCity } : {}
-                }
-            ],
-            order: [['price', 'ASC']] // Sort by price ascending
-        });
+    // Transform data
+    const transformedFlights = flights.map(flight => {
+      const data = flight.toJSON();
+      
+      // Convert airline logo to base64 if exists
+      if (data.Airline?.logo) {
+        data.Airline.logo = data.Airline.logo.toString('base64');
+      }
 
-        // Transform flight data
-        const transformedFlights = flights.map(flight => {
-            const flightData = flight.toJSON();
-            
-            // Calculate duration
-            const departure = new Date(flightData.departureTime);
-            const arrival = new Date(flightData.arrivalTime);
-            const durationMs = arrival - departure;
-            const hours = Math.floor(durationMs / (1000 * 60 * 60));
-            const minutes = Math.round((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-            
-            return {
-                ...flightData,
-                duration: `${hours}h ${minutes}m`,
-                departureTime: departure.toLocaleTimeString('id-ID', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }),
-                arrivalTime: arrival.toLocaleTimeString('id-ID', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }),
-                price: parseFloat(flightData.price).toLocaleString('id-ID')
-            };
-        });
+      return data;
+    });
 
-        res.json(transformedFlights);
-    } catch (error) {
-        console.error('Error in getFlights:', error);
-        res.status(500).json({ msg: error.message });
-    }
+    res.json(transformedFlights);
+  } catch (error) {
+    console.error('Error in getFlights:', error);
+    res.status(500).json({ msg: error.message });
+  }
 };
 
 const getFlightById = async(req, res) => {

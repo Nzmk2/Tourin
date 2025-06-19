@@ -1,5 +1,5 @@
-// src/components/FlightList.js
 import React, { useState, useEffect } from 'react';
+import axiosInstance from '../../api/axiosConfig.js';
 import FlightCard from './FlightCard.js';
 import './FlightList.css';
 import './App.css';
@@ -11,98 +11,113 @@ const FlightList = ({ searchParams }) => {
 
   useEffect(() => {
     const fetchFlights = async () => {
-      if (!searchParams || !searchParams.departureCity || !searchParams.destinationCity || !searchParams.departureDate) {
-        setFlights([]); // Clear flights if search params are incomplete
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
       try {
-        // Construct query parameters for the API call
-        const query = new URLSearchParams({
-          departureCity: searchParams.departureCity,
-          destinationCity: searchParams.destinationCity,
-          departureDate: searchParams.departureDate,
-          // Add other parameters if your backend supports filtering by them
-          ...(searchParams.returnDate && { returnDate: searchParams.returnDate }),
-          ...(searchParams.passengers && { passengers: searchParams.passengers }),
-        }).toString();
-
-        const response = await fetch(`http://localhost:5000/flights?${query}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setFlights(data);
-      } catch (e) {
-        console.error("Failed to fetch flights:", e);
-        setError(e);
+        // Fetch semua penerbangan tanpa parameter
+        const res = await axiosInstance.get('/api/flights');
+        console.log('All flights:', res.data);
+        setFlights(res.data);
+      } catch (err) {
+        console.error('Error fetching flights:', err);
+        setError(err.response?.data?.msg || 'Gagal memuat data penerbangan');
       } finally {
         setLoading(false);
       }
     };
 
     fetchFlights();
-  }, [searchParams]); // Re-fetch when searchParams change
+  }, []); // Hapus searchParams dari dependency array
 
-  if (loading) {
-    return <div className="flight-list-container">Loading flights...</div>;
-  }
+  // Calculate lowest price flight
+  const getLowestPriceFlight = () => {
+    if (!flights.length) return null;
+    return flights.reduce((min, flight) =>
+      parseFloat(flight.price) < parseFloat(min.price) ? flight : min
+    , flights[0]);
+  };
 
-  if (error) {
-    return <div className="flight-list-container">Error: {error.message}</div>;
-  }
+  // Calculate shortest duration flight
+  const getShortestDurationFlight = () => {
+    if (!flights.length) return null;
+    return flights.reduce((shortest, flight) => {
+      // Hitung durasi dalam menit untuk setiap penerbangan
+      const getDurationInMinutes = (flight) => {
+        const departure = new Date(flight.departureTime);
+        const arrival = new Date(flight.arrivalTime);
+        return Math.round((arrival - departure) / (1000 * 60));
+      };
+
+      const currentDuration = getDurationInMinutes(flight);
+      const shortestDuration = getDurationInMinutes(shortest);
+
+      return currentDuration < shortestDuration ? flight : shortest;
+    }, flights[0]);
+  };
+
+  // Format durasi
+  const formatDuration = (flight) => {
+    const departure = new Date(flight.departureTime);
+    const arrival = new Date(flight.arrivalTime);
+    const durationMs = arrival - departure;
+    const hours = Math.floor(durationMs / (1000 * 60 * 60));
+    const minutes = Math.round((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}j ${minutes}m`;
+  };
+
+  if (loading) return <div className="flight-list-container">Loading...</div>;
+  if (error) return <div className="flight-list-container">{error}</div>;
+
+  const lowestPriceFlight = getLowestPriceFlight();
+  const shortestDurationFlight = getShortestDurationFlight();
 
   return (
     <div className="flight-list-container">
-      {/* Search results summary - adapt this to real data if needed */}
       <div className="flight-summary">
         <div className="flight-summary-details">
-          {/* These will need to be calculated based on fetched flights */}
           <div className="flight-summary-item">
             <p>Harga terendah</p>
             <p className="price-highlight">
-              {flights.length > 0 ? `Rp ${Math.min(...flights.map(f => parseFloat(f.price)))}` : 'N/A'}
+              {lowestPriceFlight ? `Rp ${parseFloat(lowestPriceFlight.price).toLocaleString('id-ID')}` : 'N/A'}
             </p>
-            {/* You'll need to parse duration from your flight data */}
-            <p>{flights.length > 0 ? flights[0].duration : 'N/A'}</p>
+            <p>{lowestPriceFlight ? formatDuration(lowestPriceFlight) : 'N/A'}</p>
           </div>
           <div className="flight-summary-item">
             <p>Durasi tersingkat</p>
             <p>
-              {flights.length > 0 ? `Rp ${Math.min(...flights.map(f => parseFloat(f.price)))}` : 'N/A'}
+              {shortestDurationFlight ? `Rp ${parseFloat(shortestDurationFlight.price).toLocaleString('id-ID')}` : 'N/A'}
             </p>
-            {/* You'll need to parse duration from your flight data */}
-            <p>{flights.length > 0 ? flights[0].duration : 'N/A'}</p>
+            <p>{shortestDurationFlight ? formatDuration(shortestDurationFlight) : 'N/A'}</p>
           </div>
         </div>
-        <button className="flight-summary-more-button">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-          </svg>
-          Lainnya
-        </button>
+        <button className="flight-summary-more-button">Lainnya</button>
       </div>
 
-      {/* Recommended flight - this will be the first flight from the fetched list */}
       {flights.length > 0 && (
         <div className="recommended-flight-section">
           <p>Penerbangan langsung termurah</p>
-          <FlightCard flight={flights[0]} />
+          <FlightCard
+            flight={lowestPriceFlight}
+            isRecommended={true}
+          />
         </div>
       )}
 
-      {/* All flights */}
       <div className="all-flights-section">
-        <h3>All Flights:</h3>
-        {flights.length > 0 ? (
-          flights.map(flight => (
-            <FlightCard key={flight.flightID} flight={flight} />
-          ))
+        <h3>Semua Penerbangan {flights.length > 0 && `(${flights.length})`}:</h3>
+        {flights.length === 0 ? (
+          <div className="no-flights-message">Tidak ada penerbangan ditemukan.</div>
         ) : (
-          <p>No flights found for your search criteria.</p>
+          flights.map(flight => (
+            <FlightCard 
+              key={flight.flightID} 
+              flight={{
+                ...flight,
+                duration: formatDuration(flight)
+              }} 
+            />
+          ))
         )}
       </div>
     </div>

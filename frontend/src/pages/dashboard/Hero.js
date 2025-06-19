@@ -8,10 +8,13 @@ const Hero = () => {
     const navigate = useNavigate();
     const [departureCity, setDepartureCity] = useState('');
     const [arrivalCity, setArrivalCity] = useState('');
-    const [departureDate, setDepartureDate] = useState(new Date().toISOString().slice(0, 10));
-    const [returnDate, setReturnDate] = useState(
-        new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().slice(0, 10)
-    );
+    const today = new Date().toISOString().split('T')[0];
+    const [departureDate, setDepartureDate] = useState(today);
+    const [returnDate, setReturnDate] = useState(() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+    });
     const [airportOptions, setAirportOptions] = useState([]);
     const [loadingAirports, setLoadingAirports] = useState(true);
     const [errorAirports, setErrorAirports] = useState(null);
@@ -108,6 +111,7 @@ const Hero = () => {
                             <input
                                 type="date"
                                 value={departureDate}
+                                min={today} // Tambahkan minimum date
                                 onChange={(e) => setDepartureDate(e.target.value)}
                             />
                             <span className="date-display">{formatDateForDisplay(departureDate)}</span>
@@ -117,6 +121,7 @@ const Hero = () => {
                             <input
                                 type="date"
                                 value={returnDate}
+                                min={departureDate} // Minimum adalah tanggal keberangkatan
                                 onChange={(e) => setReturnDate(e.target.value)}
                             />
                             <span className="date-display">{formatDateForDisplay(returnDate)}</span>
