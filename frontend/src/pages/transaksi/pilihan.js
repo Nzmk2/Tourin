@@ -18,7 +18,7 @@ const Pilihan = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedWallet, setSelectedWallet] = useState('');
   
-  const currentDate = "2025-06-19 16:49:00";
+  const currentDate = "2025-06-19 17:13:35";
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,7 +42,10 @@ const Pilihan = () => {
       departureTime: selectedFlight.departureTime,
       departureAirport: selectedFlight.DepartureAirport,
       destinationAirport: selectedFlight.DestinationAirport,
-      arrivalTime: selectedFlight.arrivalTime
+      arrivalTime: selectedFlight.arrivalTime,
+      flightNumber: selectedFlight.flightNumber,
+      gate: selectedFlight.gate || 'TBA',
+      terminal: selectedFlight.terminal || 'TBA'
     });
   }, [selectedFlight, isAuthenticated, navigate]);
 
@@ -71,81 +74,6 @@ const Pilihan = () => {
         return true;
     }
     return true;
-  };
-
-  const handlePaymentSubmit = async () => {
-    if (!isAuthenticated) {
-      setError('Please login first');
-      navigate('/login');
-      return;
-    }
-
-    if (!bookingData) {
-      setError('No flight selected');
-      return;
-    }
-
-    if (!validatePaymentDetails()) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const bookingBody = {
-        flightID: bookingData.flightID,
-        totalPrice: parseFloat(bookingData.totalPrice),
-        status: "pending",
-        bookingDate: currentDate,
-        username: user.firstName,
-        userID: user.userID,
-        paymentMethod: paymentMethod,
-        paymentDetails: getPaymentDetails()
-      };
-
-      const bookingResponse = await axiosInstance.post('/api/bookings', bookingBody);
-
-      if (bookingResponse.data && bookingResponse.data.bookingID) {
-        const paymentBody = {
-          bookingID: bookingResponse.data.bookingID,
-          userID: user.userID,
-          amount: calculateTotalPrice().total,
-          paymentMethod: paymentMethod,
-          paymentStatus: 'pending',
-          paymentDate: currentDate,
-          details: {
-            username: user.firstName,
-            bookingDate: currentDate,
-            ...getPaymentDetails()
-          }
-        };
-
-        const paymentResponse = await axiosInstance.post('/api/payments', paymentBody);
-
-        if (paymentResponse.data) {
-          navigate('/pilihan/transaksi', {
-            state: {
-              bookingID: bookingResponse.data.bookingID,
-              paymentID: paymentResponse.data.paymentID,
-              userID: user.userID,
-              totalAmount: calculateTotalPrice().total,
-              paymentMethod: paymentMethod
-            }
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Payment Error:', err);
-      if (err.response?.status === 401) {
-        setError('Session expired. Please login again.');
-        navigate('/login');
-      } else {
-        setError(err.response?.data?.msg || 'Failed to process payment');
-      }
-    } finally {
-      setLoading(false);
-    }
   };
 
   const getPaymentDetails = () => {
@@ -180,15 +108,6 @@ const Pilihan = () => {
     }
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
-  };
-
   const calculateTotalPrice = () => {
     if (!bookingData) return { basePrice: 0, tax: 0, serviceFee: 0, total: 0 };
     
@@ -201,6 +120,115 @@ const Pilihan = () => {
       serviceFee,
       total: basePrice + tax + serviceFee
     };
+  };
+
+  const handlePaymentSubmit = async () => {
+    if (!isAuthenticated) {
+      setError('Please login first');
+      navigate('/login');
+      return;
+    }
+
+    if (!bookingData) {
+      setError('No flight selected');
+      return;
+    }
+
+    if (!validatePaymentDetails()) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const prices = calculateTotalPrice();
+      const bookingBody = {
+        flightID: bookingData.flightID,
+        totalPrice: prices.total,
+        status: "pending",
+        bookingDate: currentDate,
+        username: user.firstName,
+        userID: user.userID,
+        paymentMethod: paymentMethod,
+        paymentDetails: getPaymentDetails()
+      };
+
+      const bookingResponse = await axiosInstance.post('/api/bookings', bookingBody);
+
+      if (bookingResponse.data && bookingResponse.data.bookingID) {
+        const paymentBody = {
+          bookingID: bookingResponse.data.bookingID,
+          userID: user.userID,
+          amount: prices.total,
+          paymentMethod: paymentMethod,
+          paymentStatus: 'pending',
+          paymentDate: currentDate,
+          details: getPaymentDetails()
+        };
+
+        const paymentResponse = await axiosInstance.post('/api/payments', paymentBody);
+
+        if (paymentResponse.data) {
+          navigate('/pilihan/transaksi', {
+            state: {
+              bookingID: bookingResponse.data.bookingID,
+              paymentID: paymentResponse.data.paymentID,
+              bookingDetails: {
+                bookingId: `BK-${bookingResponse.data.bookingID.toString().padStart(6, '0')}`,
+                userId: `USR-${user.userID}`,
+                flightId: `FL-${bookingData.flightID}`,
+                airline: bookingData.airline?.name || 'TBA',
+                airlineLogo: bookingData.airline?.logoUrl,
+                flightNumber: bookingData.flightNumber,
+                departureTime: new Date(bookingData.departureTime).toLocaleTimeString(),
+                arrivalTime: new Date(bookingData.arrivalTime).toLocaleTimeString(),
+                gate: bookingData.gate,
+                terminal: bookingData.terminal,
+                departureAirport: {
+                  code: bookingData.departureAirport?.code || 'TBA',
+                  name: bookingData.departureAirport?.name || 'TBA'
+                },
+                arrivalAirport: {
+                  code: bookingData.destinationAirport?.code || 'TBA',
+                  name: bookingData.destinationAirport?.name || 'TBA'
+                },
+                bookingDate: new Date(currentDate).toLocaleDateString(),
+                bookingTime: new Date(currentDate).toLocaleTimeString(),
+                passengerName: `${user.firstName} ${user.lastName || ''}`,
+                seatClass: "Economy Class",
+                seatNumber: "TBA",
+                price: prices,
+                totalPrice: prices.total,
+                payment: {
+                  method: paymentMethod,
+                  details: getPaymentDetails()
+                }
+              }
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Payment Error:', err);
+      if (err.response?.status === 401) {
+        setError('Session expired. Please login again.');
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.msg || 'Failed to process payment');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
   };
 
   if (!bookingData) {

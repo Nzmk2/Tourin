@@ -4,7 +4,7 @@ import { useAuth } from '../../auth/AuthContext';
 import axiosInstance from '../../api/axiosConfig';
 import './transaksi.css';
 
-export default function Transaksi() {
+const Transaksi = () => {
   const { isAuthenticated } = useAuth();
   const [bookingData, setBookingData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,102 +12,79 @@ export default function Transaksi() {
   
   const location = useLocation();
   const navigate = useNavigate();
-  const { bookingID } = location.state || {};
+  const { bookingID, bookingDetails } = location.state || {};
   
   useEffect(() => {
-    const fetchBookingData = async () => {
-      if (!isAuthenticated) {
-        navigate('/login');
-        return;
-      }
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
 
-      if (!bookingID) {
-        setError('No booking ID provided');
-        setLoading(false);
-        return;
-      }
+    if (bookingDetails) {
+      setBookingData(bookingDetails);
+      setLoading(false);
+    } else if (bookingID) {
+      fetchBookingData();
+    } else {
+      setError('No booking data available');
+      setLoading(false);
+    }
+  }, [bookingID, bookingDetails, isAuthenticated, navigate]);
 
-      try {
-        const response = await axiosInstance.get(`/api/bookings/${bookingID}`);
-        console.log('Booking Response:', response.data);
-        setBookingData(transformBookingData(response.data));
-      } catch (err) {
-        console.error('Error fetching booking:', err);
-        setError(err.response?.data?.msg || 'Failed to fetch booking details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookingData();
-  }, [bookingID, isAuthenticated, navigate]);
+  const fetchBookingData = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/bookings/${bookingID}`);
+      setBookingData(transformBookingData(response.data));
+    } catch (err) {
+      console.error('Error fetching booking:', err);
+      setError(err.response?.data?.msg || 'Failed to fetch booking details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const transformBookingData = (data) => {
-    console.log('Raw booking data:', data);
     try {
-      const currentDateTime = new Date().toISOString().split('T');
-      const [currentDate, timeWithMS] = currentDateTime;
-      const currentTime = timeWithMS.split('.')[0];
-
-      // Basic booking data
-      const transformed = {
+      return {
         bookingId: `BK-${data.bookingID.toString().padStart(6, '0')}`,
         userId: `USR-${data.userID}`,
         flightId: `FL-${data.flightID}`,
+        airline: data.Flight?.Airline?.name || 'TBA',
+        airlineLogo: data.Flight?.Airline?.logoUrl,
+        flightNumber: data.Flight?.flightNumber || 'TBA',
+        departureTime: data.Flight?.departureTime
+          ? new Date(data.Flight.departureTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })
+          : 'TBA',
+        arrivalTime: data.Flight?.arrivalTime
+          ? new Date(data.Flight.arrivalTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })
+          : 'TBA',
+        gate: data.Flight?.gate || 'TBA',
+        terminal: data.Flight?.terminal || 'TBA',
+        departureAirport: {
+          code: data.Flight?.DepartureAirport?.code || 'TBA',
+          name: data.Flight?.DepartureAirport?.name || 'TBA'
+        },
+        arrivalAirport: {
+          code: data.Flight?.DestinationAirport?.code || 'TBA',
+          name: data.Flight?.DestinationAirport?.name || 'TBA'
+        },
         bookingDate: new Date(data.bookingDate).toLocaleDateString(),
         bookingTime: new Date(data.bookingDate).toLocaleTimeString(),
-        totalPrice: parseFloat(data.totalPrice || 0),
-        seatClass: "Economy Class",
-        seatNumber: "TBA"
+        passengerName: data.User
+          ? `${data.User.firstName} ${data.User.lastName || ''}`
+          : 'Guest',
+        seatClass: 'Economy Class',
+        seatNumber: 'TBA',
+        totalPrice: parseFloat(data.totalPrice || 0)
       };
-
-      // Flight data if available
-      if (data.Flight) {
-        transformed.airline = data.Flight.Airline?.name || 'TBA';
-        transformed.airlineLogo = data.Flight.Airline?.logoUrl || null;
-        transformed.flightNumber = data.Flight.flightNumber || 'TBA';
-        transformed.departureTime = data.Flight.departureTime ? 
-          new Date(data.Flight.departureTime).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }) : 'TBA';
-        transformed.arrivalTime = data.Flight.arrivalTime ?
-          new Date(data.Flight.arrivalTime).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }) : 'TBA';
-        transformed.gate = data.Flight.gate || "TBA";
-        transformed.terminal = data.Flight.terminal || "TBA";
-        transformed.departureAirport = {
-          code: data.Flight.DepartureAirport?.code || 'TBA',
-          name: data.Flight.DepartureAirport?.name || 'TBA'
-        };
-        transformed.arrivalAirport = {
-          code: data.Flight.DestinationAirport?.code || 'TBA',
-          name: data.Flight.DestinationAirport?.name || 'TBA'
-        };
-      } else {
-        transformed.airline = 'TBA';
-        transformed.airlineLogo = null;
-        transformed.flightNumber = 'TBA';
-        transformed.departureTime = 'TBA';
-        transformed.arrivalTime = 'TBA';
-        transformed.gate = 'TBA';
-        transformed.terminal = 'TBA';
-        transformed.departureAirport = { code: 'TBA', name: 'TBA' };
-        transformed.arrivalAirport = { code: 'TBA', name: 'TBA' };
-      }
-
-      // User data if available
-      if (data.User) {
-        transformed.passengerName = `${data.User.firstName} ${data.User.lastName}`;
-      } else {
-        transformed.passengerName = 'Guest';
-      }
-
-      return transformed;
     } catch (error) {
       console.error('Transform error:', error);
       throw error;
@@ -123,7 +100,25 @@ export default function Transaksi() {
     }).format(price);
   };
 
-  // Rest of your component remains the same...
+  const calculateFlightDuration = (departureTime, arrivalTime) => {
+    if (departureTime === 'TBA' || arrivalTime === 'TBA') return 'TBA';
+    
+    const departure = new Date(`2000-01-01T${departureTime}`);
+    const arrival = new Date(`2000-01-01T${arrivalTime}`);
+    const diffInMinutes = (arrival - departure) / (1000 * 60);
+    const hours = Math.floor(diffInMinutes / 60);
+    const minutes = diffInMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
+  const handleDownloadTicket = () => {
+    window.print();
+  };
+
+  const handlePrintTicket = () => {
+    window.print();
+  };
+
   if (loading) {
     return <div className="tf-loading">Loading...</div>;
   }
@@ -138,7 +133,6 @@ export default function Transaksi() {
 
   return (
     <div className="tf-container">
-      {/* Rest of your JSX remains exactly the same... */}
       <div className="tf-breadcrumbs">
         Home &gt; Flight Booking &gt; Payment Confirmation
       </div>
@@ -157,7 +151,6 @@ export default function Transaksi() {
       </div>
 
       <div className="tf-ticket">
-        {/* Rest of the ticket JSX remains exactly the same... */}
         <div className="tf-ticket-header">
           <div className="tf-airline-logo">
             {bookingData.airlineLogo && (
@@ -196,7 +189,6 @@ export default function Transaksi() {
             </div>
 
             <div className="tf-passenger-info">
-              {/* Rest of passenger info JSX remains the same... */}
               <div className="tf-info-group">
                 <label>Passenger Name</label>
                 <span>{bookingData.passengerName}</span>
@@ -238,7 +230,6 @@ export default function Transaksi() {
       </div>
 
       <div className="tf-summary">
-        {/* Rest of summary JSX remains the same... */}
         <div className="tf-summary-header">
           <h3>Price Details</h3>
         </div>
@@ -293,22 +284,6 @@ export default function Transaksi() {
       </div>
     </div>
   );
-}
+};
 
-// Utility functions
-function calculateFlightDuration(departureTime, arrivalTime) {
-  const departure = new Date(`2000-01-01T${departureTime}`);
-  const arrival = new Date(`2000-01-01T${arrivalTime}`);
-  const diffInMinutes = (arrival - departure) / (1000 * 60);
-  const hours = Math.floor(diffInMinutes / 60);
-  const minutes = diffInMinutes % 60;
-  return `${hours}h ${minutes}m`;
-}
-
-function handleDownloadTicket() {
-  window.print();
-}
-
-function handlePrintTicket() {
-  window.print();
-}
+export default Transaksi;
