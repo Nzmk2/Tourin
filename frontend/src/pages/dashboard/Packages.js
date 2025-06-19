@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Packages.css'; // Import CSS file
+import axiosInstance from '../../api/axiosConfig.js'; // Import axios instance
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faMapMarkerAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,15 +12,15 @@ const Packages = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        // Assuming your backend is running on http://localhost:5000
-        // Use /packages to get all packages including destination data
-        const response = await fetch('http://localhost:5000/packages'); 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await axiosInstance.get('/api/packages');
+        if (response.data && response.data.data) {
+          setPackageData(response.data.data);
+        } else {
+          console.error('Unexpected response structure:', response);
+          setPackageData([]); // Fallback to an empty array
         }
-        const data = await response.json();
-        setPackageData(data);
       } catch (e) {
+        console.error('Error fetching packages:', e);
         setError(e);
       } finally {
         setLoading(false);

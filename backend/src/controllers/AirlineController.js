@@ -6,17 +6,19 @@ export const getAirlines = async(req, res) => {
             attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
         });
 
-        // Transform logo binary data to base64 string
-        const airlinesData = airlines.map(airline => {
+        // Transform untuk menambahkan logoUrl
+        const transformedAirlines = airlines.map(airline => {
             const data = airline.toJSON();
-            if (data.logo) {
-                // Convert Buffer to base64 string but keep the original property names
-                data.logo = data.logo.toString('base64');
+            if (data.logo && data.logoType) {
+                data.logoUrl = `data:${data.logoType};base64,${data.logo.toString('base64')}`;
             }
+            // Hapus data binary dari response
+            delete data.logo;
+            delete data.logoType;
             return data;
         });
 
-        res.json(airlinesData);
+        res.status(200).json(transformedAirlines);
     } catch (error) {
         console.error('Error in getAirlines:', error);
         res.status(500).json({ msg: error.message });

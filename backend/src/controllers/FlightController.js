@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import Flight from "../models/FlightModel.js";
 import Airline from "../models/AirlineModel.js";
 import Airport from "../models/AirportModel.js";
@@ -15,7 +16,36 @@ export {
 // Definisi fungsi-fungsi
 const getFlights = async(req, res) => {
     try {
+        const { 
+            departureCity, 
+            destinationCity, 
+            departureDate,
+            returnDate,
+            passengers 
+        } = req.query;
+
+        // Parse departure date to start and end of day
+        const startDate = new Date(departureDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(departureDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Base query conditions
+        const whereConditions = {
+            departureTime: {
+                [Op.between]: [startDate, endDate]
+            }
+        };
+
+        // Add passenger count condition if specified
+        if (passengers) {
+            whereConditions.availableSeats = {
+                [Op.gte]: parseInt(passengers)
+            };
+        }
+
         const flights = await Flight.findAll({
+            where: whereConditions,
             include: [
                 { 
                     model: Airline,
@@ -26,34 +56,46 @@ const getFlights = async(req, res) => {
                     model: Airport, 
                     as: 'DepartureAirport',
                     required: true,
-                    attributes: ['name', 'code']
+                    attributes: ['name', 'code', 'city'],
+                    where: departureCity ? { city: departureCity } : {}
                 },
                 { 
                     model: Airport, 
                     as: 'DestinationAirport',
                     required: true,
-                    attributes: ['name', 'code']
+                    attributes: ['name', 'code', 'city'],
+                    where: destinationCity ? { city: destinationCity } : {}
                 }
-            ]
+            ],
+            order: [['price', 'ASC']] // Sort by price ascending
         });
 
-        console.log('Raw flights data:', JSON.stringify(flights, null, 2));
-
-        // Tambahkan transformasi untuk memastikan data airline
+        // Transform flight data
         const transformedFlights = flights.map(flight => {
             const flightData = flight.toJSON();
-            console.log('Flight airline data:', flightData.Airline);
+            
+            // Calculate duration
+            const departure = new Date(flightData.departureTime);
+            const arrival = new Date(flightData.arrivalTime);
+            const durationMs = arrival - departure;
+            const hours = Math.floor(durationMs / (1000 * 60 * 60));
+            const minutes = Math.round((durationMs % (1000 * 60 * 60)) / (1000 * 60));
             
             return {
                 ...flightData,
-                Airline: flightData.Airline || {
-                    name: `Airline ${flightData.airlineID}`,  // Fallback jika tidak ada nama
-                    code: 'N/A'
-                }
+                duration: `${hours}h ${minutes}m`,
+                departureTime: departure.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                arrivalTime: arrival.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                price: parseFloat(flightData.price).toLocaleString('id-ID')
             };
         });
 
-        console.log('Transformed flights:', JSON.stringify(transformedFlights, null, 2));
         res.json(transformedFlights);
     } catch (error) {
         console.error('Error in getFlights:', error);

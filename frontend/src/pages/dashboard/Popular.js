@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Popular.css'; // Import the CSS file
+import axiosInstance from '../../api/axiosConfig.js'; // Import axios instance
 
 const Popular = () => {
   const [destinations, setDestinations] = useState([]);
@@ -9,14 +10,9 @@ const Popular = () => {
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
-        // Assuming your backend is running on http://localhost:5000
-        // You might need to adjust this URL based on your actual backend setup
-        const response = await fetch('http://localhost:5000/destinations'); 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setDestinations(data);
+        // Corrected endpoint for popular destinations, prefixed with /api
+        const response = await axiosInstance.get('/api/destinations/popular');
+        setDestinations(response.data.data); // Accessing the 'data' array from the response
       } catch (e) {
         setError(e);
       } finally {
@@ -29,11 +25,13 @@ const Popular = () => {
 
   const renderStars = (rating) => {
     const stars = [];
+    // Ensure rating is a number and within 0-5 for rendering stars
+    const numRating = Math.max(0, Math.min(5, Math.round(rating)));
     for (let i = 0; i < 5; i++) {
       stars.push(
         <i
           key={i}
-          className={`fas fa-star ${i < rating ? 'star-filled' : 'star-empty'}`}
+          className={`fas fa-star ${i < numRating ? 'star-filled' : 'star-empty'}`}
         ></i>
       );
     }
@@ -64,9 +62,9 @@ const Popular = () => {
           destinations.map(dest => (
             <div className="destination-card" key={dest.destinationID}>
               <div className="card-image-wrapper">
-                <img src={dest.imageUrl} alt={dest.city} className="card-image" />
-                {/* Assuming your backend provides a 'rating' field, otherwise you might need to add it or default it */}
-                {renderStars(dest.rating || 5)} 
+                {/* Use imageType to construct data URL */}
+                <img src={`data:${dest.imageType};base64,${dest.image}`} alt={dest.city} className="card-image" />
+                {renderStars(dest.rating)}
               </div>
               <div className="card-content">
                 <p className="card-country">{dest.country}</p>

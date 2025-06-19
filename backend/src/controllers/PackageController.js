@@ -41,7 +41,7 @@ export const getPackages = async(req, res) => {
             return packageData;
         });
 
-        res.status(200).json(transformedPackages);
+        res.status(200).json({ data: transformedPackages });
     } catch (error) {
         console.error('Error in getPackages:', error);
         res.status(500).json({ msg: error.message });
@@ -74,7 +74,7 @@ export const getPopularPackages = async(req, res) => {
             return packageData;
         });
 
-        res.status(200).json(transformedPackages);
+        res.status(200).json({ data: transformedPackages });
     } catch (error) {
         res.status(500).json({ msg: error.message });
     }

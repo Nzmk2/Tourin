@@ -1,5 +1,6 @@
 // src/components/FilterSidebar.js
 import React, { useState, useEffect } from 'react';
+import axiosInstance from '../../api/axiosConfig.js'; // Import axios instance
 import './FilterSidebar.css';
 import './App.css';
 
@@ -15,21 +16,25 @@ const FilterSidebar = ({ onFilterChange }) => {
       setLoadingAirlines(true);
       setErrorAirlines(null);
       try {
-        const response = await fetch('http://localhost:5000/airlines'); // Fetch airlines
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setAirlines(data);
-      } catch (e) {
-        console.error("Failed to fetch airlines:", e);
-        setErrorAirlines(e);
+        // Perbaikan: Gunakan axiosInstance tanpa URL lengkap
+        const response = await axiosInstance.get('/airlines');
+        // Perbaikan: Axios langsung memberikan response.data
+        const transformedAirlines = response.data.map(airline => ({
+          ...airline,
+          // Tambah logoUrl jika ada logo dan logoType
+          logoUrl: airline.logo && airline.logoType ? 
+            `data:${airline.logoType};base64,${airline.logo}` : null
+        }));
+        setAirlines(transformedAirlines);
+      } catch (error) {
+        console.error("Failed to fetch airlines:", error);
+        setErrorAirlines(error.message || 'Failed to load airlines');
       } finally {
         setLoadingAirlines(false);
       }
     };
     fetchAirlines();
-  }, []); // Run once on component mount
+  }, []);
 
   const handleTransitChange = (event) => {
     const value = event.target.value;
@@ -41,9 +46,12 @@ const FilterSidebar = ({ onFilterChange }) => {
   };
 
   const handleAirlineChange = (event) => {
-    const value = event.target.value;
+    // Perbaikan: Parse nilai ke integer karena airlineID adalah number
+    const value = parseInt(event.target.value, 10);
     setSelectedAirlines(prev => {
-      const newAirlines = prev.includes(value) ? prev.filter(a => a !== value) : [...prev, value];
+      const newAirlines = prev.includes(value) ? 
+        prev.filter(a => a !== value) : 
+        [...prev, value];
       onFilterChange({ transits: selectedTransits, airlines: newAirlines });
       return newAirlines;
     });
