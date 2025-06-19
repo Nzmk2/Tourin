@@ -31,7 +31,7 @@ const AddPayment = () => {
     useEffect(() => {
         const fetchBookings = async () => {
             try {
-                const response = await axiosInstance.get('/bookings');
+                const response = await axiosInstance.get('/api/bookings');
                 // Filter only bookings that don't have payments or have failed payments
                 const availableBookings = response.data.filter(booking => 
                     booking.status !== 'cancelled' &&
@@ -93,7 +93,7 @@ const AddPayment = () => {
         e.preventDefault();
 
         try {
-            await axiosInstance.post('/payments', {
+            await axiosInstance.post('/api/payments', {
                 bookingID,
                 amount,
                 paymentMethod,

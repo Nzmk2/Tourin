@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 
-// Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
@@ -20,8 +19,9 @@ const BookingManagement = () => {
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [showModal, setShowModal] = useState(false);
-    const [bookingToCancel, setBookingToCancel] = useState(null);
+    const [bookingToDelete, setBookingToDelete] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (isDarkMode) {
@@ -52,7 +52,7 @@ const BookingManagement = () => {
     const getBookings = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/api/bookings');    // Add /api prefix
+            const response = await axiosInstance.get('/api/bookings');
             setBookings(response.data);
             setMsg('');
             setLoading(false);
@@ -73,44 +73,38 @@ const BookingManagement = () => {
         getBookings();
     }, []);
 
-    const confirmCancel = (bookingId) => {
-        setBookingToCancel(bookingId);
+    const confirmDelete = (bookingId) => {
+        setBookingToDelete(bookingId);
         setShowModal(true);
     };
 
     const cancelModal = () => {
         setShowModal(false);
-        setBookingToCancel(null);
+        setBookingToDelete(null);
     };
 
-    const executeCancel = async () => {
+    const executeDelete = async () => {
         setShowModal(false);
-        if (!bookingToCancel) return;
+        if (!bookingToDelete) return;
 
         try {
-            await axiosInstance.patch(`/api/bookings/${bookingToCancel}`, {    // Add /api prefix
-                status: 'cancelled'
-            });
-            setMsg("Booking cancelled successfully!");
+            await axiosInstance.delete(`/api/bookings/${bookingToDelete}`);
+            setMsg("Booking deleted successfully!");
             setMsgType('success');
-            setBookings(prevBookings => 
-                prevBookings.map(booking => 
-                    booking.bookingID === bookingToCancel 
-                        ? {...booking, status: 'cancelled'} 
-                        : booking
-                )
+            setBookings(prevBookings =>
+                prevBookings.filter(booking => booking.bookingID !== bookingToDelete)
             );
         } catch (error) {
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
-                setMsg("Failed to cancel booking. Network error or server unavailable.");
+                setMsg("Failed to delete booking. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error cancelling booking:", error);
+            console.error("Error deleting booking:", error);
         } finally {
-            setBookingToCancel(null);
+            setBookingToDelete(null);
         }
     };
 
@@ -132,7 +126,7 @@ const BookingManagement = () => {
     };
 
     const getStatusBadgeClass = (status) => {
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'confirmed':
                 return 'status-badge confirmed';
             case 'cancelled':
@@ -205,11 +199,19 @@ const BookingManagement = () => {
                                                 <tr key={booking.bookingID}>
                                                     <td>{index + 1}</td>
                                                     <td>{formatDate(booking.bookingDate)}</td>
-                                                    <td>{booking.user.name}</td>
+                                                    <td>{booking.User?.name || booking.user?.name || '-'}</td>
                                                     <td>
-                                                        {`${booking.flight.flightNumber} - 
-                                                          ${booking.flight.departureAirport.code} to 
-                                                          ${booking.flight.arrivalAirport.code}`}
+                                                        {booking.Flight?.flightNumber || booking.flight?.flightNumber || ''}
+                                                        {booking.Flight?.departureAirport?.code
+                                                            ? ` - ${booking.Flight.departureAirport.code}`
+                                                            : booking.flight?.departureAirport?.code
+                                                            ? ` - ${booking.flight.departureAirport.code}` : ''
+                                                        }
+                                                        {booking.Flight?.arrivalAirport?.code
+                                                            ? ` to ${booking.Flight.arrivalAirport.code}`
+                                                            : booking.flight?.arrivalAirport?.code
+                                                            ? ` to ${booking.flight.arrivalAirport.code}` : ''
+                                                        }
                                                     </td>
                                                     <td>{formatPrice(booking.totalPrice)}</td>
                                                     <td>
@@ -218,20 +220,18 @@ const BookingManagement = () => {
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <Link 
-                                                            to={`/admin/bookings/view/${booking.bookingID}`} 
-                                                            className="table-action-button view"
+                                                        <Link
+                                                            to={`/admin/bookings/edit/${booking.bookingID}`}
+                                                            className="table-action-button edit"
                                                         >
-                                                            View
+                                                            Edit
                                                         </Link>
-                                                        {booking.status === 'pending' && (
-                                                            <button 
-                                                                onClick={() => confirmCancel(booking.bookingID)} 
-                                                                className="table-action-button cancel"
-                                                            >
-                                                                Cancel
-                                                            </button>
-                                                        )}
+                                                        <button
+                                                            onClick={() => confirmDelete(booking.bookingID)}
+                                                            className="table-action-button delete"
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))
@@ -253,14 +253,14 @@ const BookingManagement = () => {
             {showModal && (
                 <div className={`modal-overlay ${showModal ? 'active' : ''}`}>
                     <div className="modal-content">
-                        <h3>Confirm Cancellation</h3>
-                        <p>Are you sure you want to cancel this booking? This action cannot be undone.</p>
+                        <h3>Confirm Deletion</h3>
+                        <p>Are you sure you want to delete this booking? This action cannot be undone.</p>
                         <div className="modal-buttons">
-                            <button onClick={executeCancel} className="modal-button confirm">
-                                Cancel Booking
+                            <button onClick={executeDelete} className="modal-button confirm">
+                                Delete
                             </button>
                             <button onClick={cancelModal} className="modal-button cancel">
-                                Keep Booking
+                                Cancel
                             </button>
                         </div>
                     </div>

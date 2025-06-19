@@ -1,5 +1,3 @@
-// src/pages/admin/booking/EditBooking.js
-
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,6 +7,14 @@ import Navbar from '../../../components/Navbar';
 // Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
+
+// Helper to format bookingDate for input type="datetime-local"
+function toInputDateTime(dt) {
+    if (!dt) return '';
+    const d = new Date(dt);
+    const pad = n => `${n}`.padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const EditBooking = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
@@ -35,17 +41,16 @@ const EditBooking = () => {
         const fetchData = async () => {
             try {
                 const [bookingRes, usersRes, flightsRes] = await Promise.all([
-                    axiosInstance.get(`/api/bookings/${id}`),    // Add /api prefix
-                    axiosInstance.get('/api/users'),             // Add /api prefix
-                    axiosInstance.get('/api/flights')            // Add /api prefix
+                    axiosInstance.get(`/api/bookings/${id}`),
+                    axiosInstance.get('/api/users'),
+                    axiosInstance.get('/api/flights')
                 ]);
-
                 const booking = bookingRes.data;
-                setUserID(booking.userID.toString());
-                setFlightID(booking.flightID.toString());
-                setStatus(booking.status);
-                setTotalPrice(booking.totalPrice.toString());
-                setBookingDate(booking.bookingDate);
+                setUserID(booking.userID?.toString() || '');
+                setFlightID(booking.flightID?.toString() || '');
+                setStatus(booking.status || '');
+                setTotalPrice(booking.totalPrice?.toString() || '');
+                setBookingDate(booking.bookingDate || '');
                 setUsers(usersRes.data);
                 setFlights(flightsRes.data);
                 setLoading(false);
@@ -93,10 +98,10 @@ const EditBooking = () => {
     const handleFlightChange = (e) => {
         const selectedFlightId = e.target.value;
         setFlightID(selectedFlightId);
-        
+
         const selectedFlight = flights.find(flight => flight.flightID === parseInt(selectedFlightId));
         if (selectedFlight) {
-            setTotalPrice(selectedFlight.price.toString());
+            setTotalPrice(selectedFlight.price?.toString() || '');
         }
     };
 
@@ -108,7 +113,8 @@ const EditBooking = () => {
                 userID,
                 flightID,
                 status,
-                totalPrice
+                totalPrice,
+                bookingDate // now editable!
             });
             setMsg("Booking updated successfully!");
             setMsgType('success');
@@ -135,17 +141,6 @@ const EditBooking = () => {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(value);
-    };
-
-    const formatDateTime = (dateTime) => {
-        if (!dateTime) return '';
-        return new Date(dateTime).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     if (loading) {
@@ -195,11 +190,12 @@ const EditBooking = () => {
                                     <div className="form-group">
                                         <label htmlFor="bookingDate" className="form-label">Booking Date</label>
                                         <input
-                                            type="text"
+                                            type="datetime-local"
                                             id="bookingDate"
                                             className="form-input"
-                                            value={formatDateTime(bookingDate)}
-                                            disabled
+                                            value={toInputDateTime(bookingDate)}
+                                            onChange={e => setBookingDate(e.target.value)}
+                                            required
                                         />
                                     </div>
 
@@ -233,7 +229,9 @@ const EditBooking = () => {
                                             <option value="">Select a flight</option>
                                             {flights.map(flight => (
                                                 <option key={flight.flightID} value={flight.flightID}>
-                                                    {`${flight.flightNumber} - ${flight.departureAirport.code} to ${flight.arrivalAirport.code}`}
+                                                    {flight.flightNumber}
+                                                    {flight.departureAirport?.code ? ` - ${flight.departureAirport.code}` : ''}
+                                                    {flight.arrivalAirport?.code ? ` to ${flight.arrivalAirport.code}` : ''}
                                                 </option>
                                             ))}
                                         </select>

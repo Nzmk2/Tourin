@@ -54,7 +54,7 @@ const PaymentManagement = () => {
     const getPayments = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/payments');
+            const response = await axiosInstance.get('/api/payments'); // Tambahkan /api
             setPayments(response.data);
             setMsg('');
             setLoading(false);
@@ -90,7 +90,7 @@ const PaymentManagement = () => {
         if (!paymentToDelete) return;
 
         try {
-            await axiosInstance.delete(`/payments/${paymentToDelete}`);
+            await axiosInstance.delete(`/api/payments/${paymentToDelete}`);
             setMsg("Payment deleted successfully!");
             setMsgType('success');
             setPayments(prevPayments => 

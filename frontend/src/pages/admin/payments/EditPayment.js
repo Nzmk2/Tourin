@@ -35,8 +35,8 @@ const EditPayment = () => {
         const fetchData = async () => {
             try {
                 const [paymentRes, bookingsRes] = await Promise.all([
-                    axiosInstance.get(`/payments/${id}`),
-                    axiosInstance.get('/bookings')
+                    axiosInstance.get(`/api/payments/${id}`),
+                    axiosInstance.get('/api/bookings')
                 ]);
 
                 const payment = paymentRes.data;
@@ -112,7 +112,7 @@ const EditPayment = () => {
         e.preventDefault();
 
         try {
-            await axiosInstance.patch(`/payments/${id}`, {
+            await axiosInstance.patch(`/api/payments/${id}`, {
                 bookingID,
                 amount,
                 paymentMethod,

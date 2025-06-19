@@ -12,10 +12,7 @@ export const getBookings = async(req, res) => {
                 { 
                     model: Flight,
                     include: [
-                        { 
-                            model: Airline,
-                            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
-                        },
+                        { model: Airline, attributes: ['airlineID', 'name', 'code', 'logo', 'logoType'] },
                         { model: Airport, as: 'DepartureAirport' },
                         { model: Airport, as: 'DestinationAirport' }
                     ]
@@ -23,11 +20,10 @@ export const getBookings = async(req, res) => {
             ]
         });
 
-        // Transform response untuk menangani BLOB image
         const transformedResponse = response.map(booking => {
             const bookingData = booking.toJSON();
             if (bookingData.Flight?.Airline?.logo) {
-                bookingData.Flight.Airline.logoUrl = 
+                bookingData.Flight.Airline.logoUrl =
                     `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
                 delete bookingData.Flight.Airline.logo;
                 delete bookingData.Flight.Airline.logoType;
@@ -45,18 +41,13 @@ export const getBookings = async(req, res) => {
 export const getBookingById = async(req, res) => {
     try {
         const response = await Booking.findOne({
-            where: {
-                bookingID: req.params.id
-            },
+            where: { bookingID: req.params.id },
             include: [
                 { model: User },
                 { 
                     model: Flight,
                     include: [
-                        { 
-                            model: Airline,
-                            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
-                        },
+                        { model: Airline, attributes: ['airlineID', 'name', 'code', 'logo', 'logoType'] },
                         { model: Airport, as: 'DepartureAirport' },
                         { model: Airport, as: 'DestinationAirport' }
                     ]
@@ -68,10 +59,9 @@ export const getBookingById = async(req, res) => {
             return res.status(404).json({ msg: "Booking not found" });
         }
 
-        // Transform response untuk menangani BLOB image
         const bookingData = response.toJSON();
         if (bookingData.Flight?.Airline?.logo) {
-            bookingData.Flight.Airline.logoUrl = 
+            bookingData.Flight.Airline.logoUrl =
                 `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
             delete bookingData.Flight.Airline.logo;
             delete bookingData.Flight.Airline.logoType;
@@ -86,8 +76,10 @@ export const getBookingById = async(req, res) => {
 
 export const createBooking = async(req, res) => {
     try {
-        const { flightID, totalPrice } = req.body;
-        const userID = req.user.userId;
+        // FIXED: userID dari body (admin) atau dari JWT (user)
+        const userID = req.body.userID || (req.user && req.user.userId);
+        if (!userID) return res.status(400).json({ msg: "User ID is required" });
+        const { flightID, totalPrice, status } = req.body;
 
         const flight = await Flight.findByPk(flightID);
         if (!flight) {
@@ -101,7 +93,7 @@ export const createBooking = async(req, res) => {
             userID: userID,
             flightID: flightID,
             totalPrice: totalPrice,
-            status: 'pending'
+            status: status || 'pending'
         });
 
         await Flight.update(
@@ -122,18 +114,21 @@ export const createBooking = async(req, res) => {
 export const updateBooking = async(req, res) => {
     try {
         const booking = await Booking.findOne({
-            where: {
-                bookingID: req.params.id
-            }
+            where: { bookingID: req.params.id }
         });
         if(!booking) return res.status(404).json({ msg: "Booking not found" });
-        
-        const { status } = req.body;
-        await Booking.update({ status }, {
-            where: {
-                bookingID: req.params.id
+
+        const { userID, flightID, status, totalPrice } = req.body;
+        await Booking.update(
+            {
+                ...(userID && { userID }),
+                ...(flightID && { flightID }),
+                ...(status && { status }),
+                ...(totalPrice && { totalPrice }),
+            }, {
+                where: { bookingID: req.params.id }
             }
-        });
+        );
         res.status(200).json({ msg: "Booking Updated Successfully" });
     } catch (error) {
         console.log(error.message);
@@ -144,12 +139,10 @@ export const updateBooking = async(req, res) => {
 export const deleteBooking = async(req, res) => {
     try {
         const booking = await Booking.findOne({
-            where: {
-                bookingID: req.params.id
-            }
+            where: { bookingID: req.params.id }
         });
         if(!booking) return res.status(404).json({ msg: "Booking not found" });
-        
+
         if (booking.status !== 'cancelled') {
             const flight = await Flight.findByPk(booking.flightID);
             await Flight.update(
@@ -158,11 +151,7 @@ export const deleteBooking = async(req, res) => {
             );
         }
 
-        await Booking.destroy({
-            where: {
-                bookingID: req.params.id
-            }
-        });
+        await Booking.destroy({ where: { bookingID: req.params.id } });
         res.status(200).json({ msg: "Booking Deleted Successfully" });
     } catch (error) {
         console.log(error.message);
@@ -179,10 +168,7 @@ export const getUserBookings = async(req, res) => {
                 { 
                     model: Flight,
                     include: [
-                        { 
-                            model: Airline,
-                            attributes: ['airlineID', 'name', 'code', 'logo', 'logoType']
-                        },
+                        { model: Airline, attributes: ['airlineID', 'name', 'code', 'logo', 'logoType'] },
                         { model: Airport, as: 'DepartureAirport' },
                         { model: Airport, as: 'DestinationAirport' }
                     ]
@@ -190,11 +176,10 @@ export const getUserBookings = async(req, res) => {
             ]
         });
 
-        // Transform response untuk menangani BLOB image
         const transformedBookings = bookings.map(booking => {
             const bookingData = booking.toJSON();
             if (bookingData.Flight?.Airline?.logo) {
-                bookingData.Flight.Airline.logoUrl = 
+                bookingData.Flight.Airline.logoUrl =
                     `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
                 delete bookingData.Flight.Airline.logo;
                 delete bookingData.Flight.Airline.logoType;

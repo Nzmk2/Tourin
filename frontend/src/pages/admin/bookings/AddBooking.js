@@ -1,12 +1,9 @@
-// src/pages/admin/booking/AddBooking.js
-
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 
-// Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
@@ -32,8 +29,8 @@ const AddBooking = () => {
         const fetchData = async () => {
             try {
                 const [usersRes, flightsRes] = await Promise.all([
-                    axiosInstance.get('/api/users'),        // Add /api prefix
-                    axiosInstance.get('/api/flights')       // Add /api prefix
+                    axiosInstance.get('/api/users'),
+                    axiosInstance.get('/api/flights')
                 ]);
                 setUsers(usersRes.data);
                 setFlights(flightsRes.data);
@@ -73,18 +70,21 @@ const AddBooking = () => {
     };
 
     const handleTotalPriceChange = (e) => {
+        // Hanya bisa diedit manual kalau ingin, walaupun sudah otomatis by flight
         const value = e.target.value.replace(/[^\d]/g, '');
         setTotalPrice(value);
     };
 
-    // Handle flight selection and auto-fill price
+    // Otomatis set harga ketika flight dipilih
     const handleFlightChange = (e) => {
         const selectedFlightId = e.target.value;
         setFlightID(selectedFlightId);
-        
+
         const selectedFlight = flights.find(flight => flight.flightID === parseInt(selectedFlightId));
         if (selectedFlight) {
-            setTotalPrice(selectedFlight.price.toString());
+            setTotalPrice(selectedFlight.price ? selectedFlight.price.toString() : '');
+        } else {
+            setTotalPrice('');
         }
     };
 
@@ -161,11 +161,13 @@ const AddBooking = () => {
                                             required
                                         >
                                             <option value="">Select a customer</option>
-                                            {users.map(user => (
-                                                <option key={user.userID} value={user.userID}>
-                                                    {user.name} - {user.email}
-                                                </option>
-                                            ))}
+                                            {users
+                                                .filter(user => user.role === "user" || user.role === "USER")
+                                                .map(user => (
+                                                    <option key={user.userID} value={user.userID}>
+                                                        {user.name} - {user.email}
+                                                    </option>
+                                                ))}
                                         </select>
                                     </div>
 
@@ -181,7 +183,9 @@ const AddBooking = () => {
                                             <option value="">Select a flight</option>
                                             {flights.map(flight => (
                                                 <option key={flight.flightID} value={flight.flightID}>
-                                                    {`${flight.flightNumber} - ${flight.departureAirport.code} to ${flight.arrivalAirport.code}`}
+                                                    {flight.flightNumber}
+                                                    {flight.departureAirport && flight.departureAirport.code ? ` - ${flight.departureAirport.code}` : ''}
+                                                    {flight.arrivalAirport && flight.arrivalAirport.code ? ` to ${flight.arrivalAirport.code}` : ''}
                                                 </option>
                                             ))}
                                         </select>
@@ -215,6 +219,7 @@ const AddBooking = () => {
                                                     onChange={handleTotalPriceChange}
                                                     placeholder="Enter total price"
                                                     required
+                                                    readOnly // Supaya field tidak bisa diedit manual, biar benar-benar otomatis
                                                 />
                                             </div>
                                         </div>
