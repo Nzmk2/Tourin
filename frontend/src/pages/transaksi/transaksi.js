@@ -1,160 +1,277 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthContext';
+import axiosInstance from '../../api/axiosConfig';
 import './transaksi.css';
 
 export default function Transaksi() {
-  // Sample data - in real implementation, this would come from props or API
-  const ticketData = {
-    bookingId: "BK-" + new Date().toISOString().slice(0,10).replace(/-/g, ''),
-    userId: "USR-Nzmk2",
-    flightId: "FL-EK380",
-    bookingDate: "2025-06-19",
-    bookingTime: "15:42:32",
-    totalPrice: 240.00,
-    departureAirport: {
-      code: "CGK",
-      name: "Soekarno-Hatta International Airport"
-    },
-    arrivalAirport: {
-      code: "DPS",
-      name: "Ngurah Rai International Airport"
-    },
-    airline: "Garuda Indonesia",
-    passengerName: "Nzmk2",
-    flightNumber: "GA-7514",
-    seatClass: "Economy Class",
-    seatNumber: "14F",
-    departureTime: "08:00",
-    arrivalTime: "10:45",
-    gate: "D12",
-    terminal: "3"
+  const { isAuthenticated } = useAuth();
+  const [bookingData, setBookingData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { bookingID } = location.state || {};
+  
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      if (!isAuthenticated) {
+        navigate('/login');
+        return;
+      }
+
+      if (!bookingID) {
+        setError('No booking ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axiosInstance.get(`/api/bookings/${bookingID}`);
+        console.log('Booking Response:', response.data);
+        setBookingData(transformBookingData(response.data));
+      } catch (err) {
+        console.error('Error fetching booking:', err);
+        setError(err.response?.data?.msg || 'Failed to fetch booking details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookingData();
+  }, [bookingID, isAuthenticated, navigate]);
+
+  const transformBookingData = (data) => {
+    console.log('Raw booking data:', data);
+    try {
+      const currentDateTime = new Date().toISOString().split('T');
+      const [currentDate, timeWithMS] = currentDateTime;
+      const currentTime = timeWithMS.split('.')[0];
+
+      // Basic booking data
+      const transformed = {
+        bookingId: `BK-${data.bookingID.toString().padStart(6, '0')}`,
+        userId: `USR-${data.userID}`,
+        flightId: `FL-${data.flightID}`,
+        bookingDate: new Date(data.bookingDate).toLocaleDateString(),
+        bookingTime: new Date(data.bookingDate).toLocaleTimeString(),
+        totalPrice: parseFloat(data.totalPrice || 0),
+        seatClass: "Economy Class",
+        seatNumber: "TBA"
+      };
+
+      // Flight data if available
+      if (data.Flight) {
+        transformed.airline = data.Flight.Airline?.name || 'TBA';
+        transformed.airlineLogo = data.Flight.Airline?.logoUrl || null;
+        transformed.flightNumber = data.Flight.flightNumber || 'TBA';
+        transformed.departureTime = data.Flight.departureTime ? 
+          new Date(data.Flight.departureTime).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }) : 'TBA';
+        transformed.arrivalTime = data.Flight.arrivalTime ?
+          new Date(data.Flight.arrivalTime).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }) : 'TBA';
+        transformed.gate = data.Flight.gate || "TBA";
+        transformed.terminal = data.Flight.terminal || "TBA";
+        transformed.departureAirport = {
+          code: data.Flight.DepartureAirport?.code || 'TBA',
+          name: data.Flight.DepartureAirport?.name || 'TBA'
+        };
+        transformed.arrivalAirport = {
+          code: data.Flight.DestinationAirport?.code || 'TBA',
+          name: data.Flight.DestinationAirport?.name || 'TBA'
+        };
+      } else {
+        transformed.airline = 'TBA';
+        transformed.airlineLogo = null;
+        transformed.flightNumber = 'TBA';
+        transformed.departureTime = 'TBA';
+        transformed.arrivalTime = 'TBA';
+        transformed.gate = 'TBA';
+        transformed.terminal = 'TBA';
+        transformed.departureAirport = { code: 'TBA', name: 'TBA' };
+        transformed.arrivalAirport = { code: 'TBA', name: 'TBA' };
+      }
+
+      // User data if available
+      if (data.User) {
+        transformed.passengerName = `${data.User.firstName} ${data.User.lastName}`;
+      } else {
+        transformed.passengerName = 'Guest';
+      }
+
+      return transformed;
+    } catch (error) {
+      console.error('Transform error:', error);
+      throw error;
+    }
   };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'IDR'
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(price);
   };
 
+  // Rest of your component remains the same...
+  if (loading) {
+    return <div className="tf-loading">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="tf-error">{error}</div>;
+  }
+
+  if (!bookingData) {
+    return <div className="tf-error">No booking data available</div>;
+  }
+
   return (
-    <div className="transaksi-container">
-      <div className="transaksi-breadcrumbs">
+    <div className="tf-container">
+      {/* Rest of your JSX remains exactly the same... */}
+      <div className="tf-breadcrumbs">
         Home &gt; Flight Booking &gt; Payment Confirmation
       </div>
 
-      <div className="transaksi-header">
-        <div className="header-left">
-          <h2>{ticketData.airline}</h2>
-          <p className="flight-number">Flight {ticketData.flightNumber}</p>
+      <div className="tf-header">
+        <div className="tf-header-left">
+          <h2>{bookingData.airline}</h2>
+          <p className="tf-flight-number">Flight {bookingData.flightNumber}</p>
         </div>
-        <div className="header-right">
-          <p className="booking-reference">Booking ID: {ticketData.bookingId}</p>
-          <p className="booking-date">Booked on: {ticketData.bookingDate} {ticketData.bookingTime}</p>
+        <div className="tf-header-right">
+          <p className="tf-booking-reference">Booking ID: {bookingData.bookingId}</p>
+          <p className="tf-booking-date">
+            Booked on: {bookingData.bookingDate} {bookingData.bookingTime}
+          </p>
         </div>
       </div>
 
-      <div className="transaksi-ticket">
-        <div className="ticket-header">
-          <div className="airline-logo">
-            <img src="/airline-logo.png" alt="Airline Logo" />
+      <div className="tf-ticket">
+        {/* Rest of the ticket JSX remains exactly the same... */}
+        <div className="tf-ticket-header">
+          <div className="tf-airline-logo">
+            {bookingData.airlineLogo && (
+              <img src={bookingData.airlineLogo} alt={`${bookingData.airline} Logo`} />
+            )}
           </div>
-          <div className="ticket-type">E-TICKET / BOARDING PASS</div>
+          <div className="tf-ticket-type">E-TICKET / BOARDING PASS</div>
         </div>
 
-        <div className="ticket-main">
-          <div className="flight-info-container">
-            <div className="flight-route">
-              <div className="departure">
-                <h3>{ticketData.departureAirport.code}</h3>
-                <p>{ticketData.departureTime}</p>
-                <span>{ticketData.departureAirport.name}</span>
+        <div className="tf-ticket-main">
+          <div className="tf-flight-info-container">
+            <div className="tf-flight-route">
+              <div className="tf-departure">
+                <h3>{bookingData.departureAirport.code}</h3>
+                <p>{bookingData.departureTime}</p>
+                <span>{bookingData.departureAirport.name}</span>
               </div>
               
-              <div className="flight-duration">
-                <div className="duration-line">
-                  <span className="plane-icon">✈</span>
+              <div className="tf-flight-duration">
+                <div className="tf-duration-line">
+                  <span className="tf-plane-icon">✈</span>
                 </div>
-                <span>2h 45m</span>
+                <span>
+                  {calculateFlightDuration(
+                    bookingData.departureTime,
+                    bookingData.arrivalTime
+                  )}
+                </span>
               </div>
 
-              <div className="arrival">
-                <h3>{ticketData.arrivalAirport.code}</h3>
-                <p>{ticketData.arrivalTime}</p>
-                <span>{ticketData.arrivalAirport.name}</span>
+              <div className="tf-arrival">
+                <h3>{bookingData.arrivalAirport.code}</h3>
+                <p>{bookingData.arrivalTime}</p>
+                <span>{bookingData.arrivalAirport.name}</span>
               </div>
             </div>
 
-            <div className="passenger-info">
-              <div className="info-group">
+            <div className="tf-passenger-info">
+              {/* Rest of passenger info JSX remains the same... */}
+              <div className="tf-info-group">
                 <label>Passenger Name</label>
-                <span>{ticketData.passengerName}</span>
+                <span>{bookingData.passengerName}</span>
               </div>
-              <div className="info-group">
+              <div className="tf-info-group">
                 <label>Flight</label>
-                <span>{ticketData.flightNumber}</span>
+                <span>{bookingData.flightNumber}</span>
               </div>
-              <div className="info-group">
+              <div className="tf-info-group">
                 <label>Date</label>
-                <span>{ticketData.bookingDate}</span>
+                <span>{bookingData.bookingDate}</span>
               </div>
-              <div className="info-group">
+              <div className="tf-info-group">
                 <label>Gate</label>
-                <span>{ticketData.gate}</span>
+                <span>{bookingData.gate}</span>
               </div>
-              <div className="info-group">
+              <div className="tf-info-group">
                 <label>Terminal</label>
-                <span>{ticketData.terminal}</span>
+                <span>{bookingData.terminal}</span>
               </div>
-              <div className="info-group">
+              <div className="tf-info-group">
                 <label>Seat</label>
-                <span>{ticketData.seatNumber}</span>
+                <span>{bookingData.seatNumber}</span>
               </div>
-              <div className="info-group">
+              <div className="tf-info-group">
                 <label>Class</label>
-                <span>{ticketData.seatClass}</span>
+                <span>{bookingData.seatClass}</span>
               </div>
             </div>
           </div>
 
-          <div className="ticket-footer">
-            <div className="barcode">
-              <div className="barcode-image">||||||||||||||||||||||||</div>
-              <div className="barcode-text">{ticketData.bookingId}</div>
+          <div className="tf-ticket-footer">
+            <div className="tf-barcode">
+              <div className="tf-barcode-image">||||||||||||||||||||||||</div>
+              <div className="tf-barcode-text">{bookingData.bookingId}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="transaksi-summary">
-        <div className="summary-header">
+      <div className="tf-summary">
+        {/* Rest of summary JSX remains the same... */}
+        <div className="tf-summary-header">
           <h3>Price Details</h3>
         </div>
-        <div className="summary-content">
-          <div className="price-row">
+        <div className="tf-summary-content">
+          <div className="tf-price-row">
             <span>Base Fare</span>
-            <span>{formatPrice(ticketData.totalPrice * 0.8)}</span>
+            <span>{formatPrice(bookingData.totalPrice * 0.8)}</span>
           </div>
-          <div className="price-row">
+          <div className="tf-price-row">
             <span>Tax</span>
-            <span>{formatPrice(ticketData.totalPrice * 0.1)}</span>
+            <span>{formatPrice(bookingData.totalPrice * 0.1)}</span>
           </div>
-          <div className="price-row">
+          <div className="tf-price-row">
             <span>Service Fee</span>
-            <span>{formatPrice(ticketData.totalPrice * 0.1)}</span>
+            <span>{formatPrice(bookingData.totalPrice * 0.1)}</span>
           </div>
-          <div className="price-row total">
+          <div className="tf-price-row tf-total">
             <span>Total Price</span>
-            <span>{formatPrice(ticketData.totalPrice)}</span>
+            <span>{formatPrice(bookingData.totalPrice)}</span>
           </div>
         </div>
-        <div className="summary-actions">
-          <button className="btn-download">Download E-Ticket</button>
-          <button className="btn-print">Print Ticket</button>
+        <div className="tf-summary-actions">
+          <button className="tf-btn-download" onClick={handleDownloadTicket}>
+            Download E-Ticket
+          </button>
+          <button className="tf-btn-print" onClick={handlePrintTicket}>
+            Print Ticket
+          </button>
         </div>
       </div>
 
-      <div className="transaksi-notes">
-        <div className="note-section">
+      <div className="tf-notes">
+        <div className="tf-note-section">
           <h4>Important Information</h4>
           <ul>
             <li>Please arrive at the airport at least 2 hours before departure</li>
@@ -164,16 +281,34 @@ export default function Transaksi() {
           </ul>
         </div>
 
-        <div className="note-section">
+        <div className="tf-note-section">
           <h4>Contact Information</h4>
           <p>
-            {ticketData.airline}<br />
+            {bookingData.airline}<br />
             Call Center: 0804-1-807-807<br />
-            Email: customer@garuda-indonesia.com<br />
-            Website: www.garuda-indonesia.com
+            Email: customer@{bookingData.airline.toLowerCase().replace(/\s+/g, '-')}.com<br />
+            Website: www.{bookingData.airline.toLowerCase().replace(/\s+/g, '-')}.com
           </p>
         </div>
       </div>
     </div>
   );
+}
+
+// Utility functions
+function calculateFlightDuration(departureTime, arrivalTime) {
+  const departure = new Date(`2000-01-01T${departureTime}`);
+  const arrival = new Date(`2000-01-01T${arrivalTime}`);
+  const diffInMinutes = (arrival - departure) / (1000 * 60);
+  const hours = Math.floor(diffInMinutes / 60);
+  const minutes = diffInMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
+function handleDownloadTicket() {
+  window.print();
+}
+
+function handlePrintTicket() {
+  window.print();
 }

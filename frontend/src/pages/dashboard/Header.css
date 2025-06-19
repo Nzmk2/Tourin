@@ -3,26 +3,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* Changed to rgba for transparency */
-  background-color: rgba(43, 65, 91, 0.7); /* Dark blue background with 0.7 alpha */
+  background-color: rgba(43, 65, 91, 0.7);
   padding: 10px 20px;
   color: white;
-  font-family: 'Arial', sans-serif; /* Or a similar clean font */
+  font-family: 'Arial', sans-serif;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  /* Added for potential fixed header */
-  position: sticky; /* or fixed */
+  position: sticky;
   top: 0;
   width: 100%;
-  z-index: 1000; /* Ensure it stays on top */
-  backdrop-filter: blur(5px); /* Adds a subtle blur effect behind the transparent header */
-  -webkit-backdrop-filter: blur(5px); /* Safari support */
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 /* Left Section: Logo and Search Bar */
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 20px; /* Space between logo and search */
+  gap: 20px;
 }
 
 .navbar-logo {
@@ -30,18 +28,11 @@
   align-items: center;
   text-decoration: none;
   color: white;
-  font-weight: bold;
-  font-size: 1.2em;
 }
 
 .navbar-logo .logo-img {
-  height: 24px; /* Adjust as needed */
-  margin-right: 5px;
-}
-
-.navbar-logo .logo-text {
-  font-size: 1.1em;
-  font-weight: normal;
+  height: 32px; /* Increased logo size */
+  width: auto;
 }
 
 .search-bar {
@@ -49,8 +40,8 @@
   align-items: center;
   background-color: white;
   border-radius: 4px;
-  padding: 5px 10px;
-  width: 280px; /* Adjust width as per the image */
+  padding: 8px 12px;
+  width: 300px;
 }
 
 .search-icon {
@@ -64,43 +55,14 @@
   flex-grow: 1;
   font-size: 0.9em;
   color: #333;
-  background-color: transparent; /* Ensure input background is also transparent for consistency */
+  background-color: transparent;
 }
 
-/* Center Section: Navigation Links */
-.navbar-center {
-  /* This section holds your custom navigation links */
-}
-
-.nav-list {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 25px; /* Space between navigation items */
-}
-
-.nav-item {
-  position: relative; /* For potential dropdowns */
-}
-
-.nav-link {
-  text-decoration: none;
-  color: white;
-  font-weight: 500;
-  font-size: 0.95em;
-  padding: 5px 0;
-  transition: color 0.3s ease;
-}
-
-.nav-link:hover {
-  color: #f7b300; /* A yellowish color for hover, similar to Tiket.com */
-}
-
-/* Right Section: Masuk and Daftar Buttons */
+/* Right Section: User Menu / Auth Buttons */
 .navbar-right {
   display: flex;
-  gap: 10px; /* Space between buttons */
+  align-items: center;
+  gap: 10px;
 }
 
 .btn-masuk,
@@ -112,6 +74,7 @@
   font-weight: bold;
   font-size: 0.9em;
   transition: background-color 0.3s ease, color 0.3s ease;
+  text-decoration: none;
 }
 
 .btn-masuk {
@@ -124,7 +87,7 @@
 }
 
 .btn-daftar {
-  background-color: #007bff; /* A bright blue, similar to Tiket.com's register button */
+  background-color: #007bff;
   color: white;
 }
 
@@ -132,152 +95,92 @@
   background-color: #0056b3;
 }
 
-/* Mobile Menu Toggle Button (Optional - uncomment in JS if used) */
-.menu-toggle {
-    display: none; /* Hidden by default, shown on smaller screens */
-    color: white;
-    font-size: 1.5em;
-    cursor: pointer;
+/* User Profile Menu */
+.user-menu {
+  position: relative;
 }
 
-/* Mobile Menu Overlay (Optional - uncomment in JS if used) */
-.mobile-menu {
-    display: none; /* Hidden by default, shown when menu is open */
-    position: absolute;
-    top: 60px; /* Adjust based on navbar height */
-    left: 0;
-    width: 100%;
-    background-color: rgba(43, 65, 91, 0.95); /* Slightly less transparent for legibility */
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 999;
+.user-profile {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
-.mobile-nav-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 20px 0;
-    text-align: center;
+.user-name {
+  color: white;
+  font-weight: 500;
+  margin-right: 8px;
 }
 
-.mobile-nav-item {
-    margin: 15px 0;
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: none;
+  min-width: 150px;
+  z-index: 1001;
 }
 
-.mobile-nav-link {
-    text-decoration: none;
-    color: white;
-    font-size: 1.1em;
-    font-weight: bold;
-    transition: color 0.3s ease;
+.user-profile:hover .profile-dropdown {
+  display: block;
 }
 
-.mobile-nav-link:hover {
-    color: #f7b300;
+.dropdown-item {
+  display: block;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  border: none;
+  width: 100%;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9em;
 }
 
-.mobile-auth-buttons {
-    display: flex;
-    gap: 10px;
+.dropdown-item:hover {
+  background-color: #f5f5f5;
 }
 
-.btn-masuk-mobile,
-.btn-daftar-mobile {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
-}
-
-.btn-masuk-mobile {
-    background-color: white;
-    color: #2b415b;
-}
-
-.btn-daftar-mobile {
-    background-color: #007bff;
-    color: white;
-}
-
-
-/* Responsive considerations */
-@media (max-width: 992px) {
-    .navbar-center {
-        display: none; /* Hide desktop nav links on smaller screens */
-    }
-
-    .menu-toggle {
-        display: block; /* Show hamburger icon */
-    }
-
-    /* On smaller screens, move auth buttons to the right of the search bar, or below if wrapped */
-    .navbar-left {
-        flex-grow: 1; /* Allow left section to take available space */
-        justify-content: space-between; /* Push logo left, search right */
-        width: auto; /* Reset width to auto */
-    }
-
-    .search-bar {
-        width: 100%; /* Make search bar full width within its flex container */
-        max-width: 250px; /* Limit max width for search bar */
-    }
-
-    .navbar-right {
-        order: 2; /* Keep it on the right side if space allows */
-        margin-left: auto; /* Push it to the right */
-    }
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
-    .navbar {
-        flex-wrap: wrap; /* Allow items to wrap to the next line */
-        padding: 10px;
-        justify-content: center; /* Center items when wrapped */
-    }
+  .navbar {
+    padding: 10px;
+  }
 
-    .navbar-left {
-        width: 100%; /* Full width for logo and search on small mobiles */
-        justify-content: space-between;
-        margin-bottom: 10px;
-        order: 1;
-    }
+  .navbar-left {
+    flex-grow: 1;
+  }
 
-    .search-bar {
-        width: calc(100% - 100px); /* Adjust search bar width relative to logo */
-        max-width: none; /* No max width for very small screens */
-    }
+  .search-bar {
+    width: 200px;
+  }
 
-    .navbar-right {
-        width: 100%; /* Full width for buttons */
-        justify-content: center;
-        margin-bottom: 0;
-        order: 3; /* Push to the bottom when wrapped */
-    }
-
-    .navbar-logo {
-        margin-right: 0;
-    }
-
-    /* If mobile menu is active, show it */
-    .mobile-menu {
-        display: flex; /* Show the mobile menu when active */
-    }
+  .user-name {
+    display: none;
+  }
 }
 
-/* Adjustments for even smaller screens */
 @media (max-width: 480px) {
-    .navbar-left {
-        flex-direction: column; /* Stack logo and search bar vertically */
-        align-items: flex-start; /* Align stacked items to the left */
-        gap: 10px;
-    }
+  .navbar-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 
-    .search-bar {
-        width: 100%; /* Full width search bar when stacked */
-    }
+  .search-bar {
+    width: 100%;
+  }
+
+  .navbar-right {
+    flex-direction: column;
+    gap: 5px;
+  }
 }

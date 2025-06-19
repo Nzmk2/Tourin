@@ -67,8 +67,22 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/flight" element={<FlightSearchPage />} />
-          <Route path="/pilihan" element={<Pilihan />} />
-          <Route path="/pilihan/transaksi" element={<Transaksi />} />
+          <Route
+            path="/pilihan"
+            element={
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
+                <Pilihan />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pilihan/transaksi"
+            element={
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
+                <Transaksi />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Protected Routes */}
           <Route

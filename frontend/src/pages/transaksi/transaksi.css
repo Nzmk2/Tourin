@@ -1,69 +1,69 @@
 /* Base Styles */
 :root {
-  --primary-color: #2557a7;
-  --secondary-color: #ff6b6b;
-  --text-primary: #2c3e50;
-  --text-secondary: #666;
-  --background-light: #f8f9fa;
-  --border-color: #e0e0e0;
-  --success-color: #2ecc71;
+  --tf-primary-color: #2557a7;
+  --tf-secondary-color: #ff6b6b;
+  --tf-text-primary: #2c3e50;
+  --tf-text-secondary: #666;
+  --tf-background-light: #f8f9fa;
+  --tf-border-color: #e0e0e0;
+  --tf-success-color: #2ecc71;
 }
 
-.transaksi-container {
+.tf-container {
   max-width: 1024px;
   margin: 2rem auto;
   padding: 0 1rem;
   font-family: 'Segoe UI', sans-serif;
-  color: var(--text-primary);
+  color: var(--tf-text-primary);
 }
 
 /* Breadcrumbs */
-.transaksi-breadcrumbs {
+.tf-breadcrumbs {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
   margin-bottom: 1.5rem;
 }
 
 /* Header Section */
-.transaksi-header {
+.tf-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--tf-border-color);
 }
 
-.header-left h2 {
+.tf-header-left h2 {
   margin: 0;
-  color: var(--primary-color);
+  color: var(--tf-primary-color);
   font-size: 1.75rem;
 }
 
-.flight-number {
+.tf-flight-number {
   margin: 0.25rem 0 0;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
   font-size: 1rem;
 }
 
-.header-right {
+.tf-header-right {
   text-align: right;
 }
 
-.booking-reference {
+.tf-booking-reference {
   font-weight: 600;
   margin: 0;
-  color: var(--primary-color);
+  color: var(--tf-primary-color);
 }
 
-.booking-date {
+.tf-booking-date {
   margin: 0.25rem 0 0;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
   font-size: 0.875rem;
 }
 
 /* Ticket Section */
-.transaksi-ticket {
+.tf-ticket {
   background: white;
   border-radius: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -71,8 +71,8 @@
   margin-bottom: 2rem;
 }
 
-.ticket-header {
-  background: var(--primary-color);
+.tf-ticket-header {
+  background: var(--tf-primary-color);
   color: white;
   padding: 1rem;
   display: flex;
@@ -80,66 +80,66 @@
   align-items: center;
 }
 
-.airline-logo img {
+.tf-airline-logo img {
   height: 40px;
   width: auto;
 }
 
-.ticket-type {
+.tf-ticket-type {
   font-weight: 600;
   letter-spacing: 1px;
 }
 
-.ticket-main {
+.tf-ticket-main {
   padding: 2rem;
 }
 
 /* Flight Route Information */
-.flight-route {
+.tf-flight-route {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px dashed var(--border-color);
+  border-bottom: 1px dashed var(--tf-border-color);
 }
 
-.departure, .arrival {
+.tf-departure, .tf-arrival {
   text-align: center;
   flex: 1;
 }
 
-.departure h3, .arrival h3 {
+.tf-departure h3, .tf-arrival h3 {
   font-size: 2rem;
   margin: 0;
-  color: var(--primary-color);
+  color: var(--tf-primary-color);
 }
 
-.departure p, .arrival p {
+.tf-departure p, .tf-arrival p {
   font-size: 1.25rem;
   margin: 0.5rem 0;
   font-weight: 600;
 }
 
-.departure span, .arrival span {
+.tf-departure span, .tf-arrival span {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
 }
 
-.flight-duration {
+.tf-flight-duration {
   flex: 1;
   text-align: center;
   position: relative;
 }
 
-.duration-line {
+.tf-duration-line {
   height: 2px;
-  background: var(--border-color);
+  background: var(--tf-border-color);
   position: relative;
   margin: 1rem 0;
 }
 
-.plane-icon {
+.tf-plane-icon {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -147,59 +147,59 @@
   font-size: 1.5rem;
   background: white;
   padding: 0 0.5rem;
-  color: var(--primary-color);
+  color: var(--tf-primary-color);
 }
 
 /* Passenger Information */
-.passenger-info {
+.tf-passenger-info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
 }
 
-.info-group {
+.tf-info-group {
   display: flex;
   flex-direction: column;
 }
 
-.info-group label {
+.tf-info-group label {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
   margin-bottom: 0.25rem;
 }
 
-.info-group span {
+.tf-info-group span {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--tf-text-primary);
 }
 
 /* Ticket Footer */
-.ticket-footer {
+.tf-ticket-footer {
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px dashed var(--border-color);
+  border-top: 1px dashed var(--tf-border-color);
   text-align: center;
 }
 
-.barcode {
+.tf-barcode {
   display: inline-block;
 }
 
-.barcode-image {
+.tf-barcode-image {
   font-family: 'Libre Barcode 39', cursive;
   font-size: 3rem;
   line-height: 1;
 }
 
-.barcode-text {
+.tf-barcode-text {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
   margin-top: 0.5rem;
 }
 
 /* Price Summary */
-.transaksi-summary {
+.tf-summary {
   background: white;
   border-radius: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -207,36 +207,36 @@
   margin-bottom: 2rem;
 }
 
-.summary-header h3 {
+.tf-summary-header h3 {
   margin: 0 0 1rem;
-  color: var(--text-primary);
+  color: var(--tf-text-primary);
 }
 
-.summary-content {
+.tf-summary-content {
   margin-bottom: 1.5rem;
 }
 
-.price-row {
+.tf-price-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.75rem;
   font-size: 0.9375rem;
 }
 
-.price-row.total {
+.tf-price-row.tf-total {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--tf-border-color);
   font-weight: 600;
   font-size: 1.125rem;
 }
 
-.summary-actions {
+.tf-summary-actions {
   display: flex;
   gap: 1rem;
 }
 
-.btn-download, .btn-print {
+.tf-btn-download, .tf-btn-print {
   flex: 1;
   padding: 0.75rem;
   border: none;
@@ -246,107 +246,107 @@
   transition: background-color 0.2s;
 }
 
-.btn-download {
-  background: var(--primary-color);
+.tf-btn-download {
+  background: var(--tf-primary-color);
   color: white;
 }
 
-.btn-print {
-  background: var(--background-light);
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+.tf-btn-print {
+  background: var(--tf-background-light);
+  color: var(--tf-primary-color);
+  border: 1px solid var(--tf-primary-color);
 }
 
-.btn-download:hover {
+.tf-btn-download:hover {
   background: #1d4b8f;
 }
 
-.btn-print:hover {
+.tf-btn-print:hover {
   background: #e8f0fe;
 }
 
 /* Notes Section */
-.transaksi-notes {
+.tf-notes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
 }
 
-.note-section h4 {
-  color: var(--text-primary);
+.tf-note-section h4 {
+  color: var(--tf-text-primary);
   margin: 0 0 1rem;
 }
 
-.note-section ul {
+.tf-note-section ul {
   margin: 0;
   padding-left: 1.25rem;
 }
 
-.note-section li {
+.tf-note-section li {
   margin-bottom: 0.5rem;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
 }
 
-.note-section p {
+.tf-note-section p {
   margin: 0;
-  color: var(--text-secondary);
+  color: var(--tf-text-secondary);
   line-height: 1.6;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .transaksi-header {
+  .tf-header {
     flex-direction: column;
   }
 
-  .header-right {
+  .tf-header-right {
     text-align: left;
     margin-top: 1rem;
   }
 
-  .flight-route {
+  .tf-flight-route {
     flex-direction: column;
     gap: 2rem;
   }
 
-  .flight-duration {
+  .tf-flight-duration {
     width: 100%;
   }
 
-  .duration-line {
+  .tf-duration-line {
     width: 2px;
     height: 50px;
     margin: 1rem auto;
   }
 
-  .passenger-info {
+  .tf-passenger-info {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 
-  .summary-actions {
+  .tf-summary-actions {
     flex-direction: column;
   }
 }
 
 /* Print Styles */
 @media print {
-  .transaksi-container {
+  .tf-container {
     margin: 0;
     padding: 0;
   }
 
-  .btn-download, .btn-print {
+  .tf-btn-download, .tf-btn-print {
     display: none;
   }
 
-  .transaksi-ticket {
+  .tf-ticket {
     box-shadow: none;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--tf-border-color);
   }
 
-  .transaksi-summary {
+  .tf-summary {
     box-shadow: none;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--tf-border-color);
   }
 }

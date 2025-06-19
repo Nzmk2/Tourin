@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import Layout from '../components/Layout';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -18,8 +17,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Layout />; // Using the updated Layout component for access denied
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    return <Navigate to="/" />;
   }
 
   return children;
