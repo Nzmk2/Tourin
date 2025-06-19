@@ -2,13 +2,31 @@ import Airport from "../models/AirportModel.js";
 
 export const getAirports = async(req, res) => {
     try {
+        console.log('Fetching airports...');
         const airports = await Airport.findAll({
             attributes: ['airportID', 'code', 'name', 'city', 'country']
         });
-        res.json(airports);
+        
+        console.log(`Found ${airports.length} airports`);
+        
+        const transformedAirports = airports.map(airport => {
+            const data = airport.toJSON();
+            return {
+                id: data.airportID,
+                code: data.code,
+                name: data.name,
+                city: data.city,
+                country: data.country
+            };
+        });
+
+        res.status(200).json(transformedAirports);
     } catch (error) {
-        console.error('Error in getAirports:', error); // Tambahkan logging
-        res.status(500).json({ msg: error.message });
+        console.error('Error in getAirports:', error);
+        res.status(500).json({ 
+            success: false,
+            message: error.message 
+        });
     }
 };
 

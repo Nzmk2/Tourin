@@ -1,7 +1,6 @@
 // src/components/FlightList.js
 import React, { useState, useEffect } from 'react';
 import FlightCard from './FlightCard.js';
-import axiosInstance from '../../api/axiosConfig.js'; // Import axios instance
 import './FlightList.css';
 import './App.css';
 

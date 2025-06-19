@@ -1,15 +1,17 @@
 // src/Hero.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../api/axiosConfig.js';
 import './Hero.css';
 
 const Hero = () => {
     const navigate = useNavigate();
-
     const [departureCity, setDepartureCity] = useState('');
     const [arrivalCity, setArrivalCity] = useState('');
     const [departureDate, setDepartureDate] = useState(new Date().toISOString().slice(0, 10));
-    const [returnDate, setReturnDate] = useState(new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().slice(0, 10));
+    const [returnDate, setReturnDate] = useState(
+        new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().slice(0, 10)
+    );
     const [airportOptions, setAirportOptions] = useState([]);
     const [loadingAirports, setLoadingAirports] = useState(true);
     const [errorAirports, setErrorAirports] = useState(null);
@@ -17,13 +19,17 @@ const Hero = () => {
     useEffect(() => {
         const fetchAirports = async () => {
             try {
-                const response = await fetch('http://localhost:5000/airports');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                setAirportOptions(data);
-                if (data.length > 0) {
-                    setDepartureCity(data[0].airportCode);
-                    setArrivalCity(data.length > 1 ? data[1].airportCode : data[0].airportCode);
+                const response = await axiosInstance.get('/api/airports');
+                const airports = response.data.map(airport => ({
+                    airportCode: airport.code,
+                    airportName: airport.name,
+                    city: airport.city,
+                    country: airport.country
+                }));
+                setAirportOptions(airports);
+                if (airports.length > 0) {
+                    setDepartureCity(airports[0].airportCode);
+                    setArrivalCity(airports.length > 1 ? airports[1].airportCode : airports[0].airportCode);
                 }
             } catch (error) {
                 console.error("Error fetching airports:", error);
@@ -35,6 +41,7 @@ const Hero = () => {
 
         fetchAirports();
     }, []);
+
 
     const formatDateForDisplay = (dateString) => {
         if (!dateString) return 'DD/MM/YYYY';
