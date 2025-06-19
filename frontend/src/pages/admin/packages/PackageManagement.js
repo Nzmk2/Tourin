@@ -1,12 +1,9 @@
-// src/pages/admin/package/PackageManagement.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 
-// Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
@@ -54,7 +51,7 @@ const PackageManagement = () => {
     const getPackages = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/packages');
+            const response = await axiosInstance.get('/api/packages');
             setPackages(response.data);
             setMsg('');
             setLoading(false);
@@ -90,7 +87,7 @@ const PackageManagement = () => {
         if (!packageToDelete) return;
 
         try {
-            await axiosInstance.delete(`/packages/${packageToDelete}`);
+            await axiosInstance.delete(`/api/packages/${packageToDelete}`);
             setMsg("Package deleted successfully!");
             setMsgType('success');
             setPackages(prevPackages => 
@@ -168,11 +165,14 @@ const PackageManagement = () => {
                                             <th>No</th>
                                             <th>Image</th>
                                             <th>Title</th>
+                                            <th>Description</th>
                                             <th>Duration</th>
                                             <th>Location</th>
                                             <th>Price</th>
                                             <th>Max Pax</th>
                                             <th>Rating</th>
+                                            <th>Review Count</th>
+                                            <th>Destination</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -182,9 +182,9 @@ const PackageManagement = () => {
                                                 <tr key={pkg.packageID}>
                                                     <td>{index + 1}</td>
                                                     <td>
-                                                        {pkg.image ? (
+                                                        {pkg.imageUrl ? (
                                                             <img 
-                                                                src={`data:${pkg.imageType};base64,${pkg.image}`}
+                                                                src={pkg.imageUrl}
                                                                 alt={pkg.title}
                                                                 className="package-thumbnail"
                                                             />
@@ -193,11 +193,23 @@ const PackageManagement = () => {
                                                         )}
                                                     </td>
                                                     <td>{pkg.title}</td>
+                                                    <td>{pkg.description}</td>
                                                     <td>{pkg.duration}</td>
                                                     <td>{pkg.location}</td>
                                                     <td>{formatPrice(pkg.price)}</td>
                                                     <td>{pkg.maxPax}</td>
-                                                    <td>{pkg.rating.toFixed(1)}</td>
+                                                    <td>{pkg.rating ? pkg.rating.toFixed(1) : '-'}</td>
+                                                    <td>{pkg.reviewCount}</td>
+                                                    <td>
+                                                        {pkg.Destination && pkg.Destination.name
+                                                            ? pkg.Destination.name
+                                                            : (
+                                                                pkg.destinationID
+                                                                ? <span style={{color:"red"}}>ID {pkg.destinationID} (not found in destinations table)</span>
+                                                                : '-'
+                                                            )
+                                                        }
+                                                    </td>
                                                     <td>
                                                         <Link 
                                                             to={`/admin/packages/edit/${pkg.packageID}`} 
@@ -216,7 +228,7 @@ const PackageManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="9" className="no-data-message">
+                                                <td colSpan="12" className="no-data-message">
                                                     No packages found.
                                                 </td>
                                             </tr>

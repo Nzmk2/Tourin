@@ -52,7 +52,7 @@ const Package = db.define('packages', {
     destinationID: {
         type: DataTypes.INTEGER,
         references: {
-            model: Destination,
+            model: 'destinations',
             key: 'destinationID'
         }
     }
@@ -60,6 +60,10 @@ const Package = db.define('packages', {
     freezeTableName: true
 });
 
-Package.belongsTo(Destination, { foreignKey: 'destinationID' });
+Package.belongsTo(Destination, { 
+    foreignKey: 'destinationID',
+    targetKey: 'destinationID',
+    as: 'Destination'  // Explicitly name the association
+});
 
 export default Package;

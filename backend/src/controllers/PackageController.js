@@ -4,37 +4,46 @@ import Destination from "../models/DestinationModel.js";
 export const getPackages = async(req, res) => {
     try {
         const packages = await Package.findAll({
-            include: [{ 
+            include: [{
                 model: Destination,
+                as: 'Destination',  // Match the association name
+                required: false,    // Allow outer join
+                where: {},         // Empty where clause for all destinations
                 attributes: ['destinationID', 'name', 'country', 'city', 'description', 'image', 'imageType']
-            }]
+            }],
+            logging: console.log    // For debugging
         });
 
-        // Transform response untuk menangani BLOB image
+        // Debug log
+        console.log('Raw packages:', JSON.stringify(packages, null, 2));
+
         const transformedPackages = packages.map(pkg => {
             const packageData = pkg.toJSON();
             
-            // Handle package image
-            if (packageData.image) {
-                packageData.imageUrl = 
-                    `data:${packageData.imageType};base64,${packageData.image.toString('base64')}`;
+            // Debug log
+            console.log('Package data before transform:', packageData);
+            
+            if (packageData.image && packageData.imageType) {
+                packageData.imageUrl = `data:${packageData.imageType};base64,${packageData.image.toString('base64')}`;
                 delete packageData.image;
                 delete packageData.imageType;
             }
             
-            // Handle destination image
-            if (packageData.Destination?.image) {
-                packageData.Destination.imageUrl = 
-                    `data:${packageData.Destination.imageType};base64,${packageData.Destination.image.toString('base64')}`;
+            if (packageData.Destination?.image && packageData.Destination?.imageType) {
+                packageData.Destination.imageUrl = `data:${packageData.Destination.imageType};base64,${packageData.Destination.image.toString('base64')}`;
                 delete packageData.Destination.image;
                 delete packageData.Destination.imageType;
             }
+            
+            // Debug log
+            console.log('Package data after transform:', packageData);
             
             return packageData;
         });
 
         res.status(200).json(transformedPackages);
     } catch (error) {
+        console.error('Error in getPackages:', error);
         res.status(500).json({ msg: error.message });
     }
 };
@@ -50,26 +59,18 @@ export const getPopularPackages = async(req, res) => {
             limit: 6
         });
 
-        // Transform response untuk menangani BLOB image
         const transformedPackages = packages.map(pkg => {
             const packageData = pkg.toJSON();
-            
-            // Handle package image
-            if (packageData.image) {
-                packageData.imageUrl = 
-                    `data:${packageData.imageType};base64,${packageData.image.toString('base64')}`;
+            if (packageData.image && packageData.imageType) {
+                packageData.imageUrl = `data:${packageData.imageType};base64,${packageData.image.toString('base64')}`;
                 delete packageData.image;
                 delete packageData.imageType;
             }
-            
-            // Handle destination image
-            if (packageData.Destination?.image) {
-                packageData.Destination.imageUrl = 
-                    `data:${packageData.Destination.imageType};base64,${packageData.Destination.image.toString('base64')}`;
+            if (packageData.Destination?.image && packageData.Destination?.imageType) {
+                packageData.Destination.imageUrl = `data:${packageData.Destination.imageType};base64,${packageData.Destination.image.toString('base64')}`;
                 delete packageData.Destination.image;
                 delete packageData.Destination.imageType;
             }
-            
             return packageData;
         });
 
@@ -85,6 +86,8 @@ export const getPackageById = async(req, res) => {
             where: { packageID: req.params.id },
             include: [{ 
                 model: Destination,
+                as: 'Destination', // ADDED: Match association name
+                required: false,
                 attributes: ['destinationID', 'name', 'country', 'city', 'description', 'image', 'imageType']
             }]
         });
@@ -94,24 +97,21 @@ export const getPackageById = async(req, res) => {
         }
 
         const packageData = tourPackage.toJSON();
-        // Handle package image
-        if (packageData.image) {
-            packageData.imageUrl = 
-                `data:${packageData.imageType};base64,${packageData.image.toString('base64')}`;
+        if (packageData.image && packageData.imageType) {
+            packageData.imageUrl = `data:${packageData.imageType};base64,${packageData.image.toString('base64')}`;
             delete packageData.image;
             delete packageData.imageType;
         }
         
-        // Handle destination image
-        if (packageData.Destination?.image) {
-            packageData.Destination.imageUrl = 
-                `data:${packageData.Destination.imageType};base64,${packageData.Destination.image.toString('base64')}`;
+        if (packageData.Destination?.image && packageData.Destination?.imageType) {
+            packageData.Destination.imageUrl = `data:${packageData.Destination.imageType};base64,${packageData.Destination.image.toString('base64')}`;
             delete packageData.Destination.image;
             delete packageData.Destination.imageType;
         }
 
         res.status(200).json(packageData);
     } catch (error) {
+        console.error('Error in getPackageById:', error); // Added error logging
         res.status(500).json({ msg: error.message });
     }
 };
@@ -140,7 +140,7 @@ export const createPackage = async(req, res) => {
         });
 
         const packageData = newPackage.toJSON();
-        if (image) {
+        if (image && imageType) {
             packageData.imageUrl = `data:${imageType};base64,${image.toString('base64')}`;
             delete packageData.image;
             delete packageData.imageType;

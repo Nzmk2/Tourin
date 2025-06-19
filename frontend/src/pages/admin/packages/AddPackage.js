@@ -4,12 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 
-// Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
-
-// Current Date and Time: 2025-06-18 20:05:39
-// Current User's Login: Nzmk2
 
 const AddPackage = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
@@ -37,7 +33,7 @@ const AddPackage = () => {
     useEffect(() => {
         const fetchDestinations = async () => {
             try {
-                const response = await axiosInstance.get('/destinations');
+                const response = await axiosInstance.get('/api/destinations');
                 setDestinations(response.data);
             } catch (error) {
                 console.error("Error fetching destinations:", error);
@@ -118,7 +114,7 @@ const AddPackage = () => {
         }
 
         try {
-            await axiosInstance.post('/packages', formData, {
+            await axiosInstance.post('/api/packages', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -129,7 +125,7 @@ const AddPackage = () => {
                 navigate('/admin/packages');
             }, 1500);
         } catch (error) {
-            if (error.response) {
+            if (error.response && error.response.data && error.response.data.msg) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {

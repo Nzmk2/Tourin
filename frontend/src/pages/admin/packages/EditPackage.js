@@ -1,12 +1,9 @@
-// src/pages/admin/package/EditPackage.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
 import Navbar from '../../../components/Navbar';
 
-// Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
 
@@ -35,12 +32,14 @@ const EditPackage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
+    const fileInputRef = useRef(null);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [packageRes, destinationsRes] = await Promise.all([
-                    axiosInstance.get(`/packages/${id}`),
-                    axiosInstance.get('/destinations')
+                    axiosInstance.get(`/api/packages/${id}`),
+                    axiosInstance.get('/api/destinations')
                 ]);
 
                 const packageData = packageRes.data;
@@ -51,19 +50,34 @@ const EditPackage = () => {
                 setMaxPax(packageData.maxPax.toString());
                 setLocation(packageData.location);
                 setDestinationID(packageData.destinationID);
-                
-                if (packageData.image) {
-                    setCurrentImage(`data:${packageData.imageType};base64,${packageData.image}`);
-                    setPreviewUrl(`data:${packageData.imageType};base64,${packageData.image}`);
+
+                // Preview image
+                if (packageData.imageUrl) {
+                    setCurrentImage(packageData.imageUrl);
+                    setPreviewUrl(packageData.imageUrl);
+                } else if (packageData.image && packageData.imageType) {
+                    const url = `data:${packageData.imageType};base64,${packageData.image}`;
+                    setCurrentImage(url);
+                    setPreviewUrl(url);
+                } else {
+                    setCurrentImage(null);
+                    setPreviewUrl(null);
                 }
 
                 setDestinations(destinationsRes.data);
                 setLoading(false);
             } catch (error) {
-                setMsg("Failed to fetch package data");
+                let errorMsg = "Failed to fetch package data";
+                if (error.response?.data?.msg) {
+                    errorMsg += `: ${error.response.data.msg}`;
+                }
+                setMsg(errorMsg);
                 setMsgType('danger');
-                console.error("Error fetching package:", error);
                 setLoading(false);
+                console.error("Error fetching package:", error);
+                if (error.response) {
+                    console.error("Backend response:", error.response.data);
+                }
             }
         };
 
@@ -99,21 +113,23 @@ const EditPackage = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            if (file.size > 5000000) { // 5MB limit
+            if (file.size > 5000000) {
                 setMsg("File size must be less than 5MB");
                 setMsgType('danger');
                 return;
             }
-
             if (!file.type.match('image.*')) {
                 setMsg("Please select an image file");
                 setMsgType('danger');
                 return;
             }
-
             setImage(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
+    };
+
+    const handleUploadClick = () => {
+        if (fileInputRef.current) fileInputRef.current.click();
     };
 
     const handlePriceChange = (e) => {
@@ -136,7 +152,8 @@ const EditPackage = () => {
         }
 
         try {
-            await axiosInstance.patch(`/packages/${id}`, formData, {
+            // PATCH juga harus ke /api/packages/:id
+            await axiosInstance.patch(`/api/packages/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -321,13 +338,26 @@ const EditPackage = () => {
 
                                     <div className="form-group">
                                         <label htmlFor="image" className="form-label">Package Image</label>
-                                        <input
-                                            type="file"
-                                            id="image"
-                                            className="form-input file-input"
-                                            onChange={handleImageChange}
-                                            accept="image/*"
-                                        />
+                                        <div className="custom-file-upload">
+                                            <input
+                                                type="file"
+                                                id="image"
+                                                ref={fileInputRef}
+                                                onChange={handleImageChange}
+                                                accept="image/*"
+                                                style={{ display: 'none' }}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="upload-button"
+                                                onClick={handleUploadClick}
+                                            >
+                                                <i className="uil uil-image-upload"></i>
+                                                Choose Image
+                                            </button>
+                                            {image && <span className="file-name">{image.name}</span>}
+                                            {!image && currentImage && <span className="file-name">Current image loaded</span>}
+                                        </div>
                                         {previewUrl && (
                                             <div className="image-preview">
                                                 <img src={previewUrl} alt="Preview" />

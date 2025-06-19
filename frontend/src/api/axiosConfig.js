@@ -5,26 +5,22 @@ const axiosInstance = axios.create({
     withCredentials: true
 });
 
-// Request interceptor
 axiosInstance.interceptors.request.use(
     (config) => {
-        // Don't set Content-Type for FormData
+        // Jangan set Content-Type jika FormData, biar browser yang set boundary
         if (!(config.data instanceof FormData)) {
             config.headers['Content-Type'] = 'application/json';
         }
-        
         const accessToken = localStorage.getItem('accessToken');
         if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;
         }
-
         console.log('Request Config:', {
             url: config.url,
             method: config.method,
             headers: config.headers,
             data: config.data instanceof FormData ? 'FormData' : config.data
         });
-
         return config;
     },
     (error) => {
@@ -33,7 +29,6 @@ axiosInstance.interceptors.request.use(
     }
 );
 
-// Response interceptor remains the same
 axiosInstance.interceptors.response.use(
     (response) => {
         console.log('Response:', response);

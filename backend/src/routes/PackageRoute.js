@@ -9,6 +9,7 @@ import {
 } from "../controllers/PackageController.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { adminOnly } from "../middleware/adminAuth.js";
+import { upload } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -18,8 +19,8 @@ router.get('/packages/popular', getPopularPackages);
 router.get('/packages/:id', getPackageById);
 
 // Protected routes (admin only)
-router.post('/packages', verifyToken, adminOnly, createPackage);
-router.patch('/packages/:id', verifyToken, adminOnly, updatePackage);
+router.post('/packages', verifyToken, adminOnly, upload.single('image'), createPackage);
+router.patch('/packages/:id', verifyToken, adminOnly, upload.single('image'), updatePackage);
 router.delete('/packages/:id', verifyToken, adminOnly, deletePackage);
 
 export default router;
