@@ -1,50 +1,51 @@
 import Destination from "../models/DestinationModel.js";
 
+// Helper function untuk format date time
+const formatDateTime = (date) => {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 export const getDestinations = async(req, res) => {
     try {
         const destinations = await Destination.findAll();
 
         // Transform response to include base64 image
         const destinationsWithImages = destinations.map(dest => {
-            const destData = dest.toJSON();
-            if (destData.image && destData.image.length > 0) {
-                destData.imageUrl = `data:${destData.imageType};base64,${destData.image.toString('base64')}`;
+            const destData = {
+                ...dest.toJSON(),
+                currentDateTime: formatDateTime(new Date()),
+                currentUser: 'Nzmk2'
+            };
+
+            // Convert Buffer to base64 string if image exists
+            if (destData.image) {
+                destData.image = Buffer.from(destData.image).toString('base64');
             }
-            delete destData.image;
-            delete destData.imageType;
+
             return destData;
         });
 
-        res.status(200).json({
-            status: 'success',
-            data: destinationsWithImages
-        });
+        res.status(200).json(destinationsWithImages);
     } catch (error) {
         console.error('Get destinations error:', error);
-        res.status(500).json({ 
-            status: 'error',
-            msg: error.message 
-        });
+        res.status(500).json({ msg: error.message });
     }
 };
 
 export const getPopularDestinations = async(req, res) => {
     try {
         const popularDestinations = await Destination.findAll({
-            where: {
-                isPopular: true
-            },
+            where: { isPopular: true },
             attributes: [
-                'destinationID',
-                'name',
-                'country',
-                'city',
-                'description',
-                'image',
-                'imageType',
-                'rating',
-                'reviewCount',
-                'isPopular'
+                'destinationID', 'name', 'country', 'city', 'description',
+                'image', 'imageType', 'rating', 'reviewCount', 'isPopular'
             ],
             order: [
                 ['rating', 'DESC'],
@@ -54,15 +55,16 @@ export const getPopularDestinations = async(req, res) => {
         });
 
         const formattedDestinations = popularDestinations.map(destination => {
-            const destData = destination.toJSON();
+            const destData = {
+                ...destination.toJSON(),
+                currentDateTime: formatDateTime(new Date()),
+                currentUser: 'Nzmk2'
+            };
             
-            if (destData.image && destData.image.length > 0) {
-                destData.imageUrl = `data:${destData.imageType};base64,${destData.image.toString('base64')}`;
+            if (destData.image) {
+                destData.image = Buffer.from(destData.image).toString('base64');
             }
             
-            delete destData.image;
-            delete destData.imageType;
-
             destData.rating = Number(destData.rating).toFixed(1);
 
             return {
@@ -77,18 +79,14 @@ export const getPopularDestinations = async(req, res) => {
 
         res.status(200).json({
             status: 'success',
-            timestamp: new Date().toISOString(),
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2',
             count: formattedDestinations.length,
             data: formattedDestinations
         });
-
     } catch (error) {
         console.error('Get popular destinations error:', error);
-        res.status(500).json({
-            status: 'error',
-            timestamp: new Date().toISOString(),
-            message: error.message
-        });
+        res.status(500).json({ msg: error.message });
     }
 };
 
@@ -99,55 +97,43 @@ export const getDestinationById = async(req, res) => {
         });
 
         if (!destination) {
-            return res.status(404).json({ 
-                status: 'error',
-                msg: "Destination not found" 
-            });
+            return res.status(404).json({ msg: "Destination not found" });
         }
 
-        const destData = destination.toJSON();
-        if (destData.image && destData.image.length > 0) {
-            destData.imageUrl = `data:${destData.imageType};base64,${destData.image.toString('base64')}`;
-        }
-        delete destData.image;
-        delete destData.imageType;
+        const destData = {
+            ...destination.toJSON(),
+            currentDateTime: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
+        };
 
-        res.status(200).json({
-            status: 'success',
-            data: destData
-        });
+        if (destData.image) {
+            destData.image = Buffer.from(destData.image).toString('base64');
+        }
+
+        res.json(destData);
     } catch (error) {
         console.error('Get destination by ID error:', error);
-        res.status(500).json({ 
-            status: 'error',
-            msg: error.message 
-        });
+        res.status(500).json({ msg: error.message });
     }
 };
 
 export const createDestination = async(req, res) => {
     try {
         console.log('Create destination request received');
+        console.log('Timestamp:', formatDateTime(new Date()));
+        console.log('Current User: Nzmk2');
         console.log('Request body:', req.body);
-        console.log('Request file:', req.file ? 'File present' : 'No file');
+        console.log('Request file:', req.file);
 
         const { name, country, city, description, isPopular } = req.body;
         
-        // Validasi input yang diperlukan
+        // Validate input
         if (!name || !country || !city || !description) {
             return res.status(400).json({
-                status: 'error',
-                msg: "Please fill in all required fields (name, country, city, description)"
+                msg: "Please fill in all required fields (name, country, city, description)",
+                timestamp: formatDateTime(new Date()),
+                currentUser: 'Nzmk2'
             });
-        }
-
-        let image = null;
-        let imageType = null;
-
-        if (req.file) {
-            console.log('Processing uploaded file:', req.file.originalname);
-            image = req.file.buffer;
-            imageType = req.file.mimetype;
         }
 
         const destinationData = {
@@ -155,137 +141,133 @@ export const createDestination = async(req, res) => {
             country: country.trim(),
             city: city.trim(),
             description: description.trim(),
-            image,
-            imageType,
             isPopular: isPopular === 'true' || isPopular === true,
             rating: 0,
             reviewCount: 0
         };
 
-        console.log('Creating destination with data:', {
-            ...destinationData,
-            image: image ? 'Image buffer present' : 'No image',
-            imageType
-        });
+        // Handle image if uploaded
+        if (req.file) {
+            destinationData.image = req.file.buffer;
+            destinationData.imageType = req.file.mimetype;
+        }
 
         const destination = await Destination.create(destinationData);
 
-        console.log('Destination created successfully:', destination.destinationID);
+        const responseData = {
+            destinationID: destination.destinationID,
+            name: destination.name,
+            country: destination.country,
+            city: destination.city,
+            description: destination.description,
+            isPopular: destination.isPopular,
+            rating: destination.rating,
+            reviewCount: destination.reviewCount,
+            currentDateTime: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
+        };
 
-        // Prepare response data
-        const responseData = destination.toJSON();
-        if (image) {
-            responseData.imageUrl = `data:${imageType};base64,${image.toString('base64')}`;
+        if (req.file) {
+            responseData.image = req.file.buffer.toString('base64');
+            responseData.imageType = req.file.mimetype;
         }
-        delete responseData.image;
-        delete responseData.imageType;
 
         res.status(201).json({
-            status: 'success',
             msg: "Destination created successfully",
-            data: responseData
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2',
+            destination: responseData
         });
 
     } catch (error) {
         console.error('Create destination error:', error);
-        
-        // Handle specific Sequelize validation errors
-        if (error.name === 'SequelizeValidationError') {
-            const validationErrors = error.errors.map(err => err.message);
-            return res.status(400).json({
-                status: 'error',
-                msg: "Validation error",
-                errors: validationErrors
-            });
-        }
-
-        // Handle unique constraint errors
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(400).json({
-                status: 'error',
-                msg: "A destination with this name already exists"
-            });
-        }
-
         res.status(500).json({ 
-            status: 'error',
-            msg: "Failed to create destination: " + error.message 
+            msg: "Failed to create destination: " + error.message,
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
         });
     }
 };
 
 export const updateDestination = async(req, res) => {
     try {
-        const { name, country, city, description, isPopular } = req.body;
+        console.log('Update request received');
+        console.log('Timestamp:', formatDateTime(new Date()));
+        console.log('Current User: Nzmk2');
         
-        const updateData = {
-            name: name?.trim(),
-            country: country?.trim(),
-            city: city?.trim(),
-            description: description?.trim(),
-            isPopular: isPopular === 'true' || isPopular === true
-        };
-
-        // Remove undefined values
-        Object.keys(updateData).forEach(key => {
-            if (updateData[key] === undefined) {
-                delete updateData[key];
-            }
+        const destination = await Destination.findOne({
+            where: { destinationID: req.params.id }
         });
+
+        if (!destination) {
+            return res.status(404).json({
+                msg: "Destination not found",
+                timestamp: formatDateTime(new Date()),
+                currentUser: 'Nzmk2'
+            });
+        }
+
+        const updateData = {
+            name: req.body.name?.trim() || destination.name,
+            country: req.body.country?.trim() || destination.country,
+            city: req.body.city?.trim() || destination.city,
+            description: req.body.description?.trim() || destination.description,
+            isPopular: req.body.isPopular === 'true' || req.body.isPopular === true
+        };
 
         if (req.file) {
             updateData.image = req.file.buffer;
             updateData.imageType = req.file.mimetype;
         }
 
-        const [updated] = await Destination.update(updateData, {
-            where: { destinationID: req.params.id }
-        });
+        await destination.update(updateData);
 
-        if (updated === 0) {
-            return res.status(404).json({ 
-                status: 'error',
-                msg: "Destination not found" 
-            });
-        }
-
-        res.status(200).json({ 
-            status: 'success',
-            msg: "Destination updated successfully" 
+        res.json({
+            msg: "Destination updated successfully",
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
         });
-        
     } catch (error) {
         console.error('Update destination error:', error);
-        res.status(500).json({ 
-            status: 'error',
-            msg: error.message 
+        res.status(500).json({
+            msg: error.message,
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
         });
     }
 };
 
 export const deleteDestination = async(req, res) => {
     try {
-        const deleted = await Destination.destroy({
+        console.log('Delete request received');
+        console.log('Timestamp:', formatDateTime(new Date()));
+        console.log('Current User: Nzmk2');
+
+        const destination = await Destination.findOne({
             where: { destinationID: req.params.id }
         });
-        
-        if (!deleted) {
-            return res.status(404).json({ 
-                status: 'error',
-                msg: "Destination not found" 
+
+        if (!destination) {
+            return res.status(404).json({
+                msg: "Destination not found",
+                timestamp: formatDateTime(new Date()),
+                currentUser: 'Nzmk2'
             });
         }
+
+        await destination.destroy();
         
-        res.status(200).json({ 
-            status: 'success',
-            msg: "Destination deleted successfully" 
+        res.json({
+            msg: "Destination deleted successfully",
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
         });
-        
     } catch (error) {
         console.error('Delete destination error:', error);
-        res.status(500).json({ 
-            status: 'error',
-            msg: error.message 
+        res.status(500).json({
+            msg: error.message,
+            timestamp: formatDateTime(new Date()),
+            currentUser: 'Nzmk2'
         });
     }
 };

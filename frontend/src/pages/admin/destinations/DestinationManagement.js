@@ -52,7 +52,7 @@ const DestinationManagement = () => {
     const getDestinations = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/destinations');
+            const response = await axiosInstance.get('/api/destinations');
             setDestinations(response.data);
             setMsg('');
             setLoading(false);
@@ -88,7 +88,7 @@ const DestinationManagement = () => {
         if (!destinationToDelete) return;
 
         try {
-            await axiosInstance.delete(`/destinations/${destinationToDelete}`);
+            await axiosInstance.delete(`/api/destinations/${destinationToDelete}`);
             setMsg("Destination deleted successfully!");
             setMsgType('success');
             setDestinations(prevDestinations => 
@@ -161,6 +161,7 @@ const DestinationManagement = () => {
                                             <th>Name</th>
                                             <th>City</th>
                                             <th>Country</th>
+                                            <th>Description</th>
                                             <th>Rating</th>
                                             <th>Popular</th>
                                             <th>Actions</th>
@@ -177,6 +178,7 @@ const DestinationManagement = () => {
                                                                 src={`data:${destination.imageType};base64,${destination.image}`}
                                                                 alt={destination.name}
                                                                 className="destination-thumbnail"
+                                                                style={{ maxWidth: '100px', maxHeight: '50px', objectFit: 'contain' }}
                                                             />
                                                         ) : (
                                                             'No Image'
@@ -185,6 +187,21 @@ const DestinationManagement = () => {
                                                     <td>{destination.name}</td>
                                                     <td>{destination.city}</td>
                                                     <td>{destination.country}</td>
+                                                    <td>
+                                                        <div 
+                                                            className="description-cell" 
+                                                            title={destination.description}
+                                                            style={{ 
+                                                                maxWidth: '200px', 
+                                                                whiteSpace: 'nowrap',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            {destination.description || 'No description'}
+                                                        </div>
+                                                    </td>
                                                     <td>{destination.rating.toFixed(1)}</td>
                                                     <td>
                                                         <span className={`status-badge ${destination.isPopular ? 'active' : 'inactive'}`}>
@@ -209,13 +226,14 @@ const DestinationManagement = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="no-data-message">
+                                                <td colSpan="9" className="no-data-message">
                                                     No destinations found.
                                                 </td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
+
                             </div>
                         </div>
                     </div>

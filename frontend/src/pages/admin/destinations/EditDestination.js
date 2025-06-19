@@ -1,6 +1,4 @@
-// src/pages/admin/destination/EditDestination.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar';
@@ -18,19 +16,49 @@ const EditDestination = () => {
         return localStorage.getItem("mode") === "dark";
     });
 
-    const [name, setName] = useState('');
-    const [country, setCountry] = useState('');
-    const [city, setCity] = useState('');
-    const [description, setDescription] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        country: '',
+        city: '',
+        description: '',
+        isPopular: false
+    });
     const [image, setImage] = useState(null);
-    const [currentImage, setCurrentImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
-    const [isPopular, setIsPopular] = useState(false);
     const [msg, setMsg] = useState('');
     const [msgType, setMsgType] = useState('info');
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
     const { id } = useParams();
+    const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        const getDestinationById = async () => {
+            try {
+                const response = await axiosInstance.get(`/api/destinations/${id}`);
+                const destination = response.data;
+                setFormData({
+                    name: destination.name,
+                    country: destination.country,
+                    city: destination.city,
+                    description: destination.description,
+                    isPopular: destination.isPopular
+                });
+                if (destination.image) {
+                    const imageUrl = `data:${destination.imageType};base64,${destination.image}`;
+                    setPreviewUrl(imageUrl);
+                }
+                setLoading(false);
+            } catch (error) {
+                setMsg(error.response?.data?.msg || "Failed to fetch destination data");
+                setMsgType('danger');
+                console.error("Error fetching destination:", error);
+                setLoading(false);
+            }
+        };
+        getDestinationById();
+    }, [id]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -50,37 +78,15 @@ const EditDestination = () => {
         localStorage.setItem("status", isSidebarClosed ? "close" : "open");
     }, [isSidebarClosed]);
 
-    useEffect(() => {
-        const getDestinationById = async () => {
-            try {
-                const response = await axiosInstance.get(`/destinations/${id}`);
-                const destination = response.data;
-                setName(destination.name);
-                setCountry(destination.country);
-                setCity(destination.city);
-                setDescription(destination.description);
-                setIsPopular(destination.isPopular);
-                if (destination.image) {
-                    setCurrentImage(`data:${destination.imageType};base64,${destination.image}`);
-                    setPreviewUrl(`data:${destination.imageType};base64,${destination.image}`);
-                }
-                setLoading(false);
-            } catch (error) {
-                setMsg("Failed to fetch destination data");
-                setMsgType('danger');
-                console.error("Error fetching destination:", error);
-                setLoading(false);
-            }
-        };
-        getDestinationById();
-    }, [id]);
+    const toggleSidebar = () => setIsSidebarClosed(prev => !prev);
+    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
-    const toggleSidebar = () => {
-        setIsSidebarClosed(prevState => !prevState);
-    };
-
-    const toggleDarkMode = () => {
-        setIsDarkMode(prevState => !prevState);
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
     const handleImageChange = (e) => {
@@ -103,38 +109,64 @@ const EditDestination = () => {
         }
     };
 
+    const validateForm = () => {
+        if (!formData.name.trim()) {
+            setMsg("Destination name is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (!formData.country.trim()) {
+            setMsg("Country is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (!formData.city.trim()) {
+            setMsg("City is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        if (!formData.description.trim()) {
+            setMsg("Description is required");
+            setMsgType('danger');
+            return false;
+        }
+
+        return true;
+    };
+
     const updateDestination = async (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('country', country);
-        formData.append('city', city);
-        formData.append('description', description);
-        formData.append('isPopular', isPopular);
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+        const formPayload = new FormData();
+        formPayload.append('name', formData.name.trim());
+        formPayload.append('country', formData.country.trim());
+        formPayload.append('city', formData.city.trim());
+        formPayload.append('description', formData.description.trim());
+        formPayload.append('isPopular', formData.isPopular);
         if (image) {
-            formData.append('image', image);
+            formPayload.append('image', image);
         }
 
         try {
-            await axiosInstance.patch(`/destinations/${id}`, formData, {
+            await axiosInstance.patch(`/api/destinations/${id}`, formPayload, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
             setMsg("Destination updated successfully!");
             setMsgType('success');
-            setTimeout(() => {
-                navigate('/admin/destinations');
-            }, 1500);
+            setTimeout(() => navigate('/admin/destinations'), 1500);
         } catch (error) {
-            if (error.response) {
-                setMsg(error.response.data.msg);
-                setMsgType('danger');
-            } else {
-                setMsg("Network error or server unavailable.");
-                setMsgType('danger');
-            }
-            console.error("Error updating destination:", error);
+            console.error('Error updating destination:', error);
+            setMsg(error.response?.data?.msg || "Failed to update destination");
+            setMsgType('danger');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -173,7 +205,7 @@ const EditDestination = () => {
                             <i className="uil uil-map-marker icon"></i>
                             <div>
                                 <h1 className="page-title">Edit Destination</h1>
-                                <p className="page-subtitle">Update destination information.</p>
+                                <p className="page-subtitle">Update destination information</p>
                             </div>
                         </div>
 
@@ -187,11 +219,13 @@ const EditDestination = () => {
                                         <input
                                             type="text"
                                             id="name"
+                                            name="name"
                                             className="form-input"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
+                                            value={formData.name}
+                                            onChange={handleInputChange}
                                             placeholder="Enter destination name"
                                             required
+                                            disabled={isSubmitting}
                                         />
                                     </div>
 
@@ -202,11 +236,13 @@ const EditDestination = () => {
                                                 <input
                                                     type="text"
                                                     id="city"
+                                                    name="city"
                                                     className="form-input"
-                                                    value={city}
-                                                    onChange={(e) => setCity(e.target.value)}
+                                                    value={formData.city}
+                                                    onChange={handleInputChange}
                                                     placeholder="Enter city"
                                                     required
+                                                    disabled={isSubmitting}
                                                 />
                                             </div>
                                         </div>
@@ -216,11 +252,13 @@ const EditDestination = () => {
                                                 <input
                                                     type="text"
                                                     id="country"
+                                                    name="country"
                                                     className="form-input"
-                                                    value={country}
-                                                    onChange={(e) => setCountry(e.target.value)}
+                                                    value={formData.country}
+                                                    onChange={handleInputChange}
                                                     placeholder="Enter country"
                                                     required
+                                                    disabled={isSubmitting}
                                                 />
                                             </div>
                                         </div>
@@ -230,24 +268,40 @@ const EditDestination = () => {
                                         <label htmlFor="description" className="form-label">Description</label>
                                         <textarea
                                             id="description"
+                                            name="description"
                                             className="form-input"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
+                                            value={formData.description}
+                                            onChange={handleInputChange}
                                             placeholder="Enter destination description"
                                             rows="4"
                                             required
+                                            disabled={isSubmitting}
                                         />
                                     </div>
 
                                     <div className="form-group">
                                         <label htmlFor="image" className="form-label">Destination Image</label>
-                                        <input
-                                            type="file"
-                                            id="image"
-                                            className="form-input file-input"
-                                            onChange={handleImageChange}
-                                            accept="image/*"
-                                        />
+                                        <div className="custom-file-upload">
+                                            <input
+                                                type="file"
+                                                id="image"
+                                                ref={fileInputRef}
+                                                onChange={handleImageChange}
+                                                accept="image/*"
+                                                style={{ display: 'none' }}
+                                                disabled={isSubmitting}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="upload-button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={isSubmitting}
+                                            >
+                                                <i className="uil uil-image-upload"></i>
+                                                Choose Image
+                                            </button>
+                                            {image && <span className="file-name">{image.name}</span>}
+                                        </div>
                                         {previewUrl && (
                                             <div className="image-preview">
                                                 <img src={previewUrl} alt="Preview" />
@@ -259,16 +313,22 @@ const EditDestination = () => {
                                         <label className="checkbox-label">
                                             <input
                                                 type="checkbox"
-                                                checked={isPopular}
-                                                onChange={(e) => setIsPopular(e.target.checked)}
+                                                name="isPopular"
+                                                checked={formData.isPopular}
+                                                onChange={handleInputChange}
+                                                disabled={isSubmitting}
                                             />
                                             Mark as Popular Destination
                                         </label>
                                     </div>
 
                                     <div className="form-actions">
-                                        <button type="submit" className="form-submit-button">
-                                            Update Destination
+                                        <button 
+                                            type="submit" 
+                                            className="form-submit-button"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? 'Updating...' : 'Update Destination'}
                                         </button>
                                     </div>
                                 </form>

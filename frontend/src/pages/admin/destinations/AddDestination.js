@@ -139,77 +139,56 @@ const AddDestination = () => {
         setIsLoading(true);
         setMsg('');
 
+        // Log data yang akan dikirim
+        console.log('Form Data:', formData);
+        console.log('Image:', image);
+
         const submitFormData = new FormData();
         submitFormData.append('name', formData.name.trim());
         submitFormData.append('country', formData.country.trim());
         submitFormData.append('city', formData.city.trim());
         submitFormData.append('description', formData.description.trim());
-        submitFormData.append('isPopular', formData.isPopular);
+        submitFormData.append('isPopular', String(formData.isPopular));
         
         if (image) {
             submitFormData.append('image', image);
         }
 
+        // Log FormData entries
+        for (let pair of submitFormData.entries()) {
+            console.log('FormData Entry:', pair[0], pair[1]);
+        }
+
         try {
-            console.log('Submitting destination data...');
-            
-            const response = await axiosInstance.post('/destinations', submitFormData, {
+            const response = await axiosInstance.post('/api/destinations', submitFormData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-                timeout: 30000 // 30 second timeout
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+                }
             });
 
-            console.log('Response received:', response.data);
+            console.log('Response:', response.data);
 
-            if (response.data.status === 'success') {
+            if (response.data) {
                 setMsg("Destination added successfully!");
                 setMsgType('success');
-                
-                // Reset form
-                setFormData({
-                    name: '',
-                    country: '',
-                    city: '',
-                    description: '',
-                    isPopular: false
-                });
-                setImage(null);
-                setPreviewUrl(null);
-                
-                // Navigate after short delay
-                setTimeout(() => {
-                    navigate('/admin/destinations');
-                }, 2000);
-            } else {
-                throw new Error(response.data.msg || 'Failed to add destination');
+                setTimeout(() => navigate('/admin/destinations'), 1500);
             }
-
         } catch (error) {
             console.error("Error adding destination:", error);
             
-            let errorMessage = "Failed to add destination. ";
-            
             if (error.response) {
-                // Server responded with error status
-                if (error.response.data && error.response.data.msg) {
-                    errorMessage += error.response.data.msg;
-                } else if (error.response.data && error.response.data.errors) {
-                    errorMessage += error.response.data.errors.join(', ');
-                } else {
-                    errorMessage += `Server error: ${error.response.status}`;
-                }
+                console.error('Error response:', error.response.data);
+                setMsg(error.response.data.msg || "Failed to add destination");
             } else if (error.request) {
-                // Request was made but no response received
-                errorMessage += "No response from server. Please check your connection.";
+                console.error('Error request:', error.request);
+                setMsg("Network error - no response received");
             } else {
-                // Something else happened
-                errorMessage += error.message;
+                console.error('Error message:', error.message);
+                setMsg("An error occurred while adding destination");
             }
             
-            setMsg(errorMessage);
             setMsgType('danger');
-            clearMessage();
         } finally {
             setIsLoading(false);
         }
