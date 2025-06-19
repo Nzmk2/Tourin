@@ -51,8 +51,26 @@ const Flight = db.define('flights', {
     freezeTableName: true
 });
 
-Flight.belongsTo(Airline, { foreignKey: 'airlineID' });
-Flight.belongsTo(Airport, { as: 'DepartureAirport', foreignKey: 'departureAirportCode', targetKey: 'code' });
-Flight.belongsTo(Airport, { as: 'DestinationAirport', foreignKey: 'destinationAirportCode', targetKey: 'code' });
+Flight.belongsTo(Airline, { 
+    foreignKey: 'airlineID',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+
+Flight.belongsTo(Airport, { 
+    as: 'DepartureAirport', 
+    foreignKey: 'departureAirportCode', 
+    targetKey: 'code',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+
+Flight.belongsTo(Airport, { 
+    as: 'DestinationAirport', 
+    foreignKey: 'destinationAirportCode', 
+    targetKey: 'code',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
 
 export default Flight;

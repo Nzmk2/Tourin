@@ -1,5 +1,3 @@
-// src/pages/admin/flight/FlightManagement.js
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosConfig';
@@ -9,6 +7,36 @@ import Navbar from '../../../components/Navbar';
 // Import CSS
 import '../../../assets/styles/Admin.css';
 import '../../../assets/styles/management.css';
+
+// ErrorBoundary Component
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error('Error caught by boundary:', error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="error-message">
+                    <h2>Something went wrong.</h2>
+                    <button onClick={() => window.location.reload()}>
+                        Refresh Page
+                    </button>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 const FlightManagement = () => {
     const [isSidebarClosed, setIsSidebarClosed] = useState(() => {
@@ -25,6 +53,7 @@ const FlightManagement = () => {
     const [flightToDelete, setFlightToDelete] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Dark mode effect
     useEffect(() => {
         if (isDarkMode) {
             document.body.classList.add("dark");
@@ -34,6 +63,7 @@ const FlightManagement = () => {
         localStorage.setItem("mode", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
+    // Sidebar effect
     useEffect(() => {
         if (isSidebarClosed) {
             document.body.classList.add("close");
@@ -51,23 +81,70 @@ const FlightManagement = () => {
         setIsDarkMode(prevState => !prevState);
     };
 
+    // Format helpers with error handling
+    const formatPrice = (price) => {
+        if (!price || isNaN(price)) return 'N/A';
+        try {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(price);
+        } catch (error) {
+            console.error('Price formatting error:', error);
+            return 'Invalid Price';
+        }
+    };
+
+    const formatDateTime = (dateTime) => {
+        if (!dateTime) return 'N/A';
+        try {
+            // Parse the date string and adjust for local timezone
+            const date = new Date(dateTime);
+            const offset = date.getTimezoneOffset();
+            const localDate = new Date(date.getTime() + (offset * 60 * 1000));
+
+            return localDate.toLocaleString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                timeZone: 'Asia/Jakarta' // Explicitly set to Jakarta timezone
+            });
+        } catch (error) {
+            console.error('Date formatting error:', error);
+            return 'Invalid Date';
+        }
+    };
+
+    // Fetch flights with detailed error handling
     const getFlights = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/flights');
-            setFlights(response.data);
-            setMsg('');
-            setLoading(false);
-        } catch (error) {
-            setLoading(false);
-            if (error.response) {
-                setMsg(error.response.data.msg);
-                setMsgType('danger');
-            } else {
-                setMsg("Failed to load flights. Network error or server unavailable.");
-                setMsgType('danger');
+            const response = await axiosInstance.get('/api/flights');
+            console.log('Flight response data:', response.data);
+
+            if (Array.isArray(response.data)) {
+                const validFlights = response.data.map(flight => {
+                    console.log('Processing flight:', flight);
+                    return {
+                        ...flight,
+                        airlineName: flight.Airline?.name || `Airline ${flight.airlineID}` // Fallback ke ID jika tidak ada nama
+                    };
+                });
+                
+                console.log('Processed flights:', validFlights);
+                setFlights(validFlights);
             }
-            console.error("Error fetching flights:", error);
+        } catch (error) {
+            console.error('Fetch error:', error);
+            setMsg(error.response?.data?.msg || "Failed to load flights");
+            setMsgType('danger');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -75,6 +152,7 @@ const FlightManagement = () => {
         getFlights();
     }, []);
 
+    // Delete handlers
     const confirmDelete = (flightId) => {
         setFlightToDelete(flightId);
         setShowModal(true);
@@ -90,44 +168,20 @@ const FlightManagement = () => {
         if (!flightToDelete) return;
 
         try {
-            await axiosInstance.delete(`/flights/${flightToDelete}`);
+            await axiosInstance.delete(`/api/flights/${flightToDelete}`);
             setMsg("Flight deleted successfully!");
             setMsgType('success');
-            setFlights(prevFlights => 
-                prevFlights.filter(flight => flight.flightID !== flightToDelete)
-            );
+            getFlights(); // Refresh the list instead of filtering locally
         } catch (error) {
-            if (error.response) {
-                setMsg(error.response.data.msg);
-                setMsgType('danger');
-            } else {
-                setMsg("Failed to delete flight. Network error or server unavailable.");
-                setMsgType('danger');
-            }
-            console.error("Error deleting flight:", error);
+            setMsg(error.response?.data?.msg || "Failed to delete flight. Please try again.");
+            setMsgType('danger');
+            console.error("Delete error:", error);
         } finally {
             setFlightToDelete(null);
         }
     };
 
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR'
-        }).format(price);
-    };
-
-    const formatDateTime = (dateTime) => {
-        return new Date(dateTime).toLocaleString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
-    };
-
+    // Loading state
     if (loading) {
         return (
             <div className="admin-dashboard-container">
@@ -146,6 +200,7 @@ const FlightManagement = () => {
         );
     }
 
+    // Main render
     return (
         <div className="admin-dashboard-container">
             <Sidebar
@@ -172,72 +227,62 @@ const FlightManagement = () => {
                                 <i className="uil uil-plus"></i> Add New Flight
                             </Link>
                             {msg && <div className={`notification-message ${msgType}`}>{msg}</div>}
-                            <div className="data-table-container">
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Flight No</th>
-                                            <th>Airline</th>
-                                            <th>From</th>
-                                            <th>To</th>
-                                            <th>Departure</th>
-                                            <th>Arrival</th>
-                                            <th>Price</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {flights.length > 0 ? (
-                                            flights.map((flight, index) => (
-                                                <tr key={flight.flightID}>
-                                                    <td>{index + 1}</td>
-                                                    <td>{flight.flightNumber}</td>
-                                                    <td>
-                                                        {flight.airline.logo ? (
-                                                            <div className="airline-logo-wrapper">
-                                                                <img 
-                                                                    src={`data:${flight.airline.logoType};base64,${flight.airline.logo}`}
-                                                                    alt={flight.airline.name}
-                                                                    className="airline-logo"
-                                                                />
-                                                                <span>{flight.airline.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            flight.airline.name
-                                                        )}
-                                                    </td>
-                                                    <td>{flight.departureAirport.code}</td>
-                                                    <td>{flight.arrivalAirport.code}</td>
-                                                    <td>{formatDateTime(flight.departureTime)}</td>
-                                                    <td>{formatDateTime(flight.arrivalTime)}</td>
-                                                    <td>{formatPrice(flight.price)}</td>
-                                                    <td>
-                                                        <Link 
-                                                            to={`/admin/flights/edit/${flight.flightID}`} 
-                                                            className="table-action-button edit"
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                        <button 
-                                                            onClick={() => confirmDelete(flight.flightID)} 
-                                                            className="table-action-button delete"
-                                                        >
-                                                            Delete
-                                                        </button>
+                            
+                            <ErrorBoundary>
+                                <div className="data-table-container">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Flight No</th>
+                                                <th>Airline</th>
+                                                <th>From</th>
+                                                <th>To</th>
+                                                <th>Departure</th>
+                                                <th>Arrival</th>
+                                                <th>Price</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {flights.length > 0 ? (
+                                                flights.map((flight, index) => (
+                                                    <tr key={flight.flightID}>
+                                                        <td>{index + 1}</td>
+                                                        <td>{flight.flightNumber}</td>
+                                                        <td>{flight.airlineName || (flight.airlineID ? `Airline ${flight.airlineID}` : 'No Airline Data')}</td>
+                                                        <td>{flight.DepartureAirport ? flight.DepartureAirport.name : 'No Airport Data'}</td>
+                                                        <td>{flight.DestinationAirport ? flight.DestinationAirport.name : 'No Airport Data'}</td>
+                                                        <td>{formatDateTime(flight.departureTime)}</td>
+                                                        <td>{formatDateTime(flight.arrivalTime)}</td>
+                                                        <td>{formatPrice(flight.price)}</td>
+                                                        <td>
+                                                            <Link 
+                                                                to={`/admin/flights/edit/${flight.flightID}`} 
+                                                                className="table-action-button edit"
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                            <button 
+                                                                onClick={() => confirmDelete(flight.flightID)} 
+                                                                className="table-action-button delete"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="9" className="no-data-message">
+                                                        No flights found.
                                                     </td>
                                                 </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="9" className="no-data-message">
-                                                    No flights found.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </ErrorBoundary>
                         </div>
                     </div>
                 </div>

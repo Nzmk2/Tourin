@@ -38,8 +38,8 @@ const AddFlight = () => {
         const fetchData = async () => {
             try {
                 const [airlinesRes, airportsRes] = await Promise.all([
-                    axiosInstance.get('/airlines'),
-                    axiosInstance.get('/airports')
+                    axiosInstance.get('/api/airlines'),  // Tambahkan /api/
+                    axiosInstance.get('/api/airports')   // Tambahkan /api/
                 ]);
                 setAirlines(airlinesRes.data);
                 setAirports(airportsRes.data);
@@ -84,12 +84,12 @@ const AddFlight = () => {
     };
 
     const formatDateTime = (dateTime) => {
-        // Format datetime-local value to ISO string format
         if (!dateTime) return '';
-        const date = new Date(dateTime);
-        return date.toISOString().slice(0, 16);
+        // Tidak perlu konversi ke ISO string
+        return dateTime;
     };
 
+        // Dalam fungsi saveFlight
     const saveFlight = async (e) => {
         e.preventDefault();
         
@@ -110,30 +110,43 @@ const AddFlight = () => {
         }
 
         try {
-            await axiosInstance.post('/flights', {
+            // Format price to remove currency formatting
+            const numericPrice = price.replace(/[^0-9]/g, '');
+
+            // Buat objek Date dengan menambahkan timezone offset
+            const createLocalDateTime = (dateString) => {
+                const date = new Date(dateString);
+                const offset = date.getTimezoneOffset();
+                const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+                return localDate.toISOString();
+            };
+
+            const response = await axiosInstance.post('/api/flights', {
                 flightNumber,
-                airlineId,
-                departureAirportId,
-                arrivalAirportId,
-                departureTime,
-                arrivalTime,
-                price,
-                capacity
+                airlineId: parseInt(airlineId),
+                departureAirportId: parseInt(departureAirportId),
+                arrivalAirportId: parseInt(arrivalAirportId),
+                departureTime: createLocalDateTime(departureTime),
+                arrivalTime: createLocalDateTime(arrivalTime),
+                price: parseFloat(numericPrice),
+                capacity: parseInt(capacity)
             });
-            setMsg("Flight added successfully!");
-            setMsgType('success');
-            setTimeout(() => {
-                navigate('/admin/flights');
-            }, 1500);
-        } catch (error) {
-            if (error.response) {
-                setMsg(error.response.data.msg);
-                setMsgType('danger');
-            } else {
-                setMsg("Network error or server unavailable.");
-                setMsgType('danger');
+
+            if (response.data.msg) {
+                setMsg(response.data.msg);
+                setMsgType('success');
+                setTimeout(() => {
+                    navigate('/admin/flights');
+                }, 1500);
             }
-            console.error("Error adding flight:", error);
+        } catch (error) {
+            console.error('Error details:', error);
+            if (error.response?.data?.msg) {
+                setMsg(error.response.data.msg);
+            } else {
+                setMsg("An error occurred while adding the flight. Please try again.");
+            }
+            setMsgType('danger');
         }
     };
 

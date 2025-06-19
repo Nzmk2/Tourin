@@ -59,28 +59,38 @@ const EditFlight = () => {
         const fetchData = async () => {
             try {
                 const [flightRes, airlinesRes, airportsRes] = await Promise.all([
-                    axiosInstance.get(`/flights/${id}`),
-                    axiosInstance.get('/airlines'),
-                    axiosInstance.get('/airports')
+                    axiosInstance.get(`/api/flights/${id}`),
+                    axiosInstance.get('/api/airlines'),
+                    axiosInstance.get('/api/airports')
                 ]);
 
+                console.log('Flight data received:', flightRes.data);
+
                 const flight = flightRes.data;
+                
+                // Konversi waktu ke waktu lokal
+                const toLocalTime = (utcTime) => {
+                    if (!utcTime) return '';
+                    const date = new Date(utcTime);
+                    return date.toISOString().slice(0, 16);
+                };
+
                 setFlightNumber(flight.flightNumber);
-                setAirlineId(flight.airlineId);
-                setDepartureAirportId(flight.departureAirportId);
-                setArrivalAirportId(flight.arrivalAirportId);
-                setDepartureTime(flight.departureTime);
-                setArrivalTime(flight.arrivalTime);
-                setPrice(flight.price.toString());
-                setCapacity(flight.capacity.toString());
+                setAirlineId(flight.airlineID);
+                setDepartureAirportId(flight.DepartureAirport?.airportID);
+                setArrivalAirportId(flight.DestinationAirport?.airportID);
+                setDepartureTime(toLocalTime(flight.departureTime));
+                setArrivalTime(toLocalTime(flight.arrivalTime));
+                setPrice(flight.price?.toString() || '');
+                setCapacity(flight.availableSeats?.toString() || '');
 
                 setAirlines(airlinesRes.data);
                 setAirports(airportsRes.data);
                 setLoading(false);
             } catch (error) {
-                setMsg("Failed to fetch flight data");
+                console.error("Error detail:", error.response?.data || error);
+                setMsg(error.response?.data?.msg || "Failed to fetch flight data");
                 setMsgType('danger');
-                console.error("Error fetching flight:", error);
                 setLoading(false);
             }
         };
@@ -102,21 +112,19 @@ const EditFlight = () => {
 
     const formatDateTime = (dateTime) => {
         if (!dateTime) return '';
-        const date = new Date(dateTime);
-        return date.toISOString().slice(0, 16);
+        // Tidak perlu konversi ke ISO string
+        return dateTime;
     };
 
     const updateFlight = async (e) => {
         e.preventDefault();
         
-        // Validate departure and arrival airports are different
         if (departureAirportId === arrivalAirportId) {
             setMsg("Departure and arrival airports cannot be the same");
             setMsgType('danger');
             return;
         }
 
-        // Validate departure time is before arrival time
         const departureDate = new Date(departureTime);
         const arrivalDate = new Date(arrivalTime);
         if (departureDate >= arrivalDate) {
@@ -126,22 +134,32 @@ const EditFlight = () => {
         }
 
         try {
-            await axiosInstance.patch(`/flights/${id}`, {
+            // Buat fungsi untuk menangani timezone lokal
+            const createLocalDateTime = (dateString) => {
+                const date = new Date(dateString);
+                const offset = date.getTimezoneOffset();
+                const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+                return localDate.toISOString();
+            };
+
+            await axiosInstance.patch(`/api/flights/${id}`, {
                 flightNumber,
-                airlineId,
+                airlineID: airlineId,
                 departureAirportId,
                 arrivalAirportId,
-                departureTime,
-                arrivalTime,
-                price,
-                capacity
+                departureTime: createLocalDateTime(departureTime),
+                arrivalTime: createLocalDateTime(arrivalTime),
+                price: parseFloat(price.replace(/[^\d]/g, '')),
+                availableSeats: parseInt(capacity)
             });
+            
             setMsg("Flight updated successfully!");
             setMsgType('success');
             setTimeout(() => {
                 navigate('/admin/flights');
             }, 1500);
         } catch (error) {
+            console.error("Update error detail:", error.response?.data || error);
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
@@ -149,7 +167,6 @@ const EditFlight = () => {
                 setMsg("Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error updating flight:", error);
         }
     };
 
