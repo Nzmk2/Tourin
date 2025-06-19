@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig';
 import { useAuth } from '../../auth/AuthContext';
 import './pilihan.css';
@@ -146,7 +146,7 @@ const Pilihan = () => {
       const bookingBody = {
         flightID: bookingData.flightID,
         totalPrice: prices.total,
-        status: "pending",
+        status: "booked",
         bookingDate: currentDate,
         username: user.firstName,
         userID: user.userID,
@@ -162,7 +162,7 @@ const Pilihan = () => {
           userID: user.userID,
           amount: prices.total,
           paymentMethod: paymentMethod,
-          paymentStatus: 'pending',
+          paymentStatus: 'completed',
           paymentDate: currentDate,
           details: getPaymentDetails()
         };
@@ -240,6 +240,9 @@ const Pilihan = () => {
   return (
     <div className="nzmk-flight-booking-container">
       <div className="nzmk-flight-details">
+        <div className="tf-breadcrumbs">
+          <Link to="/" className="tf-breadcrumb-link">Home</Link>
+        </div>
         <div className="nzmk-flight-header">
           <div className="nzmk-flight-title">
             <h2>{bookingData.airline?.name || 'Airline'}</h2>

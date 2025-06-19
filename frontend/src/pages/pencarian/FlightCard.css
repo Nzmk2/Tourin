@@ -18,17 +18,40 @@
 .flight-card-airline-info {
     display: flex;
     align-items: center;
-    flex-wrap: wrap; /* Allow highlight to wrap if too long */
-    gap: 8px; /* Space between items */
+    gap: 12px; /* Increased from 8px for better spacing */
+}
+
+
+.airline-logo {
+    width: 60px;  /* Increased from 36px */
+    height: 60px; /* Increased from 36px */
+    object-fit: contain;
+    border-radius: 8px; /* Slightly increased for better proportion */
+    background-color: #fff;
+    padding: 4px; /* Increased padding */
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.flight-card-airline-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.airline-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1rem; /* Slightly larger font */
 }
 
 .flight-card-airline-info img {
-    width: 36px; /* w-8, slightly larger for better visibility */
-    height: 36px; /* h-8 */
-    border-radius: 50%; /* rounded-full */
-    margin-right: 8px; /* mr-3, adjusted */
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 8px;
     object-fit: contain;
-    background-color: #e5e7eb; /* Light background for placeholder */
+    background-color: #e5e7eb;
 }
 
 .flight-card-airline-info span:first-of-type { /* Airline Name */

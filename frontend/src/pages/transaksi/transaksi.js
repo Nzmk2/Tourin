@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import axiosInstance from '../../api/axiosConfig';
+import Barcode from 'react-barcode'; 
+import html2pdf from 'html2pdf.js';
 import './transaksi.css';
 
 const Transaksi = () => {
@@ -43,9 +45,35 @@ const Transaksi = () => {
     }
   };
 
+  // Fungsi untuk generate random gate
+  const generateRandomGate = () => {
+    const gates = ['A', 'B', 'C', 'D'];
+    const number = Math.floor(Math.random() * 20) + 1;
+    return `${gates[Math.floor(Math.random() * gates.length)]}${number}`;
+  };
+
+  // Fungsi untuk generate random terminal
+  const generateRandomTerminal = () => {
+    const terminals = ['1', '2', '3'];
+    return terminals[Math.floor(Math.random() * terminals.length)];
+  };
+
+  // Fungsi untuk generate random seat
+  const generateRandomSeat = () => {
+    const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const number = Math.floor(Math.random() * 30) + 1;
+    return `${number}${rows[Math.floor(Math.random() * rows.length)]}`;
+  };
+
+  // Update fungsi transformBookingData
   const transformBookingData = (data) => {
     try {
-      return {
+      // Generate nilai random di awal
+      const gate = generateRandomGate();
+      const terminal = generateRandomTerminal(); 
+      const seatNumber = generateRandomSeat();
+
+      const transformedData = {
         bookingId: `BK-${data.bookingID.toString().padStart(6, '0')}`,
         userId: `USR-${data.userID}`,
         flightId: `FL-${data.flightID}`,
@@ -66,8 +94,10 @@ const Transaksi = () => {
               hour12: false
             })
           : 'TBA',
-        gate: data.Flight?.gate || 'TBA',
-        terminal: data.Flight?.terminal || 'TBA',
+        // Gunakan nilai random yang sudah di-generate
+        gate: gate,
+        terminal: terminal,
+        seatNumber: seatNumber,
         departureAirport: {
           code: data.Flight?.DepartureAirport?.code || 'TBA',
           name: data.Flight?.DepartureAirport?.name || 'TBA'
@@ -82,9 +112,13 @@ const Transaksi = () => {
           ? `${data.User.firstName} ${data.User.lastName || ''}`
           : 'Guest',
         seatClass: 'Economy Class',
-        seatNumber: 'TBA',
         totalPrice: parseFloat(data.totalPrice || 0)
       };
+
+      console.log('Generated values:', { gate, terminal, seatNumber }); // Debugging
+      console.log('Transformed data:', transformedData); // Debugging
+
+      return transformedData;
     } catch (error) {
       console.error('Transform error:', error);
       throw error;
@@ -103,16 +137,72 @@ const Transaksi = () => {
   const calculateFlightDuration = (departureTime, arrivalTime) => {
     if (departureTime === 'TBA' || arrivalTime === 'TBA') return 'TBA';
     
-    const departure = new Date(`2000-01-01T${departureTime}`);
-    const arrival = new Date(`2000-01-01T${arrivalTime}`);
-    const diffInMinutes = (arrival - departure) / (1000 * 60);
-    const hours = Math.floor(diffInMinutes / 60);
-    const minutes = diffInMinutes % 60;
-    return `${hours}h ${minutes}m`;
+    try {
+      // Pastikan format waktu valid
+      if (!departureTime || !arrivalTime) return 'TBA';
+
+      // Ambil jam dan menit dari string waktu (format "HH:MM")
+      const [depHours, depMinutes] = departureTime.split(':').map(Number);
+      const [arrHours, arrMinutes] = arrivalTime.split(':').map(Number);
+
+      // Hitung total menit
+      let totalMinutes = (arrHours * 60 + arrMinutes) - (depHours * 60 + depMinutes);
+
+      // Handle kasus ketika penerbangan melewati tengah malam
+      if (totalMinutes < 0) {
+        totalMinutes += 24 * 60; // Tambah 24 jam dalam menit
+      }
+
+      // Konversi ke jam dan menit
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      return `${hours}h ${minutes}m`;
+    } catch (error) {
+      console.error('Error calculating duration:', error);
+      return 'TBA';
+    }
   };
 
   const handleDownloadTicket = () => {
-    window.print();
+    // Dapatkan elemen yang akan di-convert ke PDF
+    const ticket = document.querySelector('.tf-ticket');
+    
+    // Generate nama file
+    const currentDate = new Date().toISOString().slice(0, 10); // Format: YYYY-MM-DD
+    const fileName = `${bookingData.bookingId}_${bookingData.passengerName.replace(/\s+/g, '_')}_${currentDate}.pdf`;
+
+    // Konfigurasi PDF
+    const opt = {
+      margin: [10, 10],
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        logging: false
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait'
+      },
+      pagebreak: { mode: ['avoid-all'] }
+    };
+
+    // Generate PDF
+    html2pdf().from(ticket).set(opt).save().catch(err => {
+      console.error('Error generating PDF:', err);
+      alert('Failed to generate PDF. Please try again.');
+    });
+  };
+
+  const formatDateForFileName = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
   };
 
   const handlePrintTicket = () => {
@@ -134,7 +224,13 @@ const Transaksi = () => {
   return (
     <div className="tf-container">
       <div className="tf-breadcrumbs">
-        Home &gt; Flight Booking &gt; Payment Confirmation
+        <Link to="/" className="tf-breadcrumb-link">Home</Link>
+        <span className="tf-breadcrumb-separator">&gt;</span>
+        <Link to="/flight" className="tf-breadcrumb-link">Flight Search</Link>
+        <span className="tf-breadcrumb-separator">&gt;</span>
+        <Link to="/pilihan" className="tf-breadcrumb-link">Flight Booking</Link>
+        <span className="tf-breadcrumb-separator">&gt;</span>
+        <span className="tf-breadcrumb-current">Payment Confirmation</span>
       </div>
 
       <div className="tf-header">
@@ -222,7 +318,18 @@ const Transaksi = () => {
 
           <div className="tf-ticket-footer">
             <div className="tf-barcode">
-              <div className="tf-barcode-image">||||||||||||||||||||||||</div>
+              <div className="tf-barcode-image">
+                <Barcode
+                  value={bookingData.bookingId}
+                  width={1.5}
+                  height={50}
+                  format="CODE128"
+                  displayValue={false} // Tidak menampilkan text di bawah barcode
+                  background="#ffffff"
+                  lineColor="#000000"
+                  margin={0}
+                />
+              </div>
               <div className="tf-barcode-text">{bookingData.bookingId}</div>
             </div>
           </div>
@@ -252,10 +359,16 @@ const Transaksi = () => {
           </div>
         </div>
         <div className="tf-summary-actions">
-          <button className="tf-btn-download" onClick={handleDownloadTicket}>
+          <button 
+            className="tf-btn-download" 
+            onClick={handleDownloadTicket}
+            title="Download ticket as PDF"
+          >
+            <span className="tf-btn-icon">📥</span>
             Download E-Ticket
           </button>
           <button className="tf-btn-print" onClick={handlePrintTicket}>
+            <span className="tf-btn-icon">🖨️</span>
             Print Ticket
           </button>
         </div>

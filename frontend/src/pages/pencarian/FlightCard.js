@@ -19,9 +19,20 @@ const FlightCard = ({ flight }) => {
 
   // Handle airline logo
   const getAirlineLogo = () => {
-    if (flight.Airline?.logo && flight.Airline?.logoType) {
-      return `data:${flight.Airline.logoType};base64,${flight.Airline.logo}`;
+    if (flight.Airline?.logo) {
+      // Jika logo adalah string base64
+      if (typeof flight.Airline.logo === 'string') {
+        return `data:${flight.Airline.logoType || 'image/png'};base64,${flight.Airline.logo}`;
+      }
+      
+      // Jika logo adalah Uint8Array atau Buffer
+      if (flight.Airline.logo instanceof Uint8Array || Buffer.isBuffer(flight.Airline.logo)) {
+        const base64String = Buffer.from(flight.Airline.logo).toString('base64');
+        return `data:${flight.Airline.logoType || 'image/png'};base64,${base64String}`;
+      }
     }
+
+    // Fallback jika tidak ada logo
     return `https://via.placeholder.com/36?text=${flight.Airline?.name?.[0] || '?'}`;
   };
 
@@ -43,6 +54,10 @@ const FlightCard = ({ flight }) => {
             src={getAirlineLogo()}
             alt={flight.Airline?.name || 'Airline'}
             className="airline-logo"
+            onError={(e) => {
+              e.target.onerror = null; // Prevent infinite loop
+              e.target.src = `https://via.placeholder.com/36?text=${flight.Airline?.name?.[0] || '?'}`;
+            }}
           />
           <span className="airline-name">{flight.Airline?.name || 'Unknown Airline'}</span>
         </div>

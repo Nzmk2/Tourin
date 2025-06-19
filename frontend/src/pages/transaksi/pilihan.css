@@ -63,6 +63,38 @@
     border-radius: 8px;
 }
 
+/* Breadcrumbs */
+.tf-breadcrumbs {
+  font-size: 0.875rem;
+  color: var(--tf-text-secondary);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tf-breadcrumb-link {
+  color: var(--tf-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.tf-breadcrumb-link:hover {
+  color: var(--tf-primary-color);
+  text-decoration: underline;
+}
+
+.tf-breadcrumb-separator {
+  margin: 0 0.25rem;
+  color: var(--tf-text-secondary);
+}
+
+.tf-breadcrumb-current {
+  color: var(--tf-primary-color);
+  font-weight: 500;
+}
+
 /* User Info Section */
 .nzmk-flight-user-info {
     display: flex;

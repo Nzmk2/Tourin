@@ -71,12 +71,44 @@ const Hero = () => {
 
     const handleSearch = (e) => {
         e.preventDefault();
+        
+        // Pastikan semua field terisi
+        if (!departureCity || !arrivalCity || !departureDate || !returnDate) {
+            alert('Mohon lengkapi semua field pencarian');
+            return;
+        }
+
+        // Bandingkan tanggal
+        const depDate = new Date(departureDate);
+        const retDate = new Date(returnDate);
+        
+        if (retDate < depDate) {
+            alert('Tanggal pulang tidak boleh lebih awal dari tanggal berangkat');
+            return;
+        }
+
+        // Ambil detail bandara keberangkatan dan tujuan
+        const departureAirport = airportOptions.find(airport => airport.airportCode === departureCity);
+        const arrivalAirport = airportOptions.find(airport => airport.airportCode === arrivalCity);
+
         navigate('/flight', {
             state: {
-                departureCity,
-                arrivalCity,
-                departureDate,
-                returnDate
+                departureCity: departureCity,
+                arrivalCity: arrivalCity,
+                departureDate: departureDate,
+                returnDate: returnDate,
+                departureAirportDetails: {
+                    code: departureAirport?.airportCode,
+                    name: departureAirport?.airportName,
+                    city: departureAirport?.city,
+                    country: departureAirport?.country
+                },
+                arrivalAirportDetails: {
+                    code: arrivalAirport?.airportCode,
+                    name: arrivalAirport?.airportName,
+                    city: arrivalAirport?.city,
+                    country: arrivalAirport?.country
+                }
             }
         });
     };
@@ -105,16 +137,23 @@ const Hero = () => {
         <div className="hero-container">
             <div className="hero-content">
                 <h1 className="main-title">Tourin Aja</h1>
-                <h2 className="text-title">Tourin hadir sebagai sahabat perjalanan terbaikmu! Kami menawarkan pengalaman wisata yang menyenangkan, nyaman, dan penuh petualangan ke berbagai destinasi impian.</h2>
+                <h2 className="text-title">
+                    Tourin hadir sebagai sahabat perjalanan terbaikmu! 
+                    Kami menawarkan pengalaman wisata yang menyenangkan, 
+                    nyaman, dan penuh petualangan ke berbagai destinasi impian.
+                </h2>
 
                 <form onSubmit={handleSearch} className="search-form">
                     <div className="search-grid">
+                        {/* Departure City Input */}
                         <div className="input-field city-input">
                             <label>Dari</label>
                             <div className="custom-select" onClick={() => toggleDropdown('departure')}>
                                 <div className="selected-value">
                                     {loadingAirports ? "Memuat bandara..." : 
-                                        airportOptions.find(airport => airport.airportCode === departureCity)?.airportName
+                                        airportOptions.find(airport => 
+                                            airport.airportCode === departureCity
+                                        )?.airportName
                                     }
                                 </div>
                                 <div className={`select-dropdown ${isDropdownOpen.departure ? 'open' : ''}`}>
@@ -131,23 +170,34 @@ const Hero = () => {
                                                 <span className="airport-name">{airport.airportName}</span>
                                                 <span className="airport-code">{airport.airportCode}</span>
                                             </div>
-                                            <span className="airport-city">{airport.city}, {airport.country}</span>
+                                            <span className="airport-city">
+                                                {airport.city}, {airport.country}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
-                        <button type="button" className="swap-button" onClick={handleSwapCities}>
+                        {/* Swap Button */}
+                        <button 
+                            type="button" 
+                            className="swap-button" 
+                            onClick={handleSwapCities}
+                            aria-label="Tukar kota keberangkatan dan tujuan"
+                        >
                             ⇄
                         </button>
 
+                        {/* Arrival City Input */}
                         <div className="input-field city-input">
                             <label>Ke</label>
                             <div className="custom-select" onClick={() => toggleDropdown('arrival')}>
                                 <div className="selected-value">
                                     {loadingAirports ? "Memuat bandara..." : 
-                                        airportOptions.find(airport => airport.airportCode === arrivalCity)?.airportName
+                                        airportOptions.find(airport => 
+                                            airport.airportCode === arrivalCity
+                                        )?.airportName
                                     }
                                 </div>
                                 <div className={`select-dropdown ${isDropdownOpen.arrival ? 'open' : ''}`}>
@@ -164,13 +214,16 @@ const Hero = () => {
                                                 <span className="airport-name">{airport.airportName}</span>
                                                 <span className="airport-code">{airport.airportCode}</span>
                                             </div>
-                                            <span className="airport-city">{airport.city}, {airport.country}</span>
+                                            <span className="airport-city">
+                                                {airport.city}, {airport.country}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
+                        {/* Departure Date Input */}
                         <div className="input-field date-input">
                             <label>Tanggal Pergi</label>
                             <div className="date-picker-wrapper">
@@ -189,6 +242,7 @@ const Hero = () => {
                             </div>
                         </div>
 
+                        {/* Return Date Input */}
                         <div className="input-field date-input">
                             <label>Tanggal Pulang</label>
                             <div className="date-picker-wrapper">
@@ -207,8 +261,11 @@ const Hero = () => {
                             </div>
                         </div>
 
-                        <button type="submit" className="search-button">
-                            Cari Penerbangan
+                        {/* Search Button */}
+                        <button type="submit" className="search-button" aria-label="Cari Penerbangan">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M12.9 14.32a8 8 0 1 1 1.41-1.41l4.3 4.3a1 1 0 1 1-1.41 1.41l-4.3-4.3zm-4.9-1.32a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/>
+                            </svg>
                         </button>
                     </div>
                 </form>

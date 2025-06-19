@@ -19,9 +19,9 @@ function Utama() {
         <Packages />
         <Gallery />
       </main>
-      <a href="#top" className="go-top button is-primary is-rounded is-large is-fixed-bottom is-fixed-right m-4 has-shadow" data-go-top>
+      {/* <a href="#top" className="go-top button is-primary is-rounded is-large is-fixed-bottom is-fixed-right m-4 has-shadow" data-go-top>
         <ion-icon name="chevron-up-outline"></ion-icon>
-      </a>
+      </a> */}
     </>
   );
 }

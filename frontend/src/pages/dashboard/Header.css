@@ -3,50 +3,68 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgba(43, 65, 91, 0.7);
+  background-color: white; /* Ubah ke transparent */
   padding: 10px 20px;
   color: white;
   font-family: 'Arial', sans-serif;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  position: sticky;
+  position: fixed; /* Ubah ke fixed agar benar-benar float */
   top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   z-index: 1000;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+/* Navbar when scrolled */
+.navbar-scrolled {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 15px 40px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Left Section: Logo and Search Bar */
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
 }
 
 .navbar-logo {
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: white;
 }
 
 .navbar-logo .logo-img {
-  height: 32px; /* Increased logo size */
+  height: 35px;
   width: auto;
+  transition: all 0.3s ease;
 }
 
+/* Search Bar with glass effect */
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.1); /* Lebih transparan */
   border-radius: 4px;
   padding: 8px 12px;
   width: 300px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-bar:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .search-icon {
-  color: #888;
+  color: white;
   margin-right: 8px;
+  opacity: 0.8;
 }
 
 .search-input {
@@ -54,36 +72,44 @@
   outline: none;
   flex-grow: 1;
   font-size: 0.9em;
-  color: #333;
+  color: white;
   background-color: transparent;
 }
 
-/* Right Section: User Menu / Auth Buttons */
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Right Section */
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
+/* Auth Buttons */
 .btn-masuk,
 .btn-daftar {
-  padding: 8px 18px;
+  padding: 8px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
   font-size: 0.9em;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
   text-decoration: none;
 }
 
 .btn-masuk {
-  background-color: white;
-  color: #2b415b;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-masuk:hover {
-  background-color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-daftar {
@@ -93,6 +119,7 @@
 
 .btn-daftar:hover {
   background-color: #0056b3;
+  transform: translateY(-1px);
 }
 
 /* User Profile Menu */
@@ -104,9 +131,9 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(0.1px);
+  transition: all 0.3s ease;
 }
 
 .user-name {
@@ -115,48 +142,75 @@
   margin-right: 8px;
 }
 
+/* Dropdown Menu */
 .profile-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 10px);
   right: 0;
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   display: none;
-  min-width: 150px;
-  z-index: 1001;
+  min-width: 180px;
+  padding: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: auto;
+  z-index: 999;
+  animation: dropdownFade 0.4s ease;
+}
+
+.profile-dropdown.open {
+  display: block;
 }
 
 .user-profile:hover .profile-dropdown {
   display: block;
+  animation: dropdownFade 0.4s ease;
 }
 
-.dropdown-item {
+/* Dropdown Items */
+.navbar .navbar-right .user-menu .user-profile .profile-dropdown .dropdown-item {
   display: block;
-  padding: 10px 15px;
-  color: #333;
+  padding: 12px 20px;
+  color: #333 !important;
   text-decoration: none;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease;
   border: none;
   width: 100%;
   text-align: left;
   background: none;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 0.95em;
+  font-weight: 500;
 }
 
-.dropdown-item:hover {
-  background-color: #f5f5f5;
+.navbar .navbar-right .user-menu .user-profile .profile-dropdown .dropdown-item:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #007bff !important;
+}
+
+/* Animation */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .navbar {
-    padding: 10px;
+    padding: 15px 20px;
   }
 
   .navbar-left {
-    flex-grow: 1;
+    gap: 15px;
   }
 
   .search-bar {
@@ -169,6 +223,10 @@
 }
 
 @media (max-width: 480px) {
+  .navbar {
+    padding: 10px 15px;
+  }
+
   .navbar-left {
     flex-direction: column;
     align-items: flex-start;
@@ -181,6 +239,12 @@
 
   .navbar-right {
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
+  }
+
+  .btn-masuk,
+  .btn-daftar {
+    width: 100%;
+    text-align: center;
   }
 }

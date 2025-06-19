@@ -7,61 +7,61 @@ import './FlightList.css';
 
 // FlightSummary Component
 const FlightSummary = ({ searchParams, formatDateForDisplay, flights }) => {
-  const firstFlight = flights && flights.length > 0 ? flights[0] : null;
-
   return (
     <div className="flight-summary-container">
-      <div className="flight-route-info">
-        <div className="route-header">
-          <div className="route-airports">
-            <div className="airport departure">
-              <span className="airport-code">{searchParams.departureCity}</span>
-              <span className="airport-name">
-                {firstFlight?.DepartureAirport?.name
-                  ? `${firstFlight.DepartureAirport.name} (${firstFlight.DepartureAirport.code})`
-                  : searchParams.departureCity}
-              </span>
+        <div className="flight-route-info">
+            <div className="route-header">
+                <div className="route-airports">
+                    <div className="airport departure">
+                        <span className="airport-code">
+                            {searchParams.departureAirportDetails?.code}
+                        </span>
+                        <span className="airport-name">
+                            {searchParams.departureAirportDetails?.name}
+                        </span>
+                        <span className="airport-location">
+                            {`${searchParams.departureAirportDetails?.city}, ${searchParams.departureAirportDetails?.country}`}
+                        </span>
+                    </div>
+                    <div className="route-arrow">→</div>
+                    <div className="airport arrival">
+                        <span className="airport-code">
+                            {searchParams.arrivalAirportDetails?.code}
+                        </span>
+                        <span className="airport-name">
+                            {searchParams.arrivalAirportDetails?.name}
+                        </span>
+                        <span className="airport-location">
+                            {`${searchParams.arrivalAirportDetails?.city}, ${searchParams.arrivalAirportDetails?.country}`}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div className="route-arrow">→</div>
-            <div className="airport arrival">
-              <span className="airport-code">{searchParams.arrivalCity}</span>
-              <span className="airport-name">
-                {firstFlight?.DestinationAirport?.name
-                  ? `${firstFlight.DestinationAirport.name} (${firstFlight.DestinationAirport.code})`
-                  : searchParams.arrivalCity}
-              </span>
+            
+            <div className="flight-dates">
+                <div className="date-item">
+                    <div className="date-label">
+                        <i className="fas fa-plane-departure"></i>
+                        <span>Tanggal Berangkat</span>
+                    </div>
+                    <div className="date-value">
+                        {formatDateForDisplay(searchParams.departureDate)}
+                    </div>
+                </div>
+                
+                <div className="date-separator"></div>
+                
+                <div className="date-item">
+                    <div className="date-label">
+                        <i className="fas fa-plane-arrival"></i>
+                        <span>Tanggal Pulang</span>
+                    </div>
+                    <div className="date-value">
+                        {formatDateForDisplay(searchParams.returnDate)}
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-        
-        <div className="flight-dates">
-          <div className="date-item">
-            <div className="date-label">
-              <i className="fas fa-plane-departure"></i>
-              <span>Tanggal Berangkat</span>
-            </div>
-            <div className="date-value">
-              {searchParams.departureDate
-                ? formatDateForDisplay(searchParams.departureDate)
-                : 'N/A'}
-            </div>
-          </div>
-          
-          <div className="date-separator"></div>
-          
-          <div className="date-item">
-            <div className="date-label">
-              <i className="fas fa-plane-arrival"></i>
-              <span>Tanggal Pulang</span>
-            </div>
-            <div className="date-value">
-              {searchParams.returnDate
-                ? formatDateForDisplay(searchParams.returnDate)
-                : 'N/A'}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
@@ -79,7 +79,7 @@ const FlightList = () => {
   const handleFilterChange = ({ airlines }) => {
     let filtered = [...flights];
     
-    if (airlines.length > 0) {
+    if (airlines && airlines.length > 0) {
       filtered = filtered.filter(flight => 
         airlines.includes(flight.airlineID)
       );
@@ -90,48 +90,56 @@ const FlightList = () => {
 
   useEffect(() => {
     const fetchFlights = async () => {
-      setLoading(true);
-      setError(null);
+        setLoading(true);
+        setError(null);
 
-      try {
-        let url = '/api/flights';
-        if (searchParams.departureCity && searchParams.arrivalCity) {
-          url += `?departureCode=${searchParams.departureCity}&destinationCode=${searchParams.arrivalCity}`;
-          if (searchParams.departureDate) {
-            url += `&departureDate=${searchParams.departureDate}`;
-          }
+        try {
+            // Buat URL dengan query parameters
+            const queryParams = new URLSearchParams({
+                departureCode: searchParams.departureCity,
+                destinationCode: searchParams.arrivalCity,
+                departureDate: searchParams.departureDate,
+                returnDate: searchParams.returnDate
+            }).toString();
+
+            const url = `/api/flights?${queryParams}`;
+            
+            const res = await axiosInstance.get(url);
+            
+            // Get airlines data for each flight
+            const flightsWithAirlines = await Promise.all(res.data.map(async flight => {
+                if (flight.airlineID) {
+                    try {
+                        const airlineRes = await axiosInstance.get(`/api/airlines/${flight.airlineID}`);
+                        return {
+                            ...flight,
+                            Airline: airlineRes.data,
+                            DepartureAirport: searchParams.departureAirportDetails,
+                            DestinationAirport: searchParams.arrivalAirportDetails
+                        };
+                    } catch (err) {
+                        console.error(`Failed to fetch airline data for flight ${flight.flightID}:`, err);
+                        return flight;
+                    }
+                }
+                return flight;
+            }));
+
+            setFlights(flightsWithAirlines);
+            setFilteredFlights(flightsWithAirlines);
+        } catch (err) {
+            console.error('Error fetching flights:', err);
+            setError(err.response?.data?.msg || 'Gagal memuat data penerbangan');
+        } finally {
+            setLoading(false);
         }
-
-        const res = await axiosInstance.get(url);
-        
-        // Get airlines data for each flight
-        const flightsWithAirlines = await Promise.all(res.data.map(async flight => {
-          if (flight.airlineID) {
-            try {
-              const airlineRes = await axiosInstance.get(`/api/airlines/${flight.airlineID}`);
-              return {
-                ...flight,
-                Airline: airlineRes.data
-              };
-            } catch (err) {
-              console.error(`Failed to fetch airline data for flight ${flight.flightID}:`, err);
-              return flight;
-            }
-          }
-          return flight;
-        }));
-
-        setFlights(flightsWithAirlines);
-        setFilteredFlights(flightsWithAirlines);
-      } catch (err) {
-        console.error('Error fetching flights:', err);
-        setError(err.response?.data?.msg || 'Gagal memuat data penerbangan');
-      } finally {
-        setLoading(false);
-      }
     };
 
-    fetchFlights();
+    // Hanya fetch jika ada parameter pencarian
+    if (searchParams.departureCity && searchParams.arrivalCity && 
+        searchParams.departureDate && searchParams.returnDate) {
+        fetchFlights();
+    }
   }, [searchParams]);
 
   const getLowestPriceFlight = () => {

@@ -42,7 +42,7 @@ export const createPayment = async(req, res) => {
             bookingID: bookingID,
             amount: amount,
             paymentMethod: paymentMethod,
-            paymentStatus: 'pending'
+            paymentStatus: 'completed'
         });
 
         res.status(201).json({
@@ -73,9 +73,9 @@ export const updatePaymentStatus = async(req, res) => {
         );
 
         // If payment is completed, update booking status
-        if (paymentStatus === 'completed') {
+        if (paymentStatus === 'failed') {
             await Booking.update(
-                { status: 'confirmed' },
+                { status: 'cancelled' },
                 { where: { bookingID: payment.bookingID } }
             );
         }

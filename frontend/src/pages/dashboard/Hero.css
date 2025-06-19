@@ -149,7 +149,7 @@
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: #fff;
+    background: rgba(165, 220, 255, 0.1);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     max-height: 300px;
@@ -242,6 +242,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.swap-button,
+.search-button {
+    align-self: center;
+    margin-top: 30px;
 }
 
 /* Responsive Styles for Dropdowns */

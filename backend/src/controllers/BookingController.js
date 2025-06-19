@@ -93,7 +93,7 @@ export const createBooking = async(req, res) => {
             userID: userID,
             flightID: flightID,
             totalPrice: totalPrice,
-            status: status || 'pending'
+            status: status || 'booked'
         });
 
         await Flight.update(
