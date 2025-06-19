@@ -1,161 +1,352 @@
-/* Base Container */
+/* Base Styles */
+:root {
+  --primary-color: #2557a7;
+  --secondary-color: #ff6b6b;
+  --text-primary: #2c3e50;
+  --text-secondary: #666;
+  --background-light: #f8f9fa;
+  --border-color: #e0e0e0;
+  --success-color: #2ecc71;
+}
+
 .transaksi-container {
+  max-width: 1024px;
+  margin: 2rem auto;
+  padding: 0 1rem;
   font-family: 'Segoe UI', sans-serif;
-  max-width: 960px;
-  margin: 30px auto;
-  padding: 20px;
+  color: var(--text-primary);
 }
 
 /* Breadcrumbs */
 .transaksi-breadcrumbs {
-  font-size: 14px;
-  color: #777;
-  margin-bottom: 12px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
 }
 
-/* Header */
-.transaksi-header h2 {
-  font-size: 26px;
+/* Header Section */
+.transaksi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-left h2 {
   margin: 0;
+  color: var(--primary-color);
+  font-size: 1.75rem;
 }
 
-.transaksi-header p {
-  margin: 5px 0 20px;
-  color: #444;
+.flight-number {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
-/* Ticket Card */
+.header-right {
+  text-align: right;
+}
+
+.booking-reference {
+  font-weight: 600;
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.booking-date {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Ticket Section */
 .transaksi-ticket {
-  display: flex;
-  background: #fefefe;
-  border: 1px solid #ddd;
-  border-radius: 16px;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  margin-bottom: 24px;
+  margin-bottom: 2rem;
 }
 
-/* Left and Right Time Section */
-.transaksi-ticket-left,
-.transaksi-ticket-right {
-  width: 20%;
-  background: #f5f5f5;
-  padding: 20px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.transaksi-time {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.transaksi-airport {
-  font-size: 13px;
-  color: #666;
-}
-
-/* Center Section */
-.transaksi-ticket-center {
-  flex: 1;
-  padding: 20px;
-  border-left: 1px dashed #ccc;
-  border-right: 1px dashed #ccc;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.transaksi-passenger-name {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.transaksi-boarding-pass {
-  font-size: 14px;
-  color: #888;
-  margin-top: 4px;
-}
-
-.transaksi-class {
-  background-color: #ffcad4;
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 10px;
-  font-size: 13px;
-  margin-top: 10px;
-}
-
-.transaksi-flight-info {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.transaksi-flight-info span {
-  font-weight: bold;
-  color: #555;
-}
-
-/* Barcode and Code */
-.transaksi-barcode {
-  margin-top: 20px;
-  font-size: 18px;
-  letter-spacing: 2px;
-  color: #000;
-}
-
-.transaksi-code {
-  font-size: 13px;
-  margin-top: 4px;
-  color: #666;
-}
-
-/* Price and Download */
-.transaksi-price-download {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.transaksi-price {
-  font-size: 26px;
-  font-weight: bold;
-  margin-right: 20px;
-}
-
-.transaksi-download {
-  background-color: #e60023;
+.ticket-header {
+  background: var(--primary-color);
   color: white;
-  padding: 10px 16px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.airline-logo img {
+  height: 40px;
+  width: auto;
+}
+
+.ticket-type {
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.ticket-main {
+  padding: 2rem;
+}
+
+/* Flight Route Information */
+.flight-route {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.departure, .arrival {
+  text-align: center;
+  flex: 1;
+}
+
+.departure h3, .arrival h3 {
+  font-size: 2rem;
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.departure p, .arrival p {
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+.departure span, .arrival span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.flight-duration {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.duration-line {
+  height: 2px;
+  background: var(--border-color);
+  position: relative;
+  margin: 1rem 0;
+}
+
+.plane-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  background: white;
+  padding: 0 0.5rem;
+  color: var(--primary-color);
+}
+
+/* Passenger Information */
+.passenger-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.info-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-group label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.info-group span {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Ticket Footer */
+.ticket-footer {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px dashed var(--border-color);
+  text-align: center;
+}
+
+.barcode {
+  display: inline-block;
+}
+
+.barcode-image {
+  font-family: 'Libre Barcode 39', cursive;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.barcode-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+/* Price Summary */
+.transaksi-summary {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-header h3 {
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+}
+
+.summary-content {
+  margin-bottom: 1.5rem;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.price-row.total {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-download, .btn-print {
+  flex: 1;
+  padding: 0.75rem;
   border: none;
-  border-radius: 10px;
-  font-weight: bold;
+  border-radius: 0.5rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-/* Terms & Conditions */
-.transaksi-terms {
-  font-size: 14px;
+.btn-download {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-print {
+  background: var(--background-light);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.btn-download:hover {
+  background: #1d4b8f;
+}
+
+.btn-print:hover {
+  background: #e8f0fe;
+}
+
+/* Notes Section */
+.transaksi-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.note-section h4 {
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+}
+
+.note-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.note-section li {
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.note-section p {
+  margin: 0;
+  color: var(--text-secondary);
   line-height: 1.6;
-  color: #333;
 }
 
-.transaksi-terms h3,
-.transaksi-terms h4 {
-  margin-top: 20px;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transaksi-header {
+    flex-direction: column;
+  }
+
+  .header-right {
+    text-align: left;
+    margin-top: 1rem;
+  }
+
+  .flight-route {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .flight-duration {
+    width: 100%;
+  }
+
+  .duration-line {
+    width: 2px;
+    height: 50px;
+    margin: 1rem auto;
+  }
+
+  .passenger-info {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .summary-actions {
+    flex-direction: column;
+  }
 }
 
-.transaksi-terms ul {
-  padding-left: 20px;
-  margin-top: 8px;
-}
+/* Print Styles */
+@media print {
+  .transaksi-container {
+    margin: 0;
+    padding: 0;
+  }
 
-.transaksi-terms a {
-  color: #007bff;
-  text-decoration: underline;
+  .btn-download, .btn-print {
+    display: none;
+  }
+
+  .transaksi-ticket {
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+
+  .transaksi-summary {
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
 }
