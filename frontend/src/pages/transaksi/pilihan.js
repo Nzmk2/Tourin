@@ -1,55 +1,165 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axiosInstance from '../../api/axiosConfig';
 import './pilihan.css';
 
 const Pilihan = () => {
   const [paymentMethod, setPaymentMethod] = useState('credit');
-  const currentUser = "Nzmk2";
-  const currentDate = "2025-06-19 15:17:24";
+  const [bookingData, setBookingData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const currentUser = "Nzmk2"; // Sesuai dengan user yang sedang login
+  const currentDate = "2025-06-19 15:28:22"; // Sesuai dengan waktu saat ini
+  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const selectedFlight = location.state?.flight;
+
+  // Format harga dalam Rupiah
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+  
+  useEffect(() => {
+    if (selectedFlight) {
+      setBookingData({
+        flightID: selectedFlight.flightID,
+        totalPrice: selectedFlight.price,
+        airline: selectedFlight.Airline,
+        departureTime: selectedFlight.departureTime,
+        departureAirport: selectedFlight.DepartureAirport,
+        destinationAirport: selectedFlight.DestinationAirport,
+        arrivalTime: selectedFlight.arrivalTime
+      });
+    }
+  }, [selectedFlight]);
+
+  const handlePaymentSubmit = async () => {
+    if (!bookingData) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Buat booking terlebih dahulu
+      const bookingResponse = await axiosInstance.post('/bookings', {
+        flightID: bookingData.flightID,
+        totalPrice: bookingData.totalPrice,
+        status: 'pending'
+      });
+
+      // Jika booking berhasil, buat payment
+      if (bookingResponse.status === 201) {
+        const paymentResponse = await axiosInstance.post('/payments', {
+          bookingID: bookingResponse.data.bookingID,
+          amount: bookingData.totalPrice,
+          paymentMethod: paymentMethod,
+          status: 'pending'
+        });
+
+        if (paymentResponse.status === 201) {
+          navigate('/pilihan/transaksi', { 
+            state: { 
+              bookingID: bookingResponse.data.bookingID,
+              paymentID: paymentResponse.data.paymentID
+            }
+          });
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Gagal membuat pemesanan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!bookingData) {
+    return <div>Tidak ada penerbangan yang dipilih</div>;
+  }
+
+  const calculateTotalPrice = () => {
+    const basePrice = parseFloat(bookingData.totalPrice);
+    const tax = basePrice * 0.1; // Pajak 10%
+    const serviceFee = 25000; // Biaya layanan tetap Rp 25.000
+    return {
+      basePrice,
+      tax,
+      serviceFee,
+      total: basePrice + tax + serviceFee
+    };
+  };
+
+  const prices = calculateTotalPrice();
 
   return (
     <div className="nzmk-flight-booking-container">
       <div className="nzmk-flight-details">
         <div className="nzmk-flight-header">
           <div className="nzmk-flight-title">
-            <h2>Emirates A380 Airbus</h2>
-            <p>Return Wed, Dec 8</p>
+            <h2>{bookingData.airline?.name || 'Maskapai'}</h2>
+            <p>{new Date(bookingData.departureTime).toLocaleDateString('id-ID')}</p>
           </div>
-          <div className="nzmk-flight-price">$240</div>
+          <div className="nzmk-flight-price">{formatPrice(prices.total)}</div>
         </div>
 
         <div className="nzmk-flight-user-info">
-          <span className="nzmk-flight-user">Welcome, {currentUser}</span>
+          <span className="nzmk-flight-user">Selamat datang, {currentUser}</span>
           <span className="nzmk-flight-datetime">{currentDate}</span>
         </div>
 
         <div className="nzmk-flight-airline-info">
-          <img src="/emirates-logo.png" alt="Emirates" className="nzmk-flight-airline-logo" />
+          {bookingData.airline?.logoUrl && (
+            <img 
+              src={bookingData.airline.logoUrl} 
+              alt={bookingData.airline.name} 
+              className="nzmk-flight-airline-logo" 
+            />
+          )}
           <div className="nzmk-flight-airline-name">
-            <h3>Emirates</h3>
-            <p>Service Add-on</p>
+            <h3>{bookingData.airline?.name}</h3>
+            <p>Detail Penerbangan</p>
           </div>
         </div>
 
         <div className="nzmk-flight-schedule">
-          <div className="nzmk-flight-time">12:00 pm</div>
+          <div className="nzmk-flight-time">
+            {new Date(bookingData.departureTime).toLocaleTimeString('id-ID', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })}
+          </div>
           <div className="nzmk-flight-line">
             <span className="nzmk-flight-plane-icon">✈</span>
           </div>
-          <div className="nzmk-flight-time">12:00 pm</div>
-          <div className="nzmk-flight-location">Newark(EWR)</div>
+          <div className="nzmk-flight-time">
+            {new Date(bookingData.arrivalTime).toLocaleTimeString('id-ID', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })}
+          </div>
+          <div className="nzmk-flight-location">
+            {`${bookingData.departureAirport?.code} → ${bookingData.destinationAirport?.code}`}
+          </div>
         </div>
 
         <div className="nzmk-flight-payment-section">
-          <h3>Payment Method</h3>
+          <h3>Metode Pembayaran</h3>
           <div className="nzmk-flight-payment-select">
             <select 
               value={paymentMethod} 
               onChange={(e) => setPaymentMethod(e.target.value)}
               className="nzmk-flight-payment-dropdown"
             >
-              <option value="credit">Credit Card</option>
-              <option value="debit">Debit Card</option>
-              <option value="transfer">Bank Transfer</option>
+              <option value="credit">Kartu Kredit</option>
+              <option value="debit">Kartu Debit</option>
+              <option value="transfer">Transfer Bank</option>
               <option value="ewallet">E-Wallet</option>
             </select>
           </div>
@@ -58,7 +168,7 @@ const Pilihan = () => {
             <div className="nzmk-flight-payment-details">
               <input 
                 type="text" 
-                placeholder="Card Number" 
+                placeholder="Nomor Kartu" 
                 className="nzmk-flight-input-full"
               />
               <div className="nzmk-flight-input-group">
@@ -79,14 +189,14 @@ const Pilihan = () => {
           {paymentMethod === 'transfer' && (
             <div className="nzmk-flight-payment-details">
               <select className="nzmk-flight-input-full">
-                <option value="">Select Bank</option>
-                <option value="bank1">Bank 1</option>
-                <option value="bank2">Bank 2</option>
-                <option value="bank3">Bank 3</option>
+                <option value="">Pilih Bank</option>
+                <option value="bca">BCA</option>
+                <option value="mandiri">Mandiri</option>
+                <option value="bni">BNI</option>
               </select>
               <input 
                 type="text" 
-                placeholder="Account Number" 
+                placeholder="Nomor Rekening" 
                 className="nzmk-flight-input-full"
               />
             </div>
@@ -95,14 +205,14 @@ const Pilihan = () => {
           {paymentMethod === 'ewallet' && (
             <div className="nzmk-flight-payment-details">
               <select className="nzmk-flight-input-full">
-                <option value="">Select E-Wallet</option>
-                <option value="wallet1">Wallet 1</option>
-                <option value="wallet2">Wallet 2</option>
-                <option value="wallet3">Wallet 3</option>
+                <option value="">Pilih E-Wallet</option>
+                <option value="ovo">OVO</option>
+                <option value="gopay">GoPay</option>
+                <option value="dana">DANA</option>
               </select>
               <input 
                 type="text" 
-                placeholder="Phone Number" 
+                placeholder="Nomor Telepon" 
                 className="nzmk-flight-input-full"
               />
             </div>
@@ -112,48 +222,48 @@ const Pilihan = () => {
 
       <div className="nzmk-flight-summary">
         <div className="nzmk-flight-summary-header">
-          <div className="nzmk-flight-summary-image">
-            <img src="/plane-image.png" alt="Emirates A380 Airbus" />
-          </div>
           <div className="nzmk-flight-summary-details">
-            <p className="nzmk-flight-economy">Economy</p>
-            <h3>Emirates A380 Airbus</h3>
-            <div className="nzmk-flight-rating">
-              <span>4.2</span>
-              <p>Very Good 84 reviews</p>
+            <p className="nzmk-flight-economy">Ekonomi</p>
+            <h3>{bookingData.airline?.name}</h3>
+            <div className="nzmk-flight-route">
+              {`${bookingData.departureAirport?.name} → ${bookingData.destinationAirport?.name}`}
             </div>
           </div>
         </div>
 
-        <p className="nzmk-flight-protection">Your booking is protected by <strong>golobe</strong></p>
-
         <div className="nzmk-flight-price-details">
-          <h3>Price Details</h3>
+          <h3>Detail Harga</h3>
           <div className="nzmk-flight-price-item">
-            <span>Base Fare</span>
-            <span>$400</span>
+            <span>Harga Dasar</span>
+            <span>{formatPrice(prices.basePrice)}</span>
           </div>
           <div className="nzmk-flight-price-item">
-            <span>Discount</span>
-            <span>$400</span>
+            <span>Pajak</span>
+            <span>{formatPrice(prices.tax)}</span>
           </div>
           <div className="nzmk-flight-price-item">
-            <span>Taxes</span>
-            <span>$400</span>
-          </div>
-          <div className="nzmk-flight-price-item">
-            <span>Service Fee</span>
-            <span>$400</span>
+            <span>Biaya Layanan</span>
+            <span>{formatPrice(prices.serviceFee)}</span>
           </div>
           <div className="nzmk-flight-price-item total">
             <span>Total</span>
-            <span>$400</span>
+            <span>{formatPrice(prices.total)}</span>
           </div>
         </div>
 
-        <button className="nzmk-flight-confirm-button">
-          Confirm Payment
+        <button 
+          className="nzmk-flight-confirm-button"
+          onClick={handlePaymentSubmit}
+          disabled={loading}
+        >
+          {loading ? 'Memproses...' : 'Konfirmasi Pembayaran'}
         </button>
+        
+        {error && (
+          <div className="nzmk-flight-error">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
