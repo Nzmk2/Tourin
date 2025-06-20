@@ -199,7 +199,13 @@ const BookingManagement = () => {
                                                 <tr key={booking.bookingID}>
                                                     <td>{index + 1}</td>
                                                     <td>{formatDate(booking.bookingDate)}</td>
-                                                    <td>{booking.User?.name || booking.user?.name || '-'}</td>
+                                                    <td>{booking.userName || 
+                                                        (booking.User ? 
+                                                            `${booking.User.firstName} ${booking.User.lastName}`.trim() : 
+                                                            (booking.user ? 
+                                                                `${booking.user.firstName} ${booking.user.lastName}`.trim() : 
+                                                                '-')
+                                                        )}</td>
                                                     <td>
                                                         {booking.Flight?.flightNumber || booking.flight?.flightNumber || ''}
                                                         {booking.Flight?.departureAirport?.code

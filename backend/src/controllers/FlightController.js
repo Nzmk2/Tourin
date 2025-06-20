@@ -105,46 +105,102 @@ const getFlightById = async (req, res) => {
 };
 
 const createFlight = async (req, res) => {
-  const { 
-    flightNumber, 
-    airlineId, 
-    departureAirportId, 
-    arrivalAirportId,
-    departureTime,
-    arrivalTime,
-    price,
-    capacity
-  } = req.body;
-
   try {
+    const { 
+      flightNumber, 
+      airlineId, 
+      departureAirportId, 
+      arrivalAirportId,
+      departureTime,
+      arrivalTime,
+      price,
+      capacity
+    } = req.body;
+
+    // Debug log
+    console.log('Received request body:', req.body);
+
+    // Validate required fields
+    if (!flightNumber || !airlineId || !departureAirportId || !arrivalAirportId || 
+        !departureTime || !arrivalTime || !price || !capacity) {
+      return res.status(400).json({ 
+        msg: "All fields are required",
+        missing: {
+          flightNumber: !flightNumber,
+          airlineId: !airlineId,
+          departureAirportId: !departureAirportId,
+          arrivalAirportId: !arrivalAirportId,
+          departureTime: !departureTime,
+          arrivalTime: !arrivalTime,
+          price: !price,
+          capacity: !capacity
+        }
+      });
+    }
+
+    // Validate airline exists
+    const airline = await Airline.findByPk(airlineId);
+    if (!airline) {
+      return res.status(400).json({ msg: `Airline with ID ${airlineId} not found` });
+    }
+
     // Get departure airport code
     const departureAirport = await Airport.findByPk(departureAirportId);
     if (!departureAirport) {
-      return res.status(400).json({ msg: "Departure airport not found" });
+      return res.status(400).json({ msg: `Departure airport with ID ${departureAirportId} not found` });
     }
 
     // Get arrival airport code
     const arrivalAirport = await Airport.findByPk(arrivalAirportId);
     if (!arrivalAirport) {
-      return res.status(400).json({ msg: "Arrival airport not found" });
+      return res.status(400).json({ msg: `Arrival airport with ID ${arrivalAirportId} not found` });
+    }
+
+    // Validate times
+    const dTime = new Date(departureTime);
+    const aTime = new Date(arrivalTime);
+    if (isNaN(dTime.getTime()) || isNaN(aTime.getTime())) {
+      return res.status(400).json({ msg: "Invalid date format" });
+    }
+
+    if (dTime >= aTime) {
+      return res.status(400).json({ msg: "Departure time must be before arrival time" });
+    }
+
+    // Validate price and capacity
+    if (isNaN(price) || price <= 0) {
+      return res.status(400).json({ msg: "Invalid price value" });
+    }
+
+    if (isNaN(capacity) || capacity <= 0) {
+      return res.status(400).json({ msg: "Invalid capacity value" });
     }
 
     // Create flight with converted data
-    await Flight.create({
+    const newFlight = await Flight.create({
       flightNumber: flightNumber,
       airlineID: airlineId,
       departureAirportCode: departureAirport.code,
       destinationAirportCode: arrivalAirport.code,
-      departureTime: departureTime,
-      arrivalTime: arrivalTime,
-      price: price,
-      availableSeats: capacity
+      departureTime: dTime,
+      arrivalTime: aTime,
+      price: parseFloat(price),
+      availableSeats: parseInt(capacity)
     });
 
-    res.json({ msg: "Flight Created Successfully" });
+    console.log('Created flight:', newFlight);
+
+    res.status(201).json({ 
+      msg: "Flight Created Successfully",
+      flight: newFlight
+    });
   } catch (error) {
     console.error('Error creating flight:', error);
-    res.status(500).json({ msg: error.message });
+    res.status(500).json({ 
+      msg: "Error creating flight",
+      error: error.message,
+      details: error.errors?.map(e => e.message)
+    });
   }
 };
 

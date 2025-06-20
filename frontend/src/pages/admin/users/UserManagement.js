@@ -45,22 +45,28 @@ const UserManagement = () => {
         try {
             setLoading(true);
             const response = await axiosInstance.get('/api/users');
-            console.log('Users data received:', response.data);
-            // Filter hanya user dengan role USER
-            const filteredUsers = response.data.filter(user => user.role === 'USER');
+            console.log('Raw users data:', response.data);
+            
+            // Filter untuk user dengan role 'user' (case insensitive)
+            const filteredUsers = response.data.filter(user => 
+                user.role && user.role.toLowerCase() === 'user'
+            );
+            console.log('Filtered users:', filteredUsers);
+            
             setUsers(filteredUsers);
             setMsg('');
             setLoading(false);
         } catch (error) {
             setLoading(false);
+            console.error("Full error object:", error);
             if (error.response) {
+                console.error("Error response:", error.response.data);
                 setMsg(error.response.data.msg);
                 setMsgType('danger');
             } else {
                 setMsg("Failed to load users. Network error or server unavailable.");
                 setMsgType('danger');
             }
-            console.error("Error fetching users:", error);
         }
     };
 
@@ -178,10 +184,14 @@ const UserManagement = () => {
                                     <tbody>
                                         {users.length > 0 ? (
                                             users.map((user, index) => {
-                                                const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
+                                                // Pastikan user tidak null
+                                                if (!user) return null;
+
+                                                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                                                console.log('Rendering user:', user); // Debug log
                                                 
                                                 return (
-                                                    <tr key={user?.userID || index}>
+                                                    <tr key={user.userID || index}>
                                                         <td>{index + 1}</td>
                                                         <td>
                                                             <div className="default-avatar">
@@ -189,18 +199,18 @@ const UserManagement = () => {
                                                             </div>
                                                         </td>
                                                         <td>{fullName || 'N/A'}</td>
-                                                        <td>{user?.email || 'N/A'}</td>
-                                                        <td>{user?.passportNumber || 'N/A'}</td>
-                                                        <td>{formatDate(user?.createdAt)}</td>
+                                                        <td>{user.email || 'N/A'}</td>
+                                                        <td>{user.passportNumber || 'N/A'}</td>
+                                                        <td>{user.createdAt ? formatDate(user.createdAt) : 'N/A'}</td>
                                                         <td>
                                                             <Link 
-                                                                to={`/admin/users/edit/${user?.userID}`} 
+                                                                to={`/admin/users/edit/${user.userID}`} 
                                                                 className="table-action-button edit"
                                                             >
                                                                 Edit
                                                             </Link>
                                                             <button 
-                                                                onClick={() => confirmDelete(user?.userID)} 
+                                                                onClick={() => confirmDelete(user.userID)} 
                                                                 className="table-action-button delete"
                                                             >
                                                                 Delete

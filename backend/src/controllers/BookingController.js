@@ -8,7 +8,10 @@ export const getBookings = async(req, res) => {
     try {
         const response = await Booking.findAll({
             include: [
-                { model: User },
+                { 
+                    model: User,
+                    attributes: ['userID', 'firstName', 'lastName', 'email'] // Tambahkan atribut yang dibutuhkan
+                },
                 { 
                     model: Flight,
                     include: [
@@ -22,12 +25,20 @@ export const getBookings = async(req, res) => {
 
         const transformedResponse = response.map(booking => {
             const bookingData = booking.toJSON();
+            
+            // Transform Airline logo if exists
             if (bookingData.Flight?.Airline?.logo) {
                 bookingData.Flight.Airline.logoUrl =
                     `data:${bookingData.Flight.Airline.logoType};base64,${bookingData.Flight.Airline.logo.toString('base64')}`;
                 delete bookingData.Flight.Airline.logo;
                 delete bookingData.Flight.Airline.logoType;
             }
+            
+            // Add formatted user name
+            if (bookingData.User) {
+                bookingData.userName = `${bookingData.User.firstName} ${bookingData.User.lastName}`.trim();
+            }
+
             return bookingData;
         });
 

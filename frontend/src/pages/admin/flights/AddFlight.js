@@ -93,45 +93,40 @@ const AddFlight = () => {
     const saveFlight = async (e) => {
         e.preventDefault();
         
-        // Validate departure and arrival airports are different
-        if (departureAirportId === arrivalAirportId) {
-            setMsg("Departure and arrival airports cannot be the same");
-            setMsgType('danger');
-            return;
-        }
-
-        // Validate departure time is before arrival time
-        const departureDate = new Date(departureTime);
-        const arrivalDate = new Date(arrivalTime);
-        if (departureDate >= arrivalDate) {
-            setMsg("Departure time must be before arrival time");
-            setMsgType('danger');
-            return;
-        }
-
         try {
-            // Format price to remove currency formatting
+            // Validasi semua field
+            if (!flightNumber || !airlineId || !departureAirportId || !arrivalAirportId || 
+                !departureTime || !arrivalTime || !price || !capacity) {
+                setMsg("All fields are required");
+                setMsgType('danger');
+                return;
+            }
+
+            // Format price to numeric value
             const numericPrice = price.replace(/[^0-9]/g, '');
 
-            // Buat objek Date dengan menambahkan timezone offset
-            const createLocalDateTime = (dateString) => {
-                const date = new Date(dateString);
-                const offset = date.getTimezoneOffset();
-                const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-                return localDate.toISOString();
-            };
+            // Validate airports are different
+            if (departureAirportId === arrivalAirportId) {
+                setMsg("Departure and arrival airports cannot be the same");
+                setMsgType('danger');
+                return;
+            }
 
-            const response = await axiosInstance.post('/api/flights', {
-                flightNumber,
+            const flightData = {
+                flightNumber: flightNumber.trim(),
                 airlineId: parseInt(airlineId),
                 departureAirportId: parseInt(departureAirportId),
                 arrivalAirportId: parseInt(arrivalAirportId),
-                departureTime: createLocalDateTime(departureTime),
-                arrivalTime: createLocalDateTime(arrivalTime),
+                departureTime: new Date(departureTime).toISOString(),
+                arrivalTime: new Date(arrivalTime).toISOString(),
                 price: parseFloat(numericPrice),
                 capacity: parseInt(capacity)
-            });
+            };
 
+            console.log('Sending flight data:', flightData);
+
+            const response = await axiosInstance.post('/api/flights', flightData);
+            
             if (response.data.msg) {
                 setMsg(response.data.msg);
                 setMsgType('success');
@@ -140,9 +135,9 @@ const AddFlight = () => {
                 }, 1500);
             }
         } catch (error) {
-            console.error('Error details:', error);
+            console.log('Error full response:', error.response?.data);
             if (error.response?.data?.msg) {
-                setMsg(error.response.data.msg);
+                setMsg(error.response?.data?.msg);
             } else {
                 setMsg("An error occurred while adding the flight. Please try again.");
             }
@@ -208,12 +203,18 @@ const AddFlight = () => {
                                                     id="airlineId"
                                                     className="form-input"
                                                     value={airlineId}
-                                                    onChange={(e) => setAirlineId(e.target.value)}
+                                                    onChange={(e) => {
+                                                        console.log('Selected airline:', e.target.value);
+                                                        setAirlineId(e.target.value);
+                                                    }}
                                                     required
                                                 >
                                                     <option value="">Select an airline</option>
                                                     {airlines.map(airline => (
-                                                        <option key={airline.airlineID} value={airline.airlineID}>
+                                                        <option 
+                                                            key={airline.airlineID} 
+                                                            value={airline.airlineID}
+                                                        >
                                                             {airline.name}
                                                         </option>
                                                     ))}
@@ -230,12 +231,19 @@ const AddFlight = () => {
                                                     id="departureAirportId"
                                                     className="form-input"
                                                     value={departureAirportId}
-                                                    onChange={(e) => setDepartureAirportId(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const selectedAirport = airports.find(a => a.airportID === parseInt(e.target.value));
+                                                        console.log('Selected departure airport:', selectedAirport);
+                                                        setDepartureAirportId(e.target.value);
+                                                    }}
                                                     required
                                                 >
                                                     <option value="">Select departure airport</option>
                                                     {airports.map(airport => (
-                                                        <option key={airport.airportID} value={airport.airportID}>
+                                                        <option 
+                                                            key={airport.airportID} 
+                                                            value={airport.airportID} // Gunakan airportID sebagai value
+                                                        >
                                                             {airport.code} - {airport.name}
                                                         </option>
                                                     ))}
@@ -249,12 +257,19 @@ const AddFlight = () => {
                                                     id="arrivalAirportId"
                                                     className="form-input"
                                                     value={arrivalAirportId}
-                                                    onChange={(e) => setArrivalAirportId(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const selectedAirport = airports.find(a => a.airportID === parseInt(e.target.value));
+                                                        console.log('Selected arrival airport:', selectedAirport);
+                                                        setArrivalAirportId(e.target.value);
+                                                    }}
                                                     required
                                                 >
                                                     <option value="">Select arrival airport</option>
                                                     {airports.map(airport => (
-                                                        <option key={airport.airportID} value={airport.airportID}>
+                                                        <option 
+                                                            key={airport.airportID}
+                                                            value={airport.airportID} // Gunakan airportID sebagai value
+                                                        >
                                                             {airport.code} - {airport.name}
                                                         </option>
                                                     ))}

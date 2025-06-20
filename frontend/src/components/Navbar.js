@@ -1,5 +1,5 @@
 import React from 'react';
-import profileImage from '../assets/img/profile.jpeg'; // <<<--- Import gambar profil di sini
+import profileImage from '../assets/img/profile.png'; // <<<--- Import gambar profil di sini
 
 /**
  * Komponen Navbar (Top Bar) untuk dashboard admin.
