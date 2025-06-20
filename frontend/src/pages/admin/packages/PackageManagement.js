@@ -51,12 +51,17 @@ const PackageManagement = () => {
     const getPackages = async () => {
         try {
             setLoading(true);
+            console.log('Fetching packages...');
             const response = await axiosInstance.get('/api/packages');
-            setPackages(response.data);
+            console.log('Packages response:', response.data); // Debug log
+            
+            // Mengakses properti data dari response
+            setPackages(response.data.data || []);
             setMsg('');
             setLoading(false);
         } catch (error) {
             setLoading(false);
+            console.log('Error full response:', error.response); // Debug log
             if (error.response) {
                 setMsg(error.response.data.msg);
                 setMsgType('danger');

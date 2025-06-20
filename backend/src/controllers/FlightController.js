@@ -235,3 +235,14 @@ export {
   updateFlight,
   deleteFlight
 };
+
+// Menambahkan fungsi untuk mendapatkan jumlah flight
+export const getFlightsCount = async(req, res) => {
+    try {
+        const count = await Flight.count();
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error in getFlightsCount:', error);
+        res.status(500).json({ msg: error.message });
+    }
+};

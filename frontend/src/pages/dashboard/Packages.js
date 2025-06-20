@@ -97,7 +97,7 @@ const Packages = () => {
                   </div>
                 </div>
                 <div className="price-section">
-                  <span className="price">${pkg.price}</span>
+                  <span className="price">RP{pkg.price}</span>
                   <span className="per-person">/ per person</span>
                 </div>
                 <button className="book-now-btn">BOOK NOW</button>

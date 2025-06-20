@@ -1,5 +1,3 @@
-// src/pages/admin/AdminDashboard.js
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import axiosInstance from '../../api/axiosConfig';
@@ -30,7 +28,7 @@ const AdminDashboard = () => {
         const date = new Date(isoString);
         return date.toLocaleString('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
@@ -39,7 +37,6 @@ const AdminDashboard = () => {
     };
 
     useEffect(() => {
-        // Update current date time
         const updateDateTime = () => {
             const now = new Date();
             const formatted = now.toISOString().slice(0, 19).replace('T', ' ');
@@ -48,7 +45,6 @@ const AdminDashboard = () => {
 
         updateDateTime();
         const interval = setInterval(updateDateTime, 1000);
-
         return () => clearInterval(interval);
     }, []);
 
@@ -65,44 +61,34 @@ const AdminDashboard = () => {
                     axiosInstance.get('/api/bookings/recent')
                 ]);
 
+                // Debug log
+                console.log('Recent bookings data received:', recentBookingsData.data);
+
                 setTotalUsers(usersCount.data.count.toLocaleString());
                 setTotalBookings(bookingsCount.data.count.toLocaleString());
                 setTotalFlights(flightsCount.data.count.toLocaleString());
 
-                const formattedBookings = recentBookingsData.data.map(booking => ({
-                    bookingID: booking.bookingID,
-                    bookerName: booking.user.name,
-                    bookerEmail: booking.user.email,
-                    bookingDate: booking.bookingDate,
-                    departureAirport: booking.flight.departureAirport.code,
-                    destinationAirport: booking.flight.arrivalAirport.code,
-                    paymentStatus: booking.payment ? booking.payment.paymentStatus : 'Pending'
-                }));
+                if (Array.isArray(recentBookingsData.data)) {
+                    setRecentBookings(recentBookingsData.data);
+                } else {
+                    console.error('Invalid bookings data format:', recentBookingsData.data);
+                    setRecentBookings([]);
+                }
 
-                setRecentBookings(formattedBookings);
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
-                if (err.response) {
-                    console.log('Error response:', err.response);
-                    setError(`Error: ${err.response.data.msg || err.response.statusText}`);
-                } else if (err.request) {
-                    console.log('Error request:', err.request);
-                    setError("Network error. Please check your connection.");
-                } else {
-                    console.log('Error:', err.message);
-                    setError(err.message);
-                }
+                setError(err.response?.data?.msg || err.message || "Failed to fetch data");
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-
-        // Refresh data every 5 minutes
         const refreshInterval = setInterval(fetchData, 300000);
         return () => clearInterval(refreshInterval);
     }, []);
+
+
 
     const boxData = [
         { 
@@ -171,9 +157,10 @@ const AdminDashboard = () => {
 
                         <div className="dashboard-header">
                             <h2 className="subtitle">
-                                Welcome back, <span className="highlight-text">{user?.name || 'Admin'}</span>!
+                                Welcome back, <span className="highlight-text">
+                                    {user?.firstName || 'Admin'}
+                                </span>!
                             </h2>
-                            <p className="current-datetime">{currentDateTime} UTC</p>
                         </div>
 
                         {error && <div className="error-message">{error}</div>}
@@ -212,31 +199,34 @@ const AdminDashboard = () => {
                                     <span className="data-title">Booking Time</span>
                                     <span className="data-title">From</span>
                                     <span className="data-title">To</span>
-                                    <span className="data-title">Payment Status</span>
+                                    <span className="data-title">Status</span>
                                 </div>
 
-                                {recentBookings.length > 0 ? (
-                                    <div className="data-rows">
-                                        {recentBookings.map((booking) => (
-                                            <div key={booking.bookingID} className="data-row">
-                                                <span className="data-list">{booking.bookerName}</span>
-                                                <span className="data-list">{booking.bookerEmail}</span>
-                                                <span className="data-list">
-                                                    {formatDateTime(booking.bookingDate)}
-                                                </span>
-                                                <span className="data-list">{booking.departureAirport}</span>
-                                                <span className="data-list">{booking.destinationAirport}</span>
-                                                <span className={`data-list status-${booking.paymentStatus.toLowerCase()}`}>
-                                                    {booking.paymentStatus}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="no-data-message">
-                                        No recent bookings found.
-                                    </div>
-                                )}
+                                {recentBookings.map((booking) => {
+                                    console.log('Rendering booking:', booking); // Debug log
+                                    return (
+                                        <div key={booking.bookingID} className="data-row">
+                                            <span className="data-list">
+                                                {booking.bookerName !== 'N/A' ? booking.bookerName : 'Unknown'}
+                                            </span>
+                                            <span className="data-list">
+                                                {booking.bookerEmail !== 'N/A' ? booking.bookerEmail : 'Unknown'}
+                                            </span>
+                                            <span className="data-list">
+                                                {formatDateTime(booking.bookingDate)}
+                                            </span>
+                                            <span className="data-list">
+                                                {booking.departureAirport !== 'N/A' ? booking.departureAirport : 'Unknown'}
+                                            </span>
+                                            <span className="data-list">
+                                                {booking.destinationAirport !== 'N/A' ? booking.destinationAirport : 'Unknown'}
+                                            </span>
+                                            <span className={`data-list status-${(booking.status || 'pending').toLowerCase()}`}>
+                                                {booking.status || 'Pending'}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

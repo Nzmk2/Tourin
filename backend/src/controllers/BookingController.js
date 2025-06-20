@@ -193,3 +193,67 @@ export const getUserBookings = async(req, res) => {
         res.status(500).json({ msg: error.message });
     }
 };
+
+export const getBookingsCount = async(req, res) => {
+    try {
+        const count = await Booking.count();
+        res.status(200).json({ count });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ msg: error.message });
+    }
+};
+
+export const getRecentBookings = async(req, res) => {
+    try {
+        const response = await Booking.findAll({
+            limit: 7,
+            order: [['createdAt', 'DESC']],
+            include: [
+                { 
+                    model: User,
+                    attributes: ['firstName', 'lastName', 'email']
+                },
+                { 
+                    model: Flight,
+                    include: [
+                        { 
+                            model: Airport, 
+                            as: 'DepartureAirport',
+                            attributes: ['name', 'code']
+                        },
+                        { 
+                            model: Airport, 
+                            as: 'DestinationAirport',
+                            attributes: ['name', 'code']
+                        }
+                    ]
+                }
+            ]
+        });
+
+        // Transform data setelah mendapatkan response
+        const formattedBookings = response.map(booking => {
+            const data = booking.get({ plain: true }); // Gunakan get({ plain: true }) untuk mendapatkan plain object
+            
+            return {
+                bookingID: data.bookingID,
+                bookerName: data.user ? `${data.user.firstName} ${data.user.lastName}` : 'Unknown',
+                bookerEmail: data.user?.email || 'Unknown',
+                bookingDate: data.bookingDate || data.createdAt,
+                departureAirport: data.flight?.DepartureAirport 
+                    ? `${data.flight.DepartureAirport.name} (${data.flight.DepartureAirport.code})`
+                    : 'Unknown',
+                destinationAirport: data.flight?.DestinationAirport
+                    ? `${data.flight.DestinationAirport.name} (${data.flight.DestinationAirport.code})`
+                    : 'Unknown',
+                status: data.status || 'pending'
+            };
+        });
+
+        res.status(200).json(formattedBookings);
+    } catch (error) {
+        console.log("Error in getRecentBookings:", error);
+        res.status(500).json({ msg: error.message });
+    }
+};

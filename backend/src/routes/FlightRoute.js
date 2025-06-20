@@ -4,12 +4,14 @@ import {
     getFlightById,
     createFlight,
     updateFlight,
-    deleteFlight
+    deleteFlight,
+    getFlightsCount
 } from "../controllers/FlightController.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
+router.get('/flights/count', getFlightsCount);
 router.get('/flights', getFlights);
 router.get('/flights/:id', getFlightById);
 router.post('/flights', verifyToken, createFlight);

@@ -25,6 +25,10 @@ import DestinationRoutes from "./src/routes/DestinationRoute.js";
 import PackageRoutes from "./src/routes/PackageRoute.js";
 import UserRoutes from "./src/routes/UserRoute.js";
 
+import bookingRoutes from './src/routes/BookingRoute.js';
+import flightRoutes from './src/routes/FlightRoute.js';
+
+
 // Import upload middleware
 import { upload } from './src/middleware/uploadMiddleware.js';
 
@@ -71,6 +75,9 @@ app.use('/api', BookingRoutes);
 app.use('/api', PaymentRoutes);
 app.use('/api', DestinationRoutes);
 app.use('/api', PackageRoutes);
+
+app.use('/api', bookingRoutes);
+app.use('/api', flightRoutes);
 
 // Multer error handling
 app.use((err, req, res, next) => {
